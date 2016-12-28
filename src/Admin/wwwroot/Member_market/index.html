@@ -14,18 +14,18 @@
 				<table id="GridView1" cellspacing="0" rules="all" border="1" style="border-collapse:collapse;" class="table table-bordered table-hover">
 					<tr>
 						<th scope="col" style="width:2%;"><input type="checkbox" onclick="$('#GridView1 tbody tr').each(function (idx, el) { var chk = $(el).find('td:first input[type=\'checkbox\']')[0]; if (chk) chk.checked = !chk.checked; });" /></th>
+						<th scope="col">market_id</th>
 						<th scope="col">member_id</th>
-						<th scope="col">product_id</th>
 						<th scope="col">创建时间</th>
 						<th scope="col" style="width:5%;">&nbsp;</th>
 					</tr>
 					<tbody>
 						<tr @for="a in items">
-							<td><input type="checkbox" id="id" name="id" value="{#a.Member_id},{#a.Product_id}" /></td>
+							<td><input type="checkbox" id="id" name="id" value="{#a.Market_id},{#a.Member_id}" /></td>
+							<td>[{#a.Market_id}]{#a.Obj_market.Title}</td>
 							<td>[{#a.Member_id}]{#a.Obj_member.Username}</td>
-							<td>[{#a.Product_id}]{#a.Obj_product.Title}</td>
 							<td>{#a.Create_time}</td>
-							<td><a href="add.html?Member_id={#a.Member_id}&Product_id={#a.Product_id}">修改</a></td>
+							<td><a href="add.html?Market_id={#a.Market_id}&Member_id={#a.Member_id}">修改</a></td>
 						</tr>
 					</tbody>
 				</table>
@@ -41,12 +41,12 @@
 	var pageindex = cint(qs.pageindex, 1);
 	qs.limit = 20;
 	qs.skip = (pageindex - 1) * qs.limit;
+	if (qs.Market_id) qs.Market_id = qs.Market_id.split('_');
 	if (qs.Member_id) qs.Member_id = qs.Member_id.split('_');
-	if (qs.Product_id) qs.Product_id = qs.Product_id.split('_');
 	delete qs.pageindex;
-	$.ajax({ url: '/api/Member_fav_product/', data: qs, traditional: true, success: function (rt) {
+	$.ajax({ url: '/api/Member_market/', data: qs, traditional: true, success: function (rt) {
+		for (var a = 0; a < rt.data.items_market.length; a++) rt.data.items[a].Obj_market = rt.data.items_market[a];
 		for (var a = 0; a < rt.data.items_member.length; a++) rt.data.items[a].Obj_member = rt.data.items_member[a];
-		for (var a = 0; a < rt.data.items_product.length; a++) rt.data.items[a].Obj_product = rt.data.items_product[a];
 		renderTpl('#form_list', rt.data);
 		delete qs.limit;
 		delete qs.skip;
@@ -58,11 +58,11 @@
 	delete fqs.pageindex;
 	var cms2FilterArray = [];
 	var cms2FilterAjaxs = 2;
-	cms2FilterFK('Member', 'Username', 'Id', 'Member_id', function (r) {
+	cms2FilterFK('Market', 'Title', 'Id', 'Market_id', function (r) {
 		if (r.text.length) cms2FilterArray[0] = r;
 		if (--cms2FilterAjaxs <= 0) cms2Filter(cms2FilterArray, fqs);
 	});
-	cms2FilterFK('Product', 'Title', 'Id', 'Product_id', function (r) {
+	cms2FilterFK('Member', 'Username', 'Id', 'Member_id', function (r) {
 		if (r.text.length) cms2FilterArray[1] = r;
 		if (--cms2FilterAjaxs <= 0) cms2Filter(cms2FilterArray, fqs);
 	});

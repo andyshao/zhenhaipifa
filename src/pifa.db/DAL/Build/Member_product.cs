@@ -6,17 +6,17 @@ using pifa.Model;
 
 namespace pifa.DAL {
 
-	public partial class Member_fav_market : IDAL {
+	public partial class Member_product : IDAL {
 		#region transact-sql define
 		public string Table { get { return TSQL.Table; } }
 		public string Field { get { return TSQL.Field; } }
 		public string Sort { get { return TSQL.Sort; } }
 		internal class TSQL {
-			internal static readonly string Table = "`member_fav_market`";
-			internal static readonly string Field = "a.`market_id`, a.`member_id`, a.`create_time`";
-			internal static readonly string Sort = "a.`market_id`, a.`member_id`";
-			public static readonly string Delete = "DELETE FROM `member_fav_market` WHERE ";
-			public static readonly string Insert = "INSERT INTO `member_fav_market`(`market_id`, `member_id`, `create_time`) VALUES(?market_id, ?member_id, ?create_time)";
+			internal static readonly string Table = "`member_product`";
+			internal static readonly string Field = "a.`member_id`, a.`product_id`, a.`create_time`";
+			internal static readonly string Sort = "a.`member_id`, a.`product_id`";
+			public static readonly string Delete = "DELETE FROM `member_product` WHERE ";
+			public static readonly string Insert = "INSERT INTO `member_product`(`member_id`, `product_id`, `create_time`) VALUES(?member_id, ?product_id, ?create_time)";
 		}
 		#endregion
 
@@ -26,59 +26,59 @@ namespace pifa.DAL {
 			parm.Value = value;
 			return parm;
 		}
-		protected static MySqlParameter[] GetParameters(Member_fav_marketInfo item) {
+		protected static MySqlParameter[] GetParameters(Member_productInfo item) {
 			return new MySqlParameter[] {
-				GetParameter("?market_id", MySqlDbType.UInt32, 10, item.Market_id), 
 				GetParameter("?member_id", MySqlDbType.UInt32, 10, item.Member_id), 
+				GetParameter("?product_id", MySqlDbType.UInt32, 10, item.Product_id), 
 				GetParameter("?create_time", MySqlDbType.DateTime, -1, item.Create_time)};
 		}
-		public Member_fav_marketInfo GetItem(IDataReader dr) {
+		public Member_productInfo GetItem(IDataReader dr) {
 			int index = -1;
-			return GetItem(dr, ref index) as Member_fav_marketInfo;
+			return GetItem(dr, ref index) as Member_productInfo;
 		}
 		public object GetItem(IDataReader dr, ref int index) {
-			return new Member_fav_marketInfo {
-				Market_id = dr.IsDBNull(++index) ? null : (uint?)dr.GetInt32(index), 
+			return new Member_productInfo {
 				Member_id = dr.IsDBNull(++index) ? null : (uint?)dr.GetInt32(index), 
+				Product_id = dr.IsDBNull(++index) ? null : (uint?)dr.GetInt32(index), 
 				Create_time = dr.IsDBNull(++index) ? null : (DateTime?)dr.GetDateTime(index)};
 		}
-		public SelectBuild<Member_fav_marketInfo> Select {
-			get { return SelectBuild<Member_fav_marketInfo>.From(this, SqlHelper.Instance); }
+		public SelectBuild<Member_productInfo> Select {
+			get { return SelectBuild<Member_productInfo>.From(this, SqlHelper.Instance); }
 		}
 		#endregion
 
-		public int Delete(uint? Market_id, uint? Member_id) {
-			return SqlHelper.ExecuteNonQuery(string.Concat(TSQL.Delete, "`market_id` = ?market_id AND `member_id` = ?member_id"), 
-				GetParameter("?market_id", MySqlDbType.UInt32, 10, Market_id), 
-				GetParameter("?member_id", MySqlDbType.UInt32, 10, Member_id));
-		}
-		public int DeleteByMarket_id(uint? Market_id) {
-			return SqlHelper.ExecuteNonQuery(string.Concat(TSQL.Delete, "`market_id` = ?market_id"), 
-				GetParameter("?market_id", MySqlDbType.UInt32, 10, Market_id));
+		public int Delete(uint? Member_id, uint? Product_id) {
+			return SqlHelper.ExecuteNonQuery(string.Concat(TSQL.Delete, "`member_id` = ?member_id AND `product_id` = ?product_id"), 
+				GetParameter("?member_id", MySqlDbType.UInt32, 10, Member_id), 
+				GetParameter("?product_id", MySqlDbType.UInt32, 10, Product_id));
 		}
 		public int DeleteByMember_id(uint? Member_id) {
 			return SqlHelper.ExecuteNonQuery(string.Concat(TSQL.Delete, "`member_id` = ?member_id"), 
 				GetParameter("?member_id", MySqlDbType.UInt32, 10, Member_id));
 		}
+		public int DeleteByProduct_id(uint? Product_id) {
+			return SqlHelper.ExecuteNonQuery(string.Concat(TSQL.Delete, "`product_id` = ?product_id"), 
+				GetParameter("?product_id", MySqlDbType.UInt32, 10, Product_id));
+		}
 
-		public int Update(Member_fav_marketInfo item) {
-			return new SqlUpdateBuild(null, item.Market_id, item.Member_id)
+		public int Update(Member_productInfo item) {
+			return new SqlUpdateBuild(null, item.Member_id, item.Product_id)
 				.SetCreate_time(item.Create_time).ExecuteNonQuery();
 		}
 		#region class SqlUpdateBuild
 		public partial class SqlUpdateBuild {
-			protected Member_fav_marketInfo _item;
+			protected Member_productInfo _item;
 			protected string _fields;
 			protected string _where;
 			protected List<MySqlParameter> _parameters = new List<MySqlParameter>();
-			public SqlUpdateBuild(Member_fav_marketInfo item, uint? Market_id, uint? Member_id) {
+			public SqlUpdateBuild(Member_productInfo item, uint? Member_id, uint? Product_id) {
 				_item = item;
-				_where = SqlHelper.Addslashes("`market_id` = {0} AND `member_id` = {1}", Market_id, Member_id);
+				_where = SqlHelper.Addslashes("`member_id` = {0} AND `product_id` = {1}", Member_id, Product_id);
 			}
 			public SqlUpdateBuild() { }
 			public override string ToString() {
 				if (string.IsNullOrEmpty(_fields)) return string.Empty;
-				if (string.IsNullOrEmpty(_where)) throw new Exception("防止 pifa.DAL.Member_fav_market.SqlUpdateBuild 误修改，请必须设置 where 条件。");
+				if (string.IsNullOrEmpty(_where)) throw new Exception("防止 pifa.DAL.Member_product.SqlUpdateBuild 误修改，请必须设置 where 条件。");
 				return string.Concat("UPDATE ", TSQL.Table, " SET ", _fields.Substring(1), " WHERE ", _where);
 			}
 			public int ExecuteNonQuery() {
@@ -92,7 +92,7 @@ namespace pifa.DAL {
 				return this;
 			}
 			public SqlUpdateBuild Set(string field, string value, params MySqlParameter[] parms) {
-				if (value.IndexOf('\'') != -1) throw new Exception("pifa.DAL.Member_fav_market.SqlUpdateBuild 可能存在注入漏洞，不允许传递 ' 给参数 value，若使用正常字符串，请使用参数化传递。");
+				if (value.IndexOf('\'') != -1) throw new Exception("pifa.DAL.Member_product.SqlUpdateBuild 可能存在注入漏洞，不允许传递 ' 给参数 value，若使用正常字符串，请使用参数化传递。");
 				_fields = string.Concat(_fields, ", ", field, " = ", value);
 				if (parms != null && parms.Length > 0) _parameters.AddRange(parms);
 				return this;
@@ -105,13 +105,13 @@ namespace pifa.DAL {
 		}
 		#endregion
 
-		public Member_fav_marketInfo Insert(Member_fav_marketInfo item) {
+		public Member_productInfo Insert(Member_productInfo item) {
 			SqlHelper.ExecuteNonQuery(TSQL.Insert, GetParameters(item));
 			return item;
 		}
 
-		public Member_fav_marketInfo GetItem(uint? Market_id, uint? Member_id) {
-			return this.Select.Where("a.`market_id` = {0} AND a.`member_id` = {1}", Market_id, Member_id).ToOne();
+		public Member_productInfo GetItem(uint? Member_id, uint? Product_id) {
+			return this.Select.Where("a.`member_id` = {0} AND a.`product_id` = {1}", Member_id, Product_id).ToOne();
 		}
 	}
 }

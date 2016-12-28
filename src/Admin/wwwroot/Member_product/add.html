@@ -19,11 +19,11 @@
 							</td>
 						</tr>
 						<tr>
-							<td>shop_id</td>
+							<td>product_id</td>
 							<td>
-								<select name="Shop_id">
+								<select name="Product_id">
 									<option value="">------ 请选择 ------</option>
-									<option @for="a in items" value="{#a.Id}">{#a.Nickname}</option>
+									<option @for="a in items" value="{#a.Id}">{#a.Title}</option>
 								</select>
 							</td>
 						</tr>
@@ -48,7 +48,7 @@
 	var ajaxs = 3;
 	var data = {};
 	var form = $('#form_add')[0];
-	var geturl = '/api/Member_fav_shop/'; for (var a in top.mainViewNav.query) geturl += top.mainViewNav.query[a] + '/';
+	var geturl = '/api/Member_product/'; for (var a in top.mainViewNav.query) geturl += top.mainViewNav.query[a] + '/';
 
 	function initUI() {
 		fillForm(form, data.item);
@@ -60,7 +60,7 @@
 					top.mainViewNav.goto('./');
 				}});
 			else
-				$.ajax({ url: '/api/Member_fav_shop/', type: 'POST', dataType: 'json', data: $(this).serialize(), success: function (rt) {
+				$.ajax({ url: '/api/Member_product/', type: 'POST', dataType: 'json', data: $(this).serialize(), success: function (rt) {
 					if (!rt.success) return alert(rt.message);
 					top.mainViewNav.goto('./');
 				}});
@@ -68,7 +68,7 @@
 		});
 	}
 
-	if (geturl === '/api/Member_fav_shop/')
+	if (geturl === '/api/Member_product/')
 		--ajaxs;
 	else
 		$.getJSON(geturl, function (rt) {
@@ -80,8 +80,8 @@
 		renderTpl(form.Member_id, rt.data);
 		if (--ajaxs <= 0) initUI();
 	});
-	$.getJSON('/api/Shop/', { limit: 2000 }, function (rt) {
-		renderTpl(form.Shop_id, rt.data);
+	$.getJSON('/api/Product/', { limit: 2000 }, function (rt) {
+		renderTpl(form.Product_id, rt.data);
 		if (--ajaxs <= 0) initUI();
 	});
 })();

@@ -276,15 +276,15 @@ namespace pifa.Model {
 			get { return _Title; }
 			set { _Title = value; }
 		}
-		public Member_fav_shopInfo Obj_member_fav_shop { set; get; }
-		private List<MemberInfo> _obj_member_favs;
+		public Member_shopInfo Obj_member_shop { set; get; }
+		private List<MemberInfo> _obj_members;
 		/// <summary>
-		/// 遍历时，可通过 Obj_member_fav_shop 可获取中间表数据
+		/// 遍历时，可通过 Obj_member_shop 可获取中间表数据
 		/// </summary>
-		public List<MemberInfo> Obj_member_favs {
+		public List<MemberInfo> Obj_members {
 			get {
-				if (_obj_member_favs == null) _obj_member_favs = Member.Select.InnerJoin<Member_fav_shop>("b", "b.`member_id` = a.`id`").Where("b.`shop_id` = {0}", _Id.Value).ToList();
-				return _obj_member_favs;
+				if (_obj_members == null) _obj_members = Member.Select.InnerJoin<Member_shop>("b", "b.`member_id` = a.`id`").Where("b.`shop_id` = {0}", _Id.Value).ToList();
+				return _obj_members;
 			}
 		}
 		private List<ProductInfo> _obj_products;
@@ -327,12 +327,12 @@ namespace pifa.Model {
 		public pifa.DAL.Shop.SqlUpdateBuild UpdateDiy {
 			get { return Shop.UpdateDiy(this, _Id); }
 		}
-		public Member_fav_shopInfo FlagMember_fav(MemberInfo Member, DateTime? Create_time) {
-			return FlagMember_fav(Member.Id, Create_time);
+		public Member_shopInfo FlagMember(MemberInfo Member, DateTime? Create_time) {
+			return FlagMember(Member.Id, Create_time);
 		}
-		public Member_fav_shopInfo FlagMember_fav(uint? Member_id, DateTime? Create_time) {
-			Member_fav_shopInfo item = Member_fav_shop.GetItem(Member_id, this.Id);
-			if (item == null) item = Member_fav_shop.Insert(new Member_fav_shopInfo {
+		public Member_shopInfo FlagMember(uint? Member_id, DateTime? Create_time) {
+			Member_shopInfo item = Member_shop.GetItem(Member_id, this.Id);
+			if (item == null) item = Member_shop.Insert(new Member_shopInfo {
 				Member_id = Member_id, 
 				Shop_id = this.Id, 
 				Create_time = Create_time});
@@ -341,14 +341,14 @@ namespace pifa.Model {
 			return item;
 		}
 
-		public int UnflagMember_fav(MemberInfo Member) {
-			return UnflagMember_fav(Member.Id);
+		public int UnflagMember(MemberInfo Member) {
+			return UnflagMember(Member.Id);
 		}
-		public int UnflagMember_fav(uint? Member_id) {
-			return Member_fav_shop.Delete(Member_id, this.Id);
+		public int UnflagMember(uint? Member_id) {
+			return Member_shop.Delete(Member_id, this.Id);
 		}
-		public int UnflagMember_favALL() {
-			return Member_fav_shop.DeleteByShop_id(this.Id);
+		public int UnflagMemberALL() {
+			return Member_shop.DeleteByShop_id(this.Id);
 		}
 
 		public ProductInfo AddProduct(CategoryInfo Category, DateTime? Create_time, ProductICON? Icon, decimal? Price, uint? Stock, string Title, string Unit) {

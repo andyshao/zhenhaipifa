@@ -201,15 +201,15 @@ namespace pifa.Model {
 			get { return _Unit; }
 			set { _Unit = value; }
 		}
-		public Member_fav_productInfo Obj_member_fav_product { set; get; }
-		private List<MemberInfo> _obj_member_favs;
+		public Member_productInfo Obj_member_product { set; get; }
+		private List<MemberInfo> _obj_members;
 		/// <summary>
-		/// 遍历时，可通过 Obj_member_fav_product 可获取中间表数据
+		/// 遍历时，可通过 Obj_member_product 可获取中间表数据
 		/// </summary>
-		public List<MemberInfo> Obj_member_favs {
+		public List<MemberInfo> Obj_members {
 			get {
-				if (_obj_member_favs == null) _obj_member_favs = Member.Select.InnerJoin<Member_fav_product>("b", "b.`member_id` = a.`id`").Where("b.`product_id` = {0}", _Id.Value).ToList();
-				return _obj_member_favs;
+				if (_obj_members == null) _obj_members = Member.Select.InnerJoin<Member_product>("b", "b.`member_id` = a.`id`").Where("b.`product_id` = {0}", _Id.Value).ToList();
+				return _obj_members;
 			}
 		}
 		public Product_attrInfo Obj_product_attr { set; get; }
@@ -263,12 +263,12 @@ namespace pifa.Model {
 		public pifa.DAL.Product.SqlUpdateBuild UpdateDiy {
 			get { return Product.UpdateDiy(this, _Id); }
 		}
-		public Member_fav_productInfo FlagMember_fav(MemberInfo Member, DateTime? Create_time) {
-			return FlagMember_fav(Member.Id, Create_time);
+		public Member_productInfo FlagMember(MemberInfo Member, DateTime? Create_time) {
+			return FlagMember(Member.Id, Create_time);
 		}
-		public Member_fav_productInfo FlagMember_fav(uint? Member_id, DateTime? Create_time) {
-			Member_fav_productInfo item = Member_fav_product.GetItem(Member_id, this.Id);
-			if (item == null) item = Member_fav_product.Insert(new Member_fav_productInfo {
+		public Member_productInfo FlagMember(uint? Member_id, DateTime? Create_time) {
+			Member_productInfo item = Member_product.GetItem(Member_id, this.Id);
+			if (item == null) item = Member_product.Insert(new Member_productInfo {
 				Member_id = Member_id, 
 				Product_id = this.Id, 
 				Create_time = Create_time});
@@ -277,14 +277,14 @@ namespace pifa.Model {
 			return item;
 		}
 
-		public int UnflagMember_fav(MemberInfo Member) {
-			return UnflagMember_fav(Member.Id);
+		public int UnflagMember(MemberInfo Member) {
+			return UnflagMember(Member.Id);
 		}
-		public int UnflagMember_fav(uint? Member_id) {
-			return Member_fav_product.Delete(Member_id, this.Id);
+		public int UnflagMember(uint? Member_id) {
+			return Member_product.Delete(Member_id, this.Id);
 		}
-		public int UnflagMember_favALL() {
-			return Member_fav_product.DeleteByProduct_id(this.Id);
+		public int UnflagMemberALL() {
+			return Member_product.DeleteByProduct_id(this.Id);
 		}
 
 		public Product_attrInfo FlagAttr(PattrInfo Pattr, string Value) {

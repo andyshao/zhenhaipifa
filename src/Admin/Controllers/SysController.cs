@@ -163,29 +163,29 @@ namespace pifa.Admin.Controllers {
 			dir3 = Sysdir.Insert(dir2.Id, DateTime.Now, "编辑", 3, "/member_addressbook/edit.aspx");
 			dir3 = Sysdir.Insert(dir2.Id, DateTime.Now, "删除", 4, "/member_addressbook/del.aspx");
 
-			dir2 = Sysdir.Insert(dir1.Id, DateTime.Now, "member_fav_market", 19, "/member_fav_market/");
-			dir3 = Sysdir.Insert(dir2.Id, DateTime.Now, "列表", 1, "/member_fav_market/");
-			dir3 = Sysdir.Insert(dir2.Id, DateTime.Now, "添加", 2, "/member_fav_market/add.aspx");
-			dir3 = Sysdir.Insert(dir2.Id, DateTime.Now, "编辑", 3, "/member_fav_market/edit.aspx");
-			dir3 = Sysdir.Insert(dir2.Id, DateTime.Now, "删除", 4, "/member_fav_market/del.aspx");
+			dir2 = Sysdir.Insert(dir1.Id, DateTime.Now, "member_market", 19, "/member_market/");
+			dir3 = Sysdir.Insert(dir2.Id, DateTime.Now, "列表", 1, "/member_market/");
+			dir3 = Sysdir.Insert(dir2.Id, DateTime.Now, "添加", 2, "/member_market/add.aspx");
+			dir3 = Sysdir.Insert(dir2.Id, DateTime.Now, "编辑", 3, "/member_market/edit.aspx");
+			dir3 = Sysdir.Insert(dir2.Id, DateTime.Now, "删除", 4, "/member_market/del.aspx");
 
-			dir2 = Sysdir.Insert(dir1.Id, DateTime.Now, "member_fav_product", 20, "/member_fav_product/");
-			dir3 = Sysdir.Insert(dir2.Id, DateTime.Now, "列表", 1, "/member_fav_product/");
-			dir3 = Sysdir.Insert(dir2.Id, DateTime.Now, "添加", 2, "/member_fav_product/add.aspx");
-			dir3 = Sysdir.Insert(dir2.Id, DateTime.Now, "编辑", 3, "/member_fav_product/edit.aspx");
-			dir3 = Sysdir.Insert(dir2.Id, DateTime.Now, "删除", 4, "/member_fav_product/del.aspx");
+			dir2 = Sysdir.Insert(dir1.Id, DateTime.Now, "member_product", 20, "/member_product/");
+			dir3 = Sysdir.Insert(dir2.Id, DateTime.Now, "列表", 1, "/member_product/");
+			dir3 = Sysdir.Insert(dir2.Id, DateTime.Now, "添加", 2, "/member_product/add.aspx");
+			dir3 = Sysdir.Insert(dir2.Id, DateTime.Now, "编辑", 3, "/member_product/edit.aspx");
+			dir3 = Sysdir.Insert(dir2.Id, DateTime.Now, "删除", 4, "/member_product/del.aspx");
 
-			dir2 = Sysdir.Insert(dir1.Id, DateTime.Now, "member_fav_shop", 21, "/member_fav_shop/");
-			dir3 = Sysdir.Insert(dir2.Id, DateTime.Now, "列表", 1, "/member_fav_shop/");
-			dir3 = Sysdir.Insert(dir2.Id, DateTime.Now, "添加", 2, "/member_fav_shop/add.aspx");
-			dir3 = Sysdir.Insert(dir2.Id, DateTime.Now, "编辑", 3, "/member_fav_shop/edit.aspx");
-			dir3 = Sysdir.Insert(dir2.Id, DateTime.Now, "删除", 4, "/member_fav_shop/del.aspx");
-
-			dir2 = Sysdir.Insert(dir1.Id, DateTime.Now, "member_security", 22, "/member_security/");
+			dir2 = Sysdir.Insert(dir1.Id, DateTime.Now, "member_security", 21, "/member_security/");
 			dir3 = Sysdir.Insert(dir2.Id, DateTime.Now, "列表", 1, "/member_security/");
 			dir3 = Sysdir.Insert(dir2.Id, DateTime.Now, "添加", 2, "/member_security/add.aspx");
 			dir3 = Sysdir.Insert(dir2.Id, DateTime.Now, "编辑", 3, "/member_security/edit.aspx");
 			dir3 = Sysdir.Insert(dir2.Id, DateTime.Now, "删除", 4, "/member_security/del.aspx");
+
+			dir2 = Sysdir.Insert(dir1.Id, DateTime.Now, "member_shop", 22, "/member_shop/");
+			dir3 = Sysdir.Insert(dir2.Id, DateTime.Now, "列表", 1, "/member_shop/");
+			dir3 = Sysdir.Insert(dir2.Id, DateTime.Now, "添加", 2, "/member_shop/add.aspx");
+			dir3 = Sysdir.Insert(dir2.Id, DateTime.Now, "编辑", 3, "/member_shop/edit.aspx");
+			dir3 = Sysdir.Insert(dir2.Id, DateTime.Now, "删除", 4, "/member_shop/del.aspx");
 
 			dir2 = Sysdir.Insert(dir1.Id, DateTime.Now, "news", 23, "/news/");
 			dir3 = Sysdir.Insert(dir2.Id, DateTime.Now, "列表", 1, "/news/");

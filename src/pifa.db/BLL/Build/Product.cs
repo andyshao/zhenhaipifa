@@ -110,11 +110,11 @@ namespace pifa.BLL {
 		public static ProductSelectBuild SelectByShop_id(params uint?[] Shop_id) {
 			return Select.WhereShop_id(Shop_id);
 		}
-		public static ProductSelectBuild SelectByMember_fav(params MemberInfo[] items) {
-			return Select.WhereMember_fav(items);
+		public static ProductSelectBuild SelectByMember(params MemberInfo[] items) {
+			return Select.WhereMember(items);
 		}
-		public static ProductSelectBuild SelectByMember_fav_id(params uint[] ids) {
-			return Select.WhereMember_fav_id(ids);
+		public static ProductSelectBuild SelectByMember_id(params uint[] ids) {
+			return Select.WhereMember_id(ids);
 		}
 		public static ProductSelectBuild SelectByAttr(params PattrInfo[] items) {
 			return Select.WhereAttr(items);
@@ -130,13 +130,13 @@ namespace pifa.BLL {
 		public ProductSelectBuild WhereShop_id(params uint?[] Shop_id) {
 			return this.Where1Or("a.`Shop_id` = {0}", Shop_id);
 		}
-		public ProductSelectBuild WhereMember_fav(params MemberInfo[] items) {
+		public ProductSelectBuild WhereMember(params MemberInfo[] items) {
 			if (items == null) return this;
-			return WhereMember_fav_id(items.Where<MemberInfo>(a => a != null).Select<MemberInfo, uint>(a => a.Id.Value).ToArray());
+			return WhereMember_id(items.Where<MemberInfo>(a => a != null).Select<MemberInfo, uint>(a => a.Id.Value).ToArray());
 		}
-		public ProductSelectBuild WhereMember_fav_id(params uint[] ids) {
+		public ProductSelectBuild WhereMember_id(params uint[] ids) {
 			if (ids == null || ids.Length == 0) return this;
-			return base.Where(string.Format(@"EXISTS( SELECT `product_id` FROM `member_fav_product` WHERE `product_id` = a.`id` AND `member_id` IN ({0}) )", string.Join<uint>(",", ids))) as ProductSelectBuild;
+			return base.Where(string.Format(@"EXISTS( SELECT `product_id` FROM `member_product` WHERE `product_id` = a.`id` AND `member_id` IN ({0}) )", string.Join<uint>(",", ids))) as ProductSelectBuild;
 		}
 		public ProductSelectBuild WhereAttr(params PattrInfo[] items) {
 			if (items == null) return this;

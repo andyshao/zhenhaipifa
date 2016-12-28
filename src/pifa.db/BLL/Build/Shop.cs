@@ -132,11 +132,11 @@ namespace pifa.BLL {
 		public static ShopSelectBuild SelectByMember_id(params uint?[] Member_id) {
 			return Select.WhereMember_id(Member_id);
 		}
-		public static ShopSelectBuild SelectByMember_fav(params MemberInfo[] items) {
-			return Select.WhereMember_fav(items);
+		public static ShopSelectBuild SelectByMember(params MemberInfo[] items) {
+			return Select.WhereMember(items);
 		}
-		public static ShopSelectBuild SelectByMember_fav_id(params uint[] ids) {
-			return Select.WhereMember_fav_id(ids);
+		public static ShopSelectBuild SelectByMember_id(params uint[] ids) {
+			return Select.WhereMember_id(ids);
 		}
 		public static ShopSelectBuild SelectByFranchising(params FranchisingInfo[] items) {
 			return Select.WhereFranchising(items);
@@ -152,13 +152,13 @@ namespace pifa.BLL {
 		public ShopSelectBuild WhereMember_id(params uint?[] Member_id) {
 			return this.Where1Or("a.`Member_id` = {0}", Member_id);
 		}
-		public ShopSelectBuild WhereMember_fav(params MemberInfo[] items) {
+		public ShopSelectBuild WhereMember(params MemberInfo[] items) {
 			if (items == null) return this;
-			return WhereMember_fav_id(items.Where<MemberInfo>(a => a != null).Select<MemberInfo, uint>(a => a.Id.Value).ToArray());
+			return WhereMember_id(items.Where<MemberInfo>(a => a != null).Select<MemberInfo, uint>(a => a.Id.Value).ToArray());
 		}
-		public ShopSelectBuild WhereMember_fav_id(params uint[] ids) {
+		public ShopSelectBuild WhereMember_id(params uint[] ids) {
 			if (ids == null || ids.Length == 0) return this;
-			return base.Where(string.Format(@"EXISTS( SELECT `shop_id` FROM `member_fav_shop` WHERE `shop_id` = a.`id` AND `member_id` IN ({0}) )", string.Join<uint>(",", ids))) as ShopSelectBuild;
+			return base.Where(string.Format(@"EXISTS( SELECT `shop_id` FROM `member_shop` WHERE `shop_id` = a.`id` AND `member_id` IN ({0}) )", string.Join<uint>(",", ids))) as ShopSelectBuild;
 		}
 		public ShopSelectBuild WhereFranchising(params FranchisingInfo[] items) {
 			if (items == null) return this;

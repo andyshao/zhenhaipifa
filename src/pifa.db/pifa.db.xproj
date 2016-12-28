@@ -7,7 +7,7 @@
 
   <Import Project="$(VSToolsPath)\DotNet\Microsoft.DotNet.Props" Condition="'$(VSToolsPath)' != ''" />
   <PropertyGroup Label="Globals">
-    <ProjectGuid>2A2E0B65-7E96-4D16-A77E-DB22E5E70712</ProjectGuid>
+    <ProjectGuid>013EB131-3BA0-405D-BA3D-73421D413C7F</ProjectGuid>
     <RootNamespace>pifa.db</RootNamespace>
     <BaseIntermediateOutputPath Condition="'$(BaseIntermediateOutputPath)'=='' ">.\obj</BaseIntermediateOutputPath>
     <OutputPath Condition="'$(OutputPath)'=='' ">.\bin\</OutputPath>

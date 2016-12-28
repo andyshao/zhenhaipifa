@@ -132,49 +132,49 @@ namespace pifa.BLL {
 		public static MemberSelectBuild Select {
 			get { return new MemberSelectBuild(dal); }
 		}
-		public static MemberSelectBuild SelectByFav_market(params MarketInfo[] items) {
-			return Select.WhereFav_market(items);
+		public static MemberSelectBuild SelectByMarket(params MarketInfo[] items) {
+			return Select.WhereMarket(items);
 		}
-		public static MemberSelectBuild SelectByFav_market_id(params uint[] ids) {
-			return Select.WhereFav_market_id(ids);
+		public static MemberSelectBuild SelectByMarket_id(params uint[] ids) {
+			return Select.WhereMarket_id(ids);
 		}
-		public static MemberSelectBuild SelectByFav_product(params ProductInfo[] items) {
-			return Select.WhereFav_product(items);
+		public static MemberSelectBuild SelectByProduct(params ProductInfo[] items) {
+			return Select.WhereProduct(items);
 		}
-		public static MemberSelectBuild SelectByFav_product_id(params uint[] ids) {
-			return Select.WhereFav_product_id(ids);
+		public static MemberSelectBuild SelectByProduct_id(params uint[] ids) {
+			return Select.WhereProduct_id(ids);
 		}
-		public static MemberSelectBuild SelectByFav_shop(params ShopInfo[] items) {
-			return Select.WhereFav_shop(items);
+		public static MemberSelectBuild SelectByShop(params ShopInfo[] items) {
+			return Select.WhereShop(items);
 		}
-		public static MemberSelectBuild SelectByFav_shop_id(params uint[] ids) {
-			return Select.WhereFav_shop_id(ids);
+		public static MemberSelectBuild SelectByShop_id(params uint[] ids) {
+			return Select.WhereShop_id(ids);
 		}
 	}
 	public partial class MemberSelectBuild : SelectBuild<MemberInfo, MemberSelectBuild> {
-		public MemberSelectBuild WhereFav_market(params MarketInfo[] items) {
+		public MemberSelectBuild WhereMarket(params MarketInfo[] items) {
 			if (items == null) return this;
-			return WhereFav_market_id(items.Where<MarketInfo>(a => a != null).Select<MarketInfo, uint>(a => a.Id.Value).ToArray());
+			return WhereMarket_id(items.Where<MarketInfo>(a => a != null).Select<MarketInfo, uint>(a => a.Id.Value).ToArray());
 		}
-		public MemberSelectBuild WhereFav_market_id(params uint[] ids) {
+		public MemberSelectBuild WhereMarket_id(params uint[] ids) {
 			if (ids == null || ids.Length == 0) return this;
-			return base.Where(string.Format(@"EXISTS( SELECT `member_id` FROM `member_fav_market` WHERE `member_id` = a.`id` AND `market_id` IN ({0}) )", string.Join<uint>(",", ids))) as MemberSelectBuild;
+			return base.Where(string.Format(@"EXISTS( SELECT `member_id` FROM `member_market` WHERE `member_id` = a.`id` AND `market_id` IN ({0}) )", string.Join<uint>(",", ids))) as MemberSelectBuild;
 		}
-		public MemberSelectBuild WhereFav_product(params ProductInfo[] items) {
+		public MemberSelectBuild WhereProduct(params ProductInfo[] items) {
 			if (items == null) return this;
-			return WhereFav_product_id(items.Where<ProductInfo>(a => a != null).Select<ProductInfo, uint>(a => a.Id.Value).ToArray());
+			return WhereProduct_id(items.Where<ProductInfo>(a => a != null).Select<ProductInfo, uint>(a => a.Id.Value).ToArray());
 		}
-		public MemberSelectBuild WhereFav_product_id(params uint[] ids) {
+		public MemberSelectBuild WhereProduct_id(params uint[] ids) {
 			if (ids == null || ids.Length == 0) return this;
-			return base.Where(string.Format(@"EXISTS( SELECT `member_id` FROM `member_fav_product` WHERE `member_id` = a.`id` AND `product_id` IN ({0}) )", string.Join<uint>(",", ids))) as MemberSelectBuild;
+			return base.Where(string.Format(@"EXISTS( SELECT `member_id` FROM `member_product` WHERE `member_id` = a.`id` AND `product_id` IN ({0}) )", string.Join<uint>(",", ids))) as MemberSelectBuild;
 		}
-		public MemberSelectBuild WhereFav_shop(params ShopInfo[] items) {
+		public MemberSelectBuild WhereShop(params ShopInfo[] items) {
 			if (items == null) return this;
-			return WhereFav_shop_id(items.Where<ShopInfo>(a => a != null).Select<ShopInfo, uint>(a => a.Id.Value).ToArray());
+			return WhereShop_id(items.Where<ShopInfo>(a => a != null).Select<ShopInfo, uint>(a => a.Id.Value).ToArray());
 		}
-		public MemberSelectBuild WhereFav_shop_id(params uint[] ids) {
+		public MemberSelectBuild WhereShop_id(params uint[] ids) {
 			if (ids == null || ids.Length == 0) return this;
-			return base.Where(string.Format(@"EXISTS( SELECT `member_id` FROM `member_fav_shop` WHERE `member_id` = a.`id` AND `shop_id` IN ({0}) )", string.Join<uint>(",", ids))) as MemberSelectBuild;
+			return base.Where(string.Format(@"EXISTS( SELECT `member_id` FROM `member_shop` WHERE `member_id` = a.`id` AND `shop_id` IN ({0}) )", string.Join<uint>(",", ids))) as MemberSelectBuild;
 		}
 		public MemberSelectBuild WhereId(params uint?[] Id) {
 			return this.Where1Or("a.`id` = {0}", Id);

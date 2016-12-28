@@ -143,15 +143,15 @@ namespace pifa.Model {
 				return _obj_markettypes;
 			}
 		}
-		public Member_fav_marketInfo Obj_member_fav_market { set; get; }
-		private List<MemberInfo> _obj_member_favs;
+		public Member_marketInfo Obj_member_market { set; get; }
+		private List<MemberInfo> _obj_members;
 		/// <summary>
-		/// 遍历时，可通过 Obj_member_fav_market 可获取中间表数据
+		/// 遍历时，可通过 Obj_member_market 可获取中间表数据
 		/// </summary>
-		public List<MemberInfo> Obj_member_favs {
+		public List<MemberInfo> Obj_members {
 			get {
-				if (_obj_member_favs == null) _obj_member_favs = Member.Select.InnerJoin<Member_fav_market>("b", "b.`member_id` = a.`id`").Where("b.`market_id` = {0}", _Id.Value).ToList();
-				return _obj_member_favs;
+				if (_obj_members == null) _obj_members = Member.Select.InnerJoin<Member_market>("b", "b.`member_id` = a.`id`").Where("b.`market_id` = {0}", _Id.Value).ToList();
+				return _obj_members;
 			}
 		}
 		private List<RentsubletInfo> _obj_rentsublets;
@@ -184,12 +184,12 @@ namespace pifa.Model {
 				Title = Title});
 		}
 
-		public Member_fav_marketInfo FlagMember_fav(MemberInfo Member, DateTime? Create_time) {
-			return FlagMember_fav(Member.Id, Create_time);
+		public Member_marketInfo FlagMember(MemberInfo Member, DateTime? Create_time) {
+			return FlagMember(Member.Id, Create_time);
 		}
-		public Member_fav_marketInfo FlagMember_fav(uint? Member_id, DateTime? Create_time) {
-			Member_fav_marketInfo item = Member_fav_market.GetItem(this.Id, Member_id);
-			if (item == null) item = Member_fav_market.Insert(new Member_fav_marketInfo {
+		public Member_marketInfo FlagMember(uint? Member_id, DateTime? Create_time) {
+			Member_marketInfo item = Member_market.GetItem(this.Id, Member_id);
+			if (item == null) item = Member_market.Insert(new Member_marketInfo {
 				Market_id = this.Id, 
 				Member_id = Member_id, 
 				Create_time = Create_time});
@@ -198,14 +198,14 @@ namespace pifa.Model {
 			return item;
 		}
 
-		public int UnflagMember_fav(MemberInfo Member) {
-			return UnflagMember_fav(Member.Id);
+		public int UnflagMember(MemberInfo Member) {
+			return UnflagMember(Member.Id);
 		}
-		public int UnflagMember_fav(uint? Member_id) {
-			return Member_fav_market.Delete(this.Id, Member_id);
+		public int UnflagMember(uint? Member_id) {
+			return Member_market.Delete(this.Id, Member_id);
 		}
-		public int UnflagMember_favALL() {
-			return Member_fav_market.DeleteByMarket_id(this.Id);
+		public int UnflagMemberALL() {
+			return Member_market.DeleteByMarket_id(this.Id);
 		}
 
 		public RentsubletInfo AddRentsublet(DateTime? Create_time, decimal? Price, RentsubletTYPE? Type) {

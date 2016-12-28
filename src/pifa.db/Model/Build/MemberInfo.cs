@@ -149,37 +149,26 @@ namespace pifa.Model {
 				return _obj_member_addressbooks;
 			}
 		}
-		public Member_fav_marketInfo Obj_member_fav_market { set; get; }
-		private List<MarketInfo> _obj_fav_markets;
+		public Member_marketInfo Obj_member_market { set; get; }
+		private List<MarketInfo> _obj_markets;
 		/// <summary>
-		/// 遍历时，可通过 Obj_member_fav_market 可获取中间表数据
+		/// 遍历时，可通过 Obj_member_market 可获取中间表数据
 		/// </summary>
-		public List<MarketInfo> Obj_fav_markets {
+		public List<MarketInfo> Obj_markets {
 			get {
-				if (_obj_fav_markets == null) _obj_fav_markets = Market.Select.InnerJoin<Member_fav_market>("b", "b.`market_id` = a.`id`").Where("b.`member_id` = {0}", _Id.Value).ToList();
-				return _obj_fav_markets;
+				if (_obj_markets == null) _obj_markets = Market.Select.InnerJoin<Member_market>("b", "b.`market_id` = a.`id`").Where("b.`member_id` = {0}", _Id.Value).ToList();
+				return _obj_markets;
 			}
 		}
-		public Member_fav_productInfo Obj_member_fav_product { set; get; }
-		private List<ProductInfo> _obj_fav_products;
+		public Member_productInfo Obj_member_product { set; get; }
+		private List<ProductInfo> _obj_products;
 		/// <summary>
-		/// 遍历时，可通过 Obj_member_fav_product 可获取中间表数据
+		/// 遍历时，可通过 Obj_member_product 可获取中间表数据
 		/// </summary>
-		public List<ProductInfo> Obj_fav_products {
+		public List<ProductInfo> Obj_products {
 			get {
-				if (_obj_fav_products == null) _obj_fav_products = Product.Select.InnerJoin<Member_fav_product>("b", "b.`product_id` = a.`id`").Where("b.`member_id` = {0}", _Id.Value).ToList();
-				return _obj_fav_products;
-			}
-		}
-		public Member_fav_shopInfo Obj_member_fav_shop { set; get; }
-		private List<ShopInfo> _obj_fav_shops;
-		/// <summary>
-		/// 遍历时，可通过 Obj_member_fav_shop 可获取中间表数据
-		/// </summary>
-		public List<ShopInfo> Obj_fav_shops {
-			get {
-				if (_obj_fav_shops == null) _obj_fav_shops = Shop.Select.InnerJoin<Member_fav_shop>("b", "b.`shop_id` = a.`id`").Where("b.`member_id` = {0}", _Id.Value).ToList();
-				return _obj_fav_shops;
+				if (_obj_products == null) _obj_products = Product.Select.InnerJoin<Member_product>("b", "b.`product_id` = a.`id`").Where("b.`member_id` = {0}", _Id.Value).ToList();
+				return _obj_products;
 			}
 		}
 		private List<Member_securityInfo> _obj_member_securitys;
@@ -187,6 +176,17 @@ namespace pifa.Model {
 			get {
 				if (_obj_member_securitys == null) _obj_member_securitys = Member_security.SelectByMember_id(_Id).Limit(500).ToList();
 				return _obj_member_securitys;
+			}
+		}
+		public Member_shopInfo Obj_member_shop { set; get; }
+		private List<ShopInfo> _obj_shops;
+		/// <summary>
+		/// 遍历时，可通过 Obj_member_shop 可获取中间表数据
+		/// </summary>
+		public List<ShopInfo> Obj_shops {
+			get {
+				if (_obj_shops == null) _obj_shops = Shop.Select.InnerJoin<Member_shop>("b", "b.`shop_id` = a.`id`").Where("b.`member_id` = {0}", _Id.Value).ToList();
+				return _obj_shops;
 			}
 		}
 		private List<OrderInfo> _obj_orders;
@@ -210,13 +210,6 @@ namespace pifa.Model {
 				return _obj_product_questions;
 			}
 		}
-		private List<ShopInfo> _obj_shops;
-		public List<ShopInfo> Obj_shops {
-			get {
-				if (_obj_shops == null) _obj_shops = Shop.SelectByMember_id(_Id).Limit(500).ToList();
-				return _obj_shops;
-			}
-		}
 		#endregion
 
 		public pifa.DAL.Member.SqlUpdateBuild UpdateDiy {
@@ -234,12 +227,12 @@ namespace pifa.Model {
 				Zip = Zip});
 		}
 
-		public Member_fav_marketInfo FlagFav_market(MarketInfo Market, DateTime? Create_time) {
-			return FlagFav_market(Market.Id, Create_time);
+		public Member_marketInfo FlagMarket(MarketInfo Market, DateTime? Create_time) {
+			return FlagMarket(Market.Id, Create_time);
 		}
-		public Member_fav_marketInfo FlagFav_market(uint? Market_id, DateTime? Create_time) {
-			Member_fav_marketInfo item = Member_fav_market.GetItem(Market_id, this.Id);
-			if (item == null) item = Member_fav_market.Insert(new Member_fav_marketInfo {
+		public Member_marketInfo FlagMarket(uint? Market_id, DateTime? Create_time) {
+			Member_marketInfo item = Member_market.GetItem(Market_id, this.Id);
+			if (item == null) item = Member_market.Insert(new Member_marketInfo {
 				Market_id = Market_id, 
 				Member_id = this.Id, 
 				Create_time = Create_time});
@@ -248,22 +241,22 @@ namespace pifa.Model {
 			return item;
 		}
 
-		public int UnflagFav_market(MarketInfo Market) {
-			return UnflagFav_market(Market.Id);
+		public int UnflagMarket(MarketInfo Market) {
+			return UnflagMarket(Market.Id);
 		}
-		public int UnflagFav_market(uint? Market_id) {
-			return Member_fav_market.Delete(Market_id, this.Id);
+		public int UnflagMarket(uint? Market_id) {
+			return Member_market.Delete(Market_id, this.Id);
 		}
-		public int UnflagFav_marketALL() {
-			return Member_fav_market.DeleteByMember_id(this.Id);
+		public int UnflagMarketALL() {
+			return Member_market.DeleteByMember_id(this.Id);
 		}
 
-		public Member_fav_productInfo FlagFav_product(ProductInfo Product, DateTime? Create_time) {
-			return FlagFav_product(Product.Id, Create_time);
+		public Member_productInfo FlagProduct(ProductInfo Product, DateTime? Create_time) {
+			return FlagProduct(Product.Id, Create_time);
 		}
-		public Member_fav_productInfo FlagFav_product(uint? Product_id, DateTime? Create_time) {
-			Member_fav_productInfo item = Member_fav_product.GetItem(this.Id, Product_id);
-			if (item == null) item = Member_fav_product.Insert(new Member_fav_productInfo {
+		public Member_productInfo FlagProduct(uint? Product_id, DateTime? Create_time) {
+			Member_productInfo item = Member_product.GetItem(this.Id, Product_id);
+			if (item == null) item = Member_product.Insert(new Member_productInfo {
 				Member_id = this.Id, 
 				Product_id = Product_id, 
 				Create_time = Create_time});
@@ -272,22 +265,28 @@ namespace pifa.Model {
 			return item;
 		}
 
-		public int UnflagFav_product(ProductInfo Product) {
-			return UnflagFav_product(Product.Id);
+		public int UnflagProduct(ProductInfo Product) {
+			return UnflagProduct(Product.Id);
 		}
-		public int UnflagFav_product(uint? Product_id) {
-			return Member_fav_product.Delete(this.Id, Product_id);
+		public int UnflagProduct(uint? Product_id) {
+			return Member_product.Delete(this.Id, Product_id);
 		}
-		public int UnflagFav_productALL() {
-			return Member_fav_product.DeleteByMember_id(this.Id);
+		public int UnflagProductALL() {
+			return Member_product.DeleteByMember_id(this.Id);
 		}
 
-		public Member_fav_shopInfo FlagFav_shop(ShopInfo Shop, DateTime? Create_time) {
-			return FlagFav_shop(Shop.Id, Create_time);
+		public Member_securityInfo AddSecurity(string Password) {
+			return Member_security.Insert(new Member_securityInfo {
+				Member_id = this.Id, 
+				Password = Password});
 		}
-		public Member_fav_shopInfo FlagFav_shop(uint? Shop_id, DateTime? Create_time) {
-			Member_fav_shopInfo item = Member_fav_shop.GetItem(this.Id, Shop_id);
-			if (item == null) item = Member_fav_shop.Insert(new Member_fav_shopInfo {
+
+		public Member_shopInfo FlagShop(ShopInfo Shop, DateTime? Create_time) {
+			return FlagShop(Shop.Id, Create_time);
+		}
+		public Member_shopInfo FlagShop(uint? Shop_id, DateTime? Create_time) {
+			Member_shopInfo item = Member_shop.GetItem(this.Id, Shop_id);
+			if (item == null) item = Member_shop.Insert(new Member_shopInfo {
 				Member_id = this.Id, 
 				Shop_id = Shop_id, 
 				Create_time = Create_time});
@@ -296,20 +295,14 @@ namespace pifa.Model {
 			return item;
 		}
 
-		public int UnflagFav_shop(ShopInfo Shop) {
-			return UnflagFav_shop(Shop.Id);
+		public int UnflagShop(ShopInfo Shop) {
+			return UnflagShop(Shop.Id);
 		}
-		public int UnflagFav_shop(uint? Shop_id) {
-			return Member_fav_shop.Delete(this.Id, Shop_id);
+		public int UnflagShop(uint? Shop_id) {
+			return Member_shop.Delete(this.Id, Shop_id);
 		}
-		public int UnflagFav_shopALL() {
-			return Member_fav_shop.DeleteByMember_id(this.Id);
-		}
-
-		public Member_securityInfo AddSecurity(string Password) {
-			return Member_security.Insert(new Member_securityInfo {
-				Member_id = this.Id, 
-				Password = Password});
+		public int UnflagShopALL() {
+			return Member_shop.DeleteByMember_id(this.Id);
 		}
 
 		public OrderInfo AddOrder(string Code, DateTime? Create_time, string Express_code, string Express_name, string Paymethod, string Remark, OrderSTATE? State, decimal? Total_express_price, decimal? Total_original_price, decimal? Total_price, DateTime? Update_time) {

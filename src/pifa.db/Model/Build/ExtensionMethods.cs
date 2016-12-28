@@ -114,29 +114,29 @@ namespace pifa.Model {
 		public static IDictionary[] ToBson(this Member_addressbookInfo[] items, Func<Member_addressbookInfo, object> func = null) { return GetBson(items, func); }
 		public static IDictionary[] ToBson(this IEnumerable<Member_addressbookInfo> items, Func<Member_addressbookInfo, object> func = null) { return GetBson(items, func); }
 
-		public static string ToJson(this Member_fav_marketInfo item) { return string.Concat(item); }
-		public static string ToJson(this Member_fav_marketInfo[] items) { return GetJson(items); }
-		public static string ToJson(this IEnumerable<Member_fav_marketInfo> items) { return GetJson(items); }
-		public static IDictionary[] ToBson(this Member_fav_marketInfo[] items, Func<Member_fav_marketInfo, object> func = null) { return GetBson(items, func); }
-		public static IDictionary[] ToBson(this IEnumerable<Member_fav_marketInfo> items, Func<Member_fav_marketInfo, object> func = null) { return GetBson(items, func); }
+		public static string ToJson(this Member_marketInfo item) { return string.Concat(item); }
+		public static string ToJson(this Member_marketInfo[] items) { return GetJson(items); }
+		public static string ToJson(this IEnumerable<Member_marketInfo> items) { return GetJson(items); }
+		public static IDictionary[] ToBson(this Member_marketInfo[] items, Func<Member_marketInfo, object> func = null) { return GetBson(items, func); }
+		public static IDictionary[] ToBson(this IEnumerable<Member_marketInfo> items, Func<Member_marketInfo, object> func = null) { return GetBson(items, func); }
 
-		public static string ToJson(this Member_fav_productInfo item) { return string.Concat(item); }
-		public static string ToJson(this Member_fav_productInfo[] items) { return GetJson(items); }
-		public static string ToJson(this IEnumerable<Member_fav_productInfo> items) { return GetJson(items); }
-		public static IDictionary[] ToBson(this Member_fav_productInfo[] items, Func<Member_fav_productInfo, object> func = null) { return GetBson(items, func); }
-		public static IDictionary[] ToBson(this IEnumerable<Member_fav_productInfo> items, Func<Member_fav_productInfo, object> func = null) { return GetBson(items, func); }
-
-		public static string ToJson(this Member_fav_shopInfo item) { return string.Concat(item); }
-		public static string ToJson(this Member_fav_shopInfo[] items) { return GetJson(items); }
-		public static string ToJson(this IEnumerable<Member_fav_shopInfo> items) { return GetJson(items); }
-		public static IDictionary[] ToBson(this Member_fav_shopInfo[] items, Func<Member_fav_shopInfo, object> func = null) { return GetBson(items, func); }
-		public static IDictionary[] ToBson(this IEnumerable<Member_fav_shopInfo> items, Func<Member_fav_shopInfo, object> func = null) { return GetBson(items, func); }
+		public static string ToJson(this Member_productInfo item) { return string.Concat(item); }
+		public static string ToJson(this Member_productInfo[] items) { return GetJson(items); }
+		public static string ToJson(this IEnumerable<Member_productInfo> items) { return GetJson(items); }
+		public static IDictionary[] ToBson(this Member_productInfo[] items, Func<Member_productInfo, object> func = null) { return GetBson(items, func); }
+		public static IDictionary[] ToBson(this IEnumerable<Member_productInfo> items, Func<Member_productInfo, object> func = null) { return GetBson(items, func); }
 
 		public static string ToJson(this Member_securityInfo item) { return string.Concat(item); }
 		public static string ToJson(this Member_securityInfo[] items) { return GetJson(items); }
 		public static string ToJson(this IEnumerable<Member_securityInfo> items) { return GetJson(items); }
 		public static IDictionary[] ToBson(this Member_securityInfo[] items, Func<Member_securityInfo, object> func = null) { return GetBson(items, func); }
 		public static IDictionary[] ToBson(this IEnumerable<Member_securityInfo> items, Func<Member_securityInfo, object> func = null) { return GetBson(items, func); }
+
+		public static string ToJson(this Member_shopInfo item) { return string.Concat(item); }
+		public static string ToJson(this Member_shopInfo[] items) { return GetJson(items); }
+		public static string ToJson(this IEnumerable<Member_shopInfo> items) { return GetJson(items); }
+		public static IDictionary[] ToBson(this Member_shopInfo[] items, Func<Member_shopInfo, object> func = null) { return GetBson(items, func); }
+		public static IDictionary[] ToBson(this IEnumerable<Member_shopInfo> items, Func<Member_shopInfo, object> func = null) { return GetBson(items, func); }
 
 		public static string ToJson(this NewsInfo item) { return string.Concat(item); }
 		public static string ToJson(this NewsInfo[] items) { return GetJson(items); }

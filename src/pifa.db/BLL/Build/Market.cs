@@ -89,24 +89,24 @@ namespace pifa.BLL {
 		public static MarketSelectBuild SelectByArea_id(params uint?[] Area_id) {
 			return Select.WhereArea_id(Area_id);
 		}
-		public static MarketSelectBuild SelectByMember_fav(params MemberInfo[] items) {
-			return Select.WhereMember_fav(items);
+		public static MarketSelectBuild SelectByMember(params MemberInfo[] items) {
+			return Select.WhereMember(items);
 		}
-		public static MarketSelectBuild SelectByMember_fav_id(params uint[] ids) {
-			return Select.WhereMember_fav_id(ids);
+		public static MarketSelectBuild SelectByMember_id(params uint[] ids) {
+			return Select.WhereMember_id(ids);
 		}
 	}
 	public partial class MarketSelectBuild : SelectBuild<MarketInfo, MarketSelectBuild> {
 		public MarketSelectBuild WhereArea_id(params uint?[] Area_id) {
 			return this.Where1Or("a.`Area_id` = {0}", Area_id);
 		}
-		public MarketSelectBuild WhereMember_fav(params MemberInfo[] items) {
+		public MarketSelectBuild WhereMember(params MemberInfo[] items) {
 			if (items == null) return this;
-			return WhereMember_fav_id(items.Where<MemberInfo>(a => a != null).Select<MemberInfo, uint>(a => a.Id.Value).ToArray());
+			return WhereMember_id(items.Where<MemberInfo>(a => a != null).Select<MemberInfo, uint>(a => a.Id.Value).ToArray());
 		}
-		public MarketSelectBuild WhereMember_fav_id(params uint[] ids) {
+		public MarketSelectBuild WhereMember_id(params uint[] ids) {
 			if (ids == null || ids.Length == 0) return this;
-			return base.Where(string.Format(@"EXISTS( SELECT `market_id` FROM `member_fav_market` WHERE `market_id` = a.`id` AND `member_id` IN ({0}) )", string.Join<uint>(",", ids))) as MarketSelectBuild;
+			return base.Where(string.Format(@"EXISTS( SELECT `market_id` FROM `member_market` WHERE `market_id` = a.`id` AND `member_id` IN ({0}) )", string.Join<uint>(",", ids))) as MarketSelectBuild;
 		}
 		public MarketSelectBuild WhereId(params uint?[] Id) {
 			return this.Where1Or("a.`id` = {0}", Id);
