@@ -1,0 +1,127 @@
+﻿
+<div class="box">
+	<div class="box-header with-border">
+		<h3 class="box-title" id="box-title"></h3>
+	</div>
+	<div class="box-body">
+		<div class="table-responsive">
+
+			<form id="form_add">
+				<div>
+					<table cellspacing="0" rules="all" class="table table-bordered table-hover" border="1" style="border-collapse:collapse;">
+						<tr update-visible style="display:none">
+							<td>id</td>
+							<td><input name="Id" type="text" readonly class="datepicker" style="width:20%;background-color:#ddd;" /></td>
+						</tr>
+						<tr>
+							<td>订单</td>
+							<td>
+								<select name="Order_id">
+									<option value="">------ 请选择 ------</option>
+									<option @for="a in items" value="{#a.Id}">{#a.Express_name}</option>
+								</select>
+							</td>
+						</tr>
+						<tr>
+							<td>商品项</td>
+							<td>
+								<select name="Productitem_id">
+									<option value="">------ 请选择 ------</option>
+									<option @for="a in items" value="{#a.Id}">{#a.Name}</option>
+								</select>
+							</td>
+						</tr>
+						<tr update-visible style="display:none">
+							<td>创建时间</td>
+							<td><input name="Create_time" type="text" readonly class="datepicker" style="width:20%;background-color:#ddd;" /></td>
+						</tr>
+						<tr>
+							<td>说明</td>
+							<td><textarea name="Descript" style="width:100%;height:100px;" editor="ueditor"></textarea></td>
+						</tr>
+						<tr>
+							<td>邮箱</td>
+							<td><input name="Email" type="text" class="datepicker" style="width:60%;" /></td>
+						</tr>
+						<tr>
+							<td>图片</td>
+							<td><input name="Img_url" type="text" class="datepicker" style="width:60%;" /></td>
+						</tr>
+						<tr>
+							<td>状态</td>
+							<td><select name="State"><option value="">------ 请选择 ------</option><option value="????">????</option><option value="????">????</option><option value="????">????</option><option value="??">??</option><option value="??">??</option><option value="??">??</option><option value="??">??</option></select></td>
+						</tr>
+						<tr>
+							<td>电话</td>
+							<td><input name="Tel" type="text" class="datepicker" style="width:60%;" /></td>
+						</tr>
+						<tr>
+							<td>手机</td>
+							<td><input name="Telphone" type="text" class="datepicker" style="width:60%;" /></td>
+						</tr>
+						<tr>
+							<td>退款金额</td>
+							<td>
+								<div class="input-group" style="width:200px;">
+									<span class="input-group-addon">￥</span>
+									<input name="Wealth" type="text" class="form-control" data-inputmask="'mask': '9', 'repeat': 10, 'greedy': false" data-mask />
+									<span class="input-group-addon">.00</span>
+								</div>
+							</td>
+						</tr>
+						<tr>
+							<td width="8%">&nbsp</td>
+							<td><input type="submit" value="更新" />&nbsp;<input type="button" value="取消" /></td>
+						</tr>
+					</table>
+				</div>
+			</form>
+
+		</div>
+	</div>
+</div>
+
+<script type="text/javascript">
+(function () {
+	var ajaxs = 3;
+	var data = {};
+	var form = $('#form_add')[0];
+	var geturl = '/api/Order_refund/'; for (var a in top.mainViewNav.query) geturl += top.mainViewNav.query[a] + '/';
+
+	function initUI() {
+		fillForm(form, data.item);
+		top.mainViewInit();
+		$(form).submit(function () {
+			if (data.item)
+				$.ajax({ url: geturl, type: 'PUT', dataType: 'json', data: $(this).serialize(), success: function (rt) {
+					if (!rt.success) return alert(rt.message);
+					top.mainViewNav.goto('./');
+				}});
+			else
+				$.ajax({ url: '/api/Order_refund/', type: 'POST', dataType: 'json', data: $(this).serialize(), success: function (rt) {
+					if (!rt.success) return alert(rt.message);
+					top.mainViewNav.goto('./');
+				}});
+			return false;
+		});
+	}
+
+	if (geturl === '/api/Order_refund/')
+		--ajaxs;
+	else
+		$.getJSON(geturl, function (rt) {
+			if (rt.success) data.item = rt.data.item;
+			if (--ajaxs <= 0) initUI();
+		});
+
+	$.getJSON('/api/Order/', { limit: 2000 }, function (rt) {
+		renderTpl(form.Order_id, rt.data);
+		if (--ajaxs <= 0) initUI();
+	});
+	$.getJSON('/api/Productitem/', { limit: 2000 }, function (rt) {
+		renderTpl(form.Productitem_id, rt.data);
+		if (--ajaxs <= 0) initUI();
+	});
+})();
+</script>
+

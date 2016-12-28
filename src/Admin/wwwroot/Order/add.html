@@ -1,0 +1,138 @@
+﻿
+<div class="box">
+	<div class="box-header with-border">
+		<h3 class="box-title" id="box-title"></h3>
+	</div>
+	<div class="box-body">
+		<div class="table-responsive">
+
+			<form id="form_add">
+				<div>
+					<table cellspacing="0" rules="all" class="table table-bordered table-hover" border="1" style="border-collapse:collapse;">
+						<tr update-visible style="display:none">
+							<td>id</td>
+							<td><input name="Id" type="text" readonly class="datepicker" style="width:20%;background-color:#ddd;" /></td>
+						</tr>
+						<tr>
+							<td>会员</td>
+							<td>
+								<select name="Member_id">
+									<option value="">------ 请选择 ------</option>
+									<option @for="a in items" value="{#a.Id}">{#a.Username}</option>
+								</select>
+							</td>
+						</tr>
+						<tr>
+							<td>订单号</td>
+							<td><input name="Code" type="text" class="datepicker" style="width:60%;" /></td>
+						</tr>
+						<tr update-visible style="display:none">
+							<td>创建时间</td>
+							<td><input name="Create_time" type="text" readonly class="datepicker" style="width:20%;background-color:#ddd;" /></td>
+						</tr>
+						<tr>
+							<td>express_code</td>
+							<td><input name="Express_code" type="text" class="datepicker" style="width:60%;" /></td>
+						</tr>
+						<tr>
+							<td>express_name</td>
+							<td><input name="Express_name" type="text" class="datepicker" style="width:60%;" /></td>
+						</tr>
+						<tr>
+							<td>paymethod</td>
+							<td><input name="Paymethod" type="text" class="datepicker" style="width:60%;" /></td>
+						</tr>
+						<tr>
+							<td>备注</td>
+							<td><input name="Remark" type="text" class="datepicker" style="width:60%;" /></td>
+						</tr>
+						<tr>
+							<td>state</td>
+							<td><select name="State"><option value="">------ 请选择 ------</option><option value="????">????</option><option value="??????">??????</option><option value="????">????</option><option value="??????">??????</option><option value="??">??</option><option value="??">??</option><option value="??">??</option></select></td>
+						</tr>
+						<tr>
+							<td>总运费</td>
+							<td>
+								<div class="input-group" style="width:200px;">
+									<span class="input-group-addon">￥</span>
+									<input name="Total_express_price" type="text" class="form-control" data-inputmask="'mask': '9', 'repeat': 10, 'greedy': false" data-mask />
+									<span class="input-group-addon">.00</span>
+								</div>
+							</td>
+						</tr>
+						<tr>
+							<td>原总金额</td>
+							<td>
+								<div class="input-group" style="width:200px;">
+									<span class="input-group-addon">￥</span>
+									<input name="Total_original_price" type="text" class="form-control" data-inputmask="'mask': '9', 'repeat': 10, 'greedy': false" data-mask />
+									<span class="input-group-addon">.00</span>
+								</div>
+							</td>
+						</tr>
+						<tr>
+							<td>总金额</td>
+							<td>
+								<div class="input-group" style="width:200px;">
+									<span class="input-group-addon">￥</span>
+									<input name="Total_price" type="text" class="form-control" data-inputmask="'mask': '9', 'repeat': 10, 'greedy': false" data-mask />
+									<span class="input-group-addon">.00</span>
+								</div>
+							</td>
+						</tr>
+						<tr update-visible style="display:none">
+							<td>修改时间</td>
+							<td><input name="Update_time" type="text" readonly class="datepicker" style="width:20%;background-color:#ddd;" /></td>
+						</tr>
+						<tr>
+							<td width="8%">&nbsp</td>
+							<td><input type="submit" value="更新" />&nbsp;<input type="button" value="取消" /></td>
+						</tr>
+					</table>
+				</div>
+			</form>
+
+		</div>
+	</div>
+</div>
+
+<script type="text/javascript">
+(function () {
+	var ajaxs = 2;
+	var data = {};
+	var form = $('#form_add')[0];
+	var geturl = '/api/Order/'; for (var a in top.mainViewNav.query) geturl += top.mainViewNav.query[a] + '/';
+
+	function initUI() {
+		fillForm(form, data.item);
+		top.mainViewInit();
+		$(form).submit(function () {
+			if (data.item)
+				$.ajax({ url: geturl, type: 'PUT', dataType: 'json', data: $(this).serialize(), success: function (rt) {
+					if (!rt.success) return alert(rt.message);
+					top.mainViewNav.goto('./');
+				}});
+			else
+				$.ajax({ url: '/api/Order/', type: 'POST', dataType: 'json', data: $(this).serialize(), success: function (rt) {
+					if (!rt.success) return alert(rt.message);
+					top.mainViewNav.goto('./');
+				}});
+			return false;
+		});
+	}
+
+	if (geturl === '/api/Order/')
+		--ajaxs;
+	else
+		$.getJSON(geturl, function (rt) {
+			if (rt.success) data.item = rt.data.item;
+			if (--ajaxs <= 0) initUI();
+		});
+
+	$.getJSON('/api/Member/', { limit: 2000 }, function (rt) {
+		renderTpl(form.Member_id, rt.data);
+		if (--ajaxs <= 0) initUI();
+	});
+})();
+</script>
+

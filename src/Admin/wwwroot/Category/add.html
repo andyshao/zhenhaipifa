@@ -1,0 +1,111 @@
+﻿
+<div class="box">
+	<div class="box-header with-border">
+		<h3 class="box-title" id="box-title"></h3>
+	</div>
+	<div class="box-body">
+		<div class="table-responsive">
+
+			<form id="form_add">
+				<div>
+					<table cellspacing="0" rules="all" class="table table-bordered table-hover" border="1" style="border-collapse:collapse;">
+						<tr update-visible style="display:none">
+							<td>id</td>
+							<td><input name="Id" type="text" readonly class="datepicker" style="width:20%;background-color:#ddd;" /></td>
+						</tr>
+						<tr>
+							<td>父</td>
+							<td id="Parent_id_td"></td>
+						</tr>
+						<tr>
+							<td>分类名称</td>
+							<td><input name="Title" type="text" class="datepicker" style="width:60%;" /></td>
+						</tr>
+						<tr>
+							<td>Area</td>
+							<td>
+								<select name="mn_Area" data-placeholder="Select a Area" class="form-control select2" multiple>
+									<option @for="a in items" value="{#a.Id}">{#a.Name}</option>
+								</select>
+							</td>
+						</tr>
+						<tr>
+							<td>Markettype</td>
+							<td>
+								<select name="mn_Markettype" data-placeholder="Select a Markettype" class="form-control select2" multiple>
+									<option @for="a in items" value="{#a.Id}">{#a.Title}</option>
+								</select>
+							</td>
+						</tr>
+						<tr>
+							<td width="8%">&nbsp</td>
+							<td><input type="submit" value="更新" />&nbsp;<input type="button" value="取消" /></td>
+						</tr>
+					</table>
+				</div>
+			</form>
+
+		</div>
+	</div>
+</div>
+
+<script type="text/javascript">
+(function () {
+	var ajaxs = 6;
+	var data = {};
+	var form = $('#form_add')[0];
+	var geturl = '/api/Category/'; for (var a in top.mainViewNav.query) geturl += top.mainViewNav.query[a] + '/';
+
+	function initUI() {
+		fillForm(form, data.item);
+		if (data.mn_Area) for (var a = 0; a < data.mn_Area.length; a++) $(form.mn_Area).find('option[value="{0}"]'.format(data.mn_Area[a].Id)).attr('selected', 'selected');
+		if (data.mn_Markettype) for (var a = 0; a < data.mn_Markettype.length; a++) $(form.mn_Markettype).find('option[value="{0}"]'.format(data.mn_Markettype[a].Id)).attr('selected', 'selected');
+		top.mainViewInit();
+		$(form).submit(function () {
+			if (data.item)
+				$.ajax({ url: geturl, type: 'PUT', dataType: 'json', data: $(this).serialize(), success: function (rt) {
+					if (!rt.success) return alert(rt.message);
+					top.mainViewNav.goto('./');
+				}});
+			else
+				$.ajax({ url: '/api/Category/', type: 'POST', dataType: 'json', data: $(this).serialize(), success: function (rt) {
+					if (!rt.success) return alert(rt.message);
+					top.mainViewNav.goto('./');
+				}});
+			return false;
+		});
+	}
+
+	if (geturl === '/api/Category/')
+		ajaxs -= 3;
+	else {
+		$.getJSON(geturl, function (rt) {
+			if (rt.success) data.item = rt.data.item;
+			if (--ajaxs <= 0) initUI();
+		});
+		$.getJSON('/api/Area/', { Category_id: top.mainViewNav.query.Id }, function (rt) {
+			if (rt.success) data.mn_Area = rt.data.items;
+			if (--ajaxs <= 0) initUI();
+		});
+		$.getJSON('/api/Markettype/', { Category_id: top.mainViewNav.query.Id }, function (rt) {
+			if (rt.success) data.mn_Markettype = rt.data.items;
+			if (--ajaxs <= 0) initUI();
+		});
+	}
+
+	$.getJSON('/api/Category/', { limit: 2000 }, function(rt) {
+		rt.items2 = yieldTreeArray(rt.data.items, null, 'Id', 'Parent_id');
+		$('#Parent_id_td').html(yieldTreeSelect(rt.items2, '{#Title}', 'Id')).find('select').attr('name', 'Parent_id');
+		if (--ajaxs <= 0) initUI();
+	});
+	$.getJSON('/api/Area/', { limit: 2000 }, function (rt) {
+		renderTpl(form.mn_Area, rt.data);
+		if (--ajaxs <= 0) initUI();
+	});
+	$.getJSON('/api/Markettype/', { limit: 2000 }, function (rt) {
+		renderTpl(form.mn_Markettype, rt.data);
+		if (--ajaxs <= 0) initUI();
+	});
+})();
+</script>
+

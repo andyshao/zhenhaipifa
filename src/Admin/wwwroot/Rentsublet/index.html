@@ -1,0 +1,75 @@
+﻿
+<div class="box">
+	<div class="box-header with-border">
+		<h3 id="box-title" class="box-title"></h3>
+		<a href="./" class="btn btn-primary">重置筛选</a>
+		<span class="form-group mr15"></span><a href="./add.html" data-toggle="modal" class="btn btn-success pull-right">添加</a>
+	</div>
+	<div class="box-body">
+		<div class="table-responsive">
+			<form id="form_search">
+				<div id="div_filter"></div>
+			</form>
+			<form id="form_list" runat="server">
+				<table id="GridView1" cellspacing="0" rules="all" border="1" style="border-collapse:collapse;" class="table table-bordered table-hover">
+					<tr>
+						<th scope="col" style="width:2%;"><input type="checkbox" onclick="$('#GridView1 tbody tr').each(function (idx, el) { var chk = $(el).find('td:first input[type=\'checkbox\']')[0]; if (chk) chk.checked = !chk.checked; });" /></th>
+						<th scope="col">id</th>
+						<th scope="col">市场</th>
+						<th scope="col">创建时间</th>
+						<th scope="col">费用</th>
+						<th scope="col">类型</th>
+						<th scope="col">&nbsp;</th>
+						<th scope="col" style="width:5%;">&nbsp;</th>
+					</tr>
+					<tbody>
+						<tr @for="a in items">
+							<td><input type="checkbox" id="id" name="id" value="{#a.Id}" /></td>
+							<td>{#a.Id}</td>
+							<td>[{#a.Market_id}]{#a.Obj_market.Title}</td>
+							<td>{#a.Create_time}</td>
+							<td>{#a.Price}</td>
+							<td>{#a.Type}</td>
+							<td><a href="../Rentsublet_franchising/?Rentsublet_id={#a.Id}">Rentsublet_franchising</a></td>
+							<td><a href="add.html?Id={#a.Id}">修改</a></td>
+						</tr>
+					</tbody>
+				</table>
+			</form>
+			<div id="kkpager"></div>
+		</div>
+	</div>
+</div>
+
+<script type="text/javascript">
+(function () {
+	var qs = _clone(top.mainViewNav.query);
+	var pageindex = cint(qs.pageindex, 1);
+	qs.limit = 20;
+	qs.skip = (pageindex - 1) * qs.limit;
+	if (qs.Market_id) qs.Market_id = qs.Market_id.split('_');
+	if (qs.Franchising_id) qs.Franchising_id = qs.Franchising_id.split('_');
+	delete qs.pageindex;
+	$.ajax({ url: '/api/Rentsublet/', data: qs, traditional: true, success: function (rt) {
+		for (var a = 0; a < rt.data.items_market.length; a++) rt.data.items[a].Obj_market = rt.data.items_market[a];
+		renderTpl('#form_list', rt.data);
+		delete qs.limit;
+		delete qs.skip;
+		$('#kkpager').html(cms2Pager(rt.data.count, pageindex, 20, qs, 'pageindex'));
+		top.mainViewInit();
+	}});
+	// 以下是过滤项
+	var fqs = _clone(top.mainViewNav.query);
+	delete fqs.pageindex;
+	var cms2FilterArray = [];
+	var cms2FilterAjaxs = 2;
+	cms2FilterFK('Market', 'Title', 'Id', 'Market_id', function (r) {
+		if (r.text.length) cms2FilterArray[0] = r;
+		if (--cms2FilterAjaxs <= 0) cms2Filter(cms2FilterArray, fqs);
+	});
+	cms2FilterFK('Franchising', 'Title', 'Id', 'Franchising_id', function (r) {
+		if (r.text.length) cms2FilterArray[1] = r;
+		if (--cms2FilterAjaxs <= 0) cms2Filter(cms2FilterArray, fqs);
+	});
+})();
+</script>

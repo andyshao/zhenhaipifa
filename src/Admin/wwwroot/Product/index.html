@@ -1,0 +1,96 @@
+﻿
+<div class="box">
+	<div class="box-header with-border">
+		<h3 id="box-title" class="box-title"></h3>
+		<a href="./" class="btn btn-primary">重置筛选</a>
+		<span class="form-group mr15"></span><a href="./add.html" data-toggle="modal" class="btn btn-success pull-right">添加</a>
+	</div>
+	<div class="box-body">
+		<div class="table-responsive">
+			<form id="form_search">
+				<div id="div_filter"></div>
+			</form>
+			<form id="form_list" runat="server">
+				<table id="GridView1" cellspacing="0" rules="all" border="1" style="border-collapse:collapse;" class="table table-bordered table-hover">
+					<tr>
+						<th scope="col" style="width:2%;"><input type="checkbox" onclick="$('#GridView1 tbody tr').each(function (idx, el) { var chk = $(el).find('td:first input[type=\'checkbox\']')[0]; if (chk) chk.checked = !chk.checked; });" /></th>
+						<th scope="col">id</th>
+						<th scope="col">分类</th>
+						<th scope="col">店铺</th>
+						<th scope="col">创建时间</th>
+						<th scope="col">点亮图标</th>
+						<th scope="col">价格</th>
+						<th scope="col">库存</th>
+						<th scope="col">产品名称</th>
+						<th scope="col">单位</th>
+						<th scope="col">&nbsp;</th>
+						<th scope="col">&nbsp;</th>
+						<th scope="col">&nbsp;</th>
+						<th scope="col">&nbsp;</th>
+						<th scope="col">&nbsp;</th>
+						<th scope="col">&nbsp;</th>
+						<th scope="col">&nbsp;</th>
+						<th scope="col" style="width:5%;">&nbsp;</th>
+					</tr>
+					<tbody>
+						<tr @for="a in items">
+							<td><input type="checkbox" id="id" name="id" value="{#a.Id}" /></td>
+							<td>{#a.Id}</td>
+							<td>[{#a.Category_id}]{#a.Obj_category.Title}</td>
+							<td>[{#a.Shop_id}]{#a.Obj_shop.Nickname}</td>
+							<td>{#a.Create_time}</td>
+							<td>{#a.Icon}</td>
+							<td>{#a.Price}</td>
+							<td>{#a.Stock}</td>
+							<td>{#String(a.Title).htmlencode()}</td>
+							<td>{#a.Unit}</td>
+							<td><a href="../Member_fav_product/?Product_id={#a.Id}">Member_fav_product</a></td>
+							<td><a href="../Product_attr/?Product_id={#a.Id}">Product_attr</a></td>
+							<td><a href="../Product_buyrule/?Product_id={#a.Id}">Product_buyrule</a></td>
+							<td><a href="../Product_comment/?Product_id={#a.Id}">Product_comment</a></td>
+							<td><a href="../Product_question/?Product_id={#a.Id}">Product_question</a></td>
+							<td><a href="../Productdesc/?Product_id={#a.Id}">Productdesc</a></td>
+							<td><a href="../Productitem/?Product_id={#a.Id}">Productitem</a></td>
+							<td><a href="add.html?Id={#a.Id}">修改</a></td>
+						</tr>
+					</tbody>
+				</table>
+			</form>
+			<div id="kkpager"></div>
+		</div>
+	</div>
+</div>
+
+<script type="text/javascript">
+(function () {
+	var qs = _clone(top.mainViewNav.query);
+	var pageindex = cint(qs.pageindex, 1);
+	qs.limit = 20;
+	qs.skip = (pageindex - 1) * qs.limit;
+	if (qs.Category_id) qs.Category_id = qs.Category_id.split('_');
+	if (qs.Shop_id) qs.Shop_id = qs.Shop_id.split('_');
+	delete qs.pageindex;
+	$.ajax({ url: '/api/Product/', data: qs, traditional: true, success: function (rt) {
+		for (var a = 0; a < rt.data.items_category.length; a++) rt.data.items[a].Obj_category = rt.data.items_category[a];
+		for (var a = 0; a < rt.data.items_shop.length; a++) rt.data.items[a].Obj_shop = rt.data.items_shop[a];
+		renderTpl('#form_list', rt.data);
+		delete qs.limit;
+		delete qs.skip;
+		$('#kkpager').html(cms2Pager(rt.data.count, pageindex, 20, qs, 'pageindex'));
+		top.mainViewInit();
+	}});
+	// 以下是过滤项
+	var fqs = _clone(top.mainViewNav.query);
+	delete fqs.pageindex;
+	var cms2FilterArray = [];
+	var cms2FilterAjaxs = 2;
+	cms2FilterFK('Category', 'Title', 'Id', 'Category_id', function (r) {
+		if (r.text.length) cms2FilterArray[0] = r;
+		if (--cms2FilterAjaxs <= 0) cms2Filter(cms2FilterArray, fqs);
+	});
+	cms2FilterFK('Shop', 'Nickname', 'Id', 'Shop_id', function (r) {
+		if (r.text.length) cms2FilterArray[1] = r;
+		if (--cms2FilterAjaxs <= 0) cms2Filter(cms2FilterArray, fqs);
+	});
+})();
+</script>

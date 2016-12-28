@@ -1,0 +1,119 @@
+﻿
+<div class="box">
+	<div class="box-header with-border">
+		<h3 class="box-title" id="box-title"></h3>
+	</div>
+	<div class="box-body">
+		<div class="table-responsive">
+
+			<form id="form_add">
+				<div>
+					<table cellspacing="0" rules="all" class="table table-bordered table-hover" border="1" style="border-collapse:collapse;">
+						<tr update-visible style="display:none">
+							<td>id</td>
+							<td><input name="Id" type="text" readonly class="datepicker" style="width:20%;background-color:#ddd;" /></td>
+						</tr>
+						<tr>
+							<td>经营</td>
+							<td><input name="Title" type="text" class="datepicker" style="width:60%;" /></td>
+						</tr>
+						<tr>
+							<td>Factory</td>
+							<td>
+								<select name="mn_Factory" data-placeholder="Select a Factory" class="form-control select2" multiple>
+									<option @for="a in items" value="{#a.Id}">{#a.Title}</option>
+								</select>
+							</td>
+						</tr>
+						<tr>
+							<td>Rentsublet</td>
+							<td>
+								<select name="mn_Rentsublet" data-placeholder="Select a Rentsublet" class="form-control select2" multiple>
+									<option @for="a in items" value="{#a.Id}">{#a.Id}</option>
+								</select>
+							</td>
+						</tr>
+						<tr>
+							<td>Shop</td>
+							<td>
+								<select name="mn_Shop" data-placeholder="Select a Shop" class="form-control select2" multiple>
+									<option @for="a in items" value="{#a.Id}">{#a.Nickname}</option>
+								</select>
+							</td>
+						</tr>
+						<tr>
+							<td width="8%">&nbsp</td>
+							<td><input type="submit" value="更新" />&nbsp;<input type="button" value="取消" /></td>
+						</tr>
+					</table>
+				</div>
+			</form>
+
+		</div>
+	</div>
+</div>
+
+<script type="text/javascript">
+(function () {
+	var ajaxs = 7;
+	var data = {};
+	var form = $('#form_add')[0];
+	var geturl = '/api/Franchising/'; for (var a in top.mainViewNav.query) geturl += top.mainViewNav.query[a] + '/';
+
+	function initUI() {
+		fillForm(form, data.item);
+		if (data.mn_Factory) for (var a = 0; a < data.mn_Factory.length; a++) $(form.mn_Factory).find('option[value="{0}"]'.format(data.mn_Factory[a].Id)).attr('selected', 'selected');
+		if (data.mn_Rentsublet) for (var a = 0; a < data.mn_Rentsublet.length; a++) $(form.mn_Rentsublet).find('option[value="{0}"]'.format(data.mn_Rentsublet[a].Id)).attr('selected', 'selected');
+		if (data.mn_Shop) for (var a = 0; a < data.mn_Shop.length; a++) $(form.mn_Shop).find('option[value="{0}"]'.format(data.mn_Shop[a].Id)).attr('selected', 'selected');
+		top.mainViewInit();
+		$(form).submit(function () {
+			if (data.item)
+				$.ajax({ url: geturl, type: 'PUT', dataType: 'json', data: $(this).serialize(), success: function (rt) {
+					if (!rt.success) return alert(rt.message);
+					top.mainViewNav.goto('./');
+				}});
+			else
+				$.ajax({ url: '/api/Franchising/', type: 'POST', dataType: 'json', data: $(this).serialize(), success: function (rt) {
+					if (!rt.success) return alert(rt.message);
+					top.mainViewNav.goto('./');
+				}});
+			return false;
+		});
+	}
+
+	if (geturl === '/api/Franchising/')
+		ajaxs -= 4;
+	else {
+		$.getJSON(geturl, function (rt) {
+			if (rt.success) data.item = rt.data.item;
+			if (--ajaxs <= 0) initUI();
+		});
+		$.getJSON('/api/Factory/', { Franchising_id: top.mainViewNav.query.Id }, function (rt) {
+			if (rt.success) data.mn_Factory = rt.data.items;
+			if (--ajaxs <= 0) initUI();
+		});
+		$.getJSON('/api/Rentsublet/', { Franchising_id: top.mainViewNav.query.Id }, function (rt) {
+			if (rt.success) data.mn_Rentsublet = rt.data.items;
+			if (--ajaxs <= 0) initUI();
+		});
+		$.getJSON('/api/Shop/', { Franchising_id: top.mainViewNav.query.Id }, function (rt) {
+			if (rt.success) data.mn_Shop = rt.data.items;
+			if (--ajaxs <= 0) initUI();
+		});
+	}
+
+	$.getJSON('/api/Factory/', { limit: 2000 }, function (rt) {
+		renderTpl(form.mn_Factory, rt.data);
+		if (--ajaxs <= 0) initUI();
+	});
+	$.getJSON('/api/Rentsublet/', { limit: 2000 }, function (rt) {
+		renderTpl(form.mn_Rentsublet, rt.data);
+		if (--ajaxs <= 0) initUI();
+	});
+	$.getJSON('/api/Shop/', { limit: 2000 }, function (rt) {
+		renderTpl(form.mn_Shop, rt.data);
+		if (--ajaxs <= 0) initUI();
+	});
+})();
+</script>
+

@@ -1,0 +1,112 @@
+﻿
+<div class="box">
+	<div class="box-header with-border">
+		<h3 class="box-title" id="box-title"></h3>
+	</div>
+	<div class="box-body">
+		<div class="table-responsive">
+
+			<form id="form_add">
+				<div>
+					<table cellspacing="0" rules="all" class="table table-bordered table-hover" border="1" style="border-collapse:collapse;">
+						<tr update-visible style="display:none">
+							<td>id</td>
+							<td><input name="Id" type="text" readonly class="datepicker" style="width:20%;background-color:#ddd;" /></td>
+						</tr>
+						<tr>
+							<td>市场</td>
+							<td>
+								<select name="Market_id">
+									<option value="">------ 请选择 ------</option>
+									<option @for="a in items" value="{#a.Id}">{#a.Title}</option>
+								</select>
+							</td>
+						</tr>
+						<tr update-visible style="display:none">
+							<td>创建时间</td>
+							<td><input name="Create_time" type="text" readonly class="datepicker" style="width:20%;background-color:#ddd;" /></td>
+						</tr>
+						<tr>
+							<td>费用</td>
+							<td>
+								<div class="input-group" style="width:200px;">
+									<span class="input-group-addon">￥</span>
+									<input name="Price" type="text" class="form-control" data-inputmask="'mask': '9', 'repeat': 10, 'greedy': false" data-mask />
+									<span class="input-group-addon">.00</span>
+								</div>
+							</td>
+						</tr>
+						<tr>
+							<td>类型</td>
+							<td><select name="Type"><option value="">------ 请选择 ------</option><option value="??">??</option><option value="??">??</option><option value="??">??</option></select></td>
+						</tr>
+						<tr>
+							<td>Franchising</td>
+							<td>
+								<select name="mn_Franchising" data-placeholder="Select a Franchising" class="form-control select2" multiple>
+									<option @for="a in items" value="{#a.Id}">{#a.Title}</option>
+								</select>
+							</td>
+						</tr>
+						<tr>
+							<td width="8%">&nbsp</td>
+							<td><input type="submit" value="更新" />&nbsp;<input type="button" value="取消" /></td>
+						</tr>
+					</table>
+				</div>
+			</form>
+
+		</div>
+	</div>
+</div>
+
+<script type="text/javascript">
+(function () {
+	var ajaxs = 4;
+	var data = {};
+	var form = $('#form_add')[0];
+	var geturl = '/api/Rentsublet/'; for (var a in top.mainViewNav.query) geturl += top.mainViewNav.query[a] + '/';
+
+	function initUI() {
+		fillForm(form, data.item);
+		if (data.mn_Franchising) for (var a = 0; a < data.mn_Franchising.length; a++) $(form.mn_Franchising).find('option[value="{0}"]'.format(data.mn_Franchising[a].Id)).attr('selected', 'selected');
+		top.mainViewInit();
+		$(form).submit(function () {
+			if (data.item)
+				$.ajax({ url: geturl, type: 'PUT', dataType: 'json', data: $(this).serialize(), success: function (rt) {
+					if (!rt.success) return alert(rt.message);
+					top.mainViewNav.goto('./');
+				}});
+			else
+				$.ajax({ url: '/api/Rentsublet/', type: 'POST', dataType: 'json', data: $(this).serialize(), success: function (rt) {
+					if (!rt.success) return alert(rt.message);
+					top.mainViewNav.goto('./');
+				}});
+			return false;
+		});
+	}
+
+	if (geturl === '/api/Rentsublet/')
+		ajaxs -= 2;
+	else {
+		$.getJSON(geturl, function (rt) {
+			if (rt.success) data.item = rt.data.item;
+			if (--ajaxs <= 0) initUI();
+		});
+		$.getJSON('/api/Franchising/', { Rentsublet_id: top.mainViewNav.query.Id }, function (rt) {
+			if (rt.success) data.mn_Franchising = rt.data.items;
+			if (--ajaxs <= 0) initUI();
+		});
+	}
+
+	$.getJSON('/api/Market/', { limit: 2000 }, function (rt) {
+		renderTpl(form.Market_id, rt.data);
+		if (--ajaxs <= 0) initUI();
+	});
+	$.getJSON('/api/Franchising/', { limit: 2000 }, function (rt) {
+		renderTpl(form.mn_Franchising, rt.data);
+		if (--ajaxs <= 0) initUI();
+	});
+})();
+</script>
+

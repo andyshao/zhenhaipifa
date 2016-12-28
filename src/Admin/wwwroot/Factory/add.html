@@ -1,0 +1,130 @@
+﻿
+<div class="box">
+	<div class="box-header with-border">
+		<h3 class="box-title" id="box-title"></h3>
+	</div>
+	<div class="box-body">
+		<div class="table-responsive">
+
+			<form id="form_add">
+				<div>
+					<table cellspacing="0" rules="all" class="table table-bordered table-hover" border="1" style="border-collapse:collapse;">
+						<tr update-visible style="display:none">
+							<td>id</td>
+							<td><input name="Id" type="text" readonly class="datepicker" style="width:20%;background-color:#ddd;" /></td>
+						</tr>
+						<tr>
+							<td>区域</td>
+							<td id="Area_id_td"></td>
+						</tr>
+						<tr>
+							<td>生产产能</td>
+							<td><input name="Capacity" type="text" class="datepicker" style="width:60%;" /></td>
+						</tr>
+						<tr update-visible style="display:none">
+							<td>创建时间</td>
+							<td><input name="Create_time" type="text" readonly class="datepicker" style="width:20%;background-color:#ddd;" /></td>
+						</tr>
+						<tr>
+							<td>加工品类</td>
+							<td><input name="Main_business" type="text" class="datepicker" style="width:60%;" /></td>
+						</tr>
+						<tr>
+							<td>起订量</td>
+							<td><input name="Min_order" type="text" class="datepicker" style="width:60%;" /></td>
+						</tr>
+						<tr>
+							<td>加工费</td>
+							<td><input name="Process_cost" type="text" class="datepicker" style="width:60%;" /></td>
+						</tr>
+						<tr>
+							<td>打样周期</td>
+							<td><input name="Sampling_period" type="text" class="datepicker" style="width:60%;" /></td>
+						</tr>
+						<tr>
+							<td>打样费用</td>
+							<td><input name="Sampling_price" type="text" class="datepicker" style="width:60%;" /></td>
+						</tr>
+						<tr>
+							<td>联系电话</td>
+							<td><input name="Telphone" type="text" class="datepicker" style="width:60%;" /></td>
+						</tr>
+						<tr>
+							<td>工厂名称</td>
+							<td><input name="Title" type="text" class="datepicker" style="width:60%;" /></td>
+						</tr>
+						<tr>
+							<td>翻单时间</td>
+							<td><input name="Turn_single_time" type="text" class="datepicker" style="width:60%;" /></td>
+						</tr>
+						<tr>
+							<td>Franchising</td>
+							<td>
+								<select name="mn_Franchising" data-placeholder="Select a Franchising" class="form-control select2" multiple>
+									<option @for="a in items" value="{#a.Id}">{#a.Title}</option>
+								</select>
+							</td>
+						</tr>
+						<tr>
+							<td width="8%">&nbsp</td>
+							<td><input type="submit" value="更新" />&nbsp;<input type="button" value="取消" /></td>
+						</tr>
+					</table>
+				</div>
+			</form>
+
+		</div>
+	</div>
+</div>
+
+<script type="text/javascript">
+(function () {
+	var ajaxs = 4;
+	var data = {};
+	var form = $('#form_add')[0];
+	var geturl = '/api/Factory/'; for (var a in top.mainViewNav.query) geturl += top.mainViewNav.query[a] + '/';
+
+	function initUI() {
+		fillForm(form, data.item);
+		if (data.mn_Franchising) for (var a = 0; a < data.mn_Franchising.length; a++) $(form.mn_Franchising).find('option[value="{0}"]'.format(data.mn_Franchising[a].Id)).attr('selected', 'selected');
+		top.mainViewInit();
+		$(form).submit(function () {
+			if (data.item)
+				$.ajax({ url: geturl, type: 'PUT', dataType: 'json', data: $(this).serialize(), success: function (rt) {
+					if (!rt.success) return alert(rt.message);
+					top.mainViewNav.goto('./');
+				}});
+			else
+				$.ajax({ url: '/api/Factory/', type: 'POST', dataType: 'json', data: $(this).serialize(), success: function (rt) {
+					if (!rt.success) return alert(rt.message);
+					top.mainViewNav.goto('./');
+				}});
+			return false;
+		});
+	}
+
+	if (geturl === '/api/Factory/')
+		ajaxs -= 2;
+	else {
+		$.getJSON(geturl, function (rt) {
+			if (rt.success) data.item = rt.data.item;
+			if (--ajaxs <= 0) initUI();
+		});
+		$.getJSON('/api/Franchising/', { Factory_id: top.mainViewNav.query.Id }, function (rt) {
+			if (rt.success) data.mn_Franchising = rt.data.items;
+			if (--ajaxs <= 0) initUI();
+		});
+	}
+
+	$.getJSON('/api/Area/', { limit: 2000 }, function(rt) {
+		rt.items2 = yieldTreeArray(rt.data.items, null, 'Id', 'Parent_id');
+		$('#Area_id_td').html(yieldTreeSelect(rt.items2, '{#Name}', 'Id')).find('select').attr('name', 'Area_id');
+		if (--ajaxs <= 0) initUI();
+	});
+	$.getJSON('/api/Franchising/', { limit: 2000 }, function (rt) {
+		renderTpl(form.mn_Franchising, rt.data);
+		if (--ajaxs <= 0) initUI();
+	});
+})();
+</script>
+
