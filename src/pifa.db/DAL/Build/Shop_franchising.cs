@@ -36,16 +36,14 @@ namespace pifa.DAL {
 			return GetItem(dr, ref index) as Shop_franchisingInfo;
 		}
 		public object GetItem(IDataReader dr, ref int index) {
-			return new Shop_franchisingInfo {
-				Franchising_id = dr.IsDBNull(++index) ? null : (uint?)dr.GetInt32(index), 
-				Shop_id = dr.IsDBNull(++index) ? null : (uint?)dr.GetInt32(index)};
-		}
-		public SelectBuild<Shop_franchisingInfo> Select {
-			get { return SelectBuild<Shop_franchisingInfo>.From(this, SqlHelper.Instance); }
+			Shop_franchisingInfo item = new Shop_franchisingInfo();
+				if (!dr.IsDBNull(++index)) item.Franchising_id = (uint?)dr.GetInt32(index);
+				if (!dr.IsDBNull(++index)) item.Shop_id = (uint?)dr.GetInt32(index);
+			return item;
 		}
 		#endregion
 
-		public int Delete(uint? Franchising_id, uint? Shop_id) {
+		public int Delete(uint Franchising_id, uint Shop_id) {
 			return SqlHelper.ExecuteNonQuery(string.Concat(TSQL.Delete, "`franchising_id` = ?franchising_id AND `shop_id` = ?shop_id"), 
 				GetParameter("?franchising_id", MySqlDbType.UInt32, 10, Franchising_id), 
 				GetParameter("?shop_id", MySqlDbType.UInt32, 10, Shop_id));
@@ -60,7 +58,7 @@ namespace pifa.DAL {
 		}
 
 		public int Update(Shop_franchisingInfo item) {
-			return new SqlUpdateBuild(null, item.Franchising_id, item.Shop_id).ExecuteNonQuery();
+			return new SqlUpdateBuild(null, item.Franchising_id.Value, item.Shop_id.Value).ExecuteNonQuery();
 		}
 		#region class SqlUpdateBuild
 		public partial class SqlUpdateBuild {
@@ -68,7 +66,7 @@ namespace pifa.DAL {
 			protected string _fields;
 			protected string _where;
 			protected List<MySqlParameter> _parameters = new List<MySqlParameter>();
-			public SqlUpdateBuild(Shop_franchisingInfo item, uint? Franchising_id, uint? Shop_id) {
+			public SqlUpdateBuild(Shop_franchisingInfo item, uint Franchising_id, uint Shop_id) {
 				_item = item;
 				_where = SqlHelper.Addslashes("`franchising_id` = {0} AND `shop_id` = {1}", Franchising_id, Shop_id);
 			}
@@ -102,8 +100,5 @@ namespace pifa.DAL {
 			return item;
 		}
 
-		public Shop_franchisingInfo GetItem(uint? Franchising_id, uint? Shop_id) {
-			return this.Select.Where("a.`franchising_id` = {0} AND a.`shop_id` = {1}", Franchising_id, Shop_id).ToOne();
-		}
 	}
 }

@@ -3,10 +3,12 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using Newtonsoft.Json;
 using pifa.BLL;
 
 namespace pifa.Model {
 
+	[JsonObject(MemberSerialization.OptIn)]
 	public partial class PattrInfo {
 		#region fields
 		private uint? _Id;
@@ -20,7 +22,7 @@ namespace pifa.Model {
 
 		public PattrInfo() { }
 
-		#region 独创的序列化，反序列化
+		#region 序列化，反序列化
 		protected static readonly string StringifySplit = "@<Pattr(Info]?#>";
 		public string Stringify() {
 			return string.Concat(
@@ -30,22 +32,30 @@ namespace pifa.Model {
 				_Is_filter == null ? "null" : (_Is_filter == true ? "1" : "0"), "|",
 				_Name == null ? "null" : _Name.Replace("|", StringifySplit));
 		}
-		public PattrInfo(string stringify) {
+		public static PattrInfo Parse(string stringify) {
 			string[] ret = stringify.Split(new char[] { '|' }, 5, StringSplitOptions.None);
 			if (ret.Length != 5) throw new Exception("格式不正确，PattrInfo：" + stringify);
-			if (string.Compare("null", ret[0]) != 0) _Id = uint.Parse(ret[0]);
-			if (string.Compare("null", ret[1]) != 0) _Category_id = uint.Parse(ret[1]);
-			if (string.Compare("null", ret[2]) != 0) _Parent_id = uint.Parse(ret[2]);
-			if (string.Compare("null", ret[3]) != 0) _Is_filter = ret[3] == "1";
-			if (string.Compare("null", ret[4]) != 0) _Name = ret[4].Replace(StringifySplit, "|");
+			PattrInfo item = new PattrInfo();
+			if (string.Compare("null", ret[0]) != 0) item.Id = uint.Parse(ret[0]);
+			if (string.Compare("null", ret[1]) != 0) item.Category_id = uint.Parse(ret[1]);
+			if (string.Compare("null", ret[2]) != 0) item.Parent_id = uint.Parse(ret[2]);
+			if (string.Compare("null", ret[3]) != 0) item.Is_filter = ret[3] == "1";
+			if (string.Compare("null", ret[4]) != 0) item.Name = ret[4].Replace(StringifySplit, "|");
+			return item;
 		}
 		#endregion
 
 		#region override
-		private static Dictionary<string, bool> __jsonIgnore;
-		private static object __jsonIgnore_lock = new object();
+		private static Lazy<Dictionary<string, bool>> __jsonIgnoreLazy = new Lazy<Dictionary<string, bool>>(() => {
+			FieldInfo field = typeof(PattrInfo).GetField("JsonIgnore");
+			Dictionary<string, bool> ret = new Dictionary<string, bool>();
+			if (field != null) string.Concat(field.GetValue(null)).Split(',').ToList().ForEach(f => {
+				if (!string.IsNullOrEmpty(f)) ret[f] = true;
+			});
+			return ret;
+		});
+		private static Dictionary<string, bool> __jsonIgnore => __jsonIgnoreLazy.Value;
 		public override string ToString() {
-			this.Init__jsonIgnore();
 			string json = string.Concat(
 				__jsonIgnore.ContainsKey("Id") ? string.Empty : string.Format(", Id : {0}", Id == null ? "null" : Id.ToString()), 
 				__jsonIgnore.ContainsKey("Category_id") ? string.Empty : string.Format(", Category_id : {0}", Category_id == null ? "null" : Category_id.ToString()), 
@@ -54,44 +64,14 @@ namespace pifa.Model {
 				__jsonIgnore.ContainsKey("Name") ? string.Empty : string.Format(", Name : {0}", Name == null ? "null" : string.Format("'{0}'", Name.Replace("\\", "\\\\").Replace("\r\n", "\\r\\n").Replace("'", "\\'"))), " }");
 			return string.Concat("{", json.Substring(1));
 		}
-		public IDictionary ToBson() {
-			this.Init__jsonIgnore();
+		public IDictionary ToBson(bool allField = false) {
 			IDictionary ht = new Hashtable();
-			if (!__jsonIgnore.ContainsKey("Id")) ht["Id"] = Id;
-			if (!__jsonIgnore.ContainsKey("Category_id")) ht["Category_id"] = Category_id;
-			if (!__jsonIgnore.ContainsKey("Parent_id")) ht["Parent_id"] = Parent_id;
-			if (!__jsonIgnore.ContainsKey("Is_filter")) ht["Is_filter"] = Is_filter;
-			if (!__jsonIgnore.ContainsKey("Name")) ht["Name"] = Name;
+			if (allField || !__jsonIgnore.ContainsKey("Id")) ht["Id"] = Id;
+			if (allField || !__jsonIgnore.ContainsKey("Category_id")) ht["Category_id"] = Category_id;
+			if (allField || !__jsonIgnore.ContainsKey("Parent_id")) ht["Parent_id"] = Parent_id;
+			if (allField || !__jsonIgnore.ContainsKey("Is_filter")) ht["Is_filter"] = Is_filter;
+			if (allField || !__jsonIgnore.ContainsKey("Name")) ht["Name"] = Name;
 			return ht;
-		}
-		private void Init__jsonIgnore() {
-			if (__jsonIgnore == null) {
-				lock (__jsonIgnore_lock) {
-					if (__jsonIgnore == null) {
-						FieldInfo field = typeof(PattrInfo).GetField("JsonIgnore");
-						__jsonIgnore = new Dictionary<string, bool>();
-						if (field != null) {
-							string[] fs = string.Concat(field.GetValue(null)).Split(',');
-							foreach (string f in fs) if (!string.IsNullOrEmpty(f)) __jsonIgnore[f] = true;
-						}
-					}
-				}
-			}
-		}
-		public override bool Equals(object obj) {
-			PattrInfo item = obj as PattrInfo;
-			if (item == null) return false;
-			return this.ToString().Equals(item.ToString());
-		}
-		public override int GetHashCode() {
-			return this.ToString().GetHashCode();
-		}
-		public static bool operator ==(PattrInfo op1, PattrInfo op2) {
-			if (object.Equals(op1, null)) return object.Equals(op2, null);
-			return op1.Equals(op2);
-		}
-		public static bool operator !=(PattrInfo op1, PattrInfo op2) {
-			return !(op1 == op2);
 		}
 		public object this[string key] {
 			get { return this.GetType().GetProperty(key).GetValue(this); }
@@ -100,14 +80,14 @@ namespace pifa.Model {
 		#endregion
 
 		#region properties
-		public uint? Id {
+		[JsonProperty] public uint? Id {
 			get { return _Id; }
 			set { _Id = value; }
 		}
 		/// <summary>
 		/// 分类
 		/// </summary>
-		public uint? Category_id {
+		[JsonProperty] public uint? Category_id {
 			get { return _Category_id; }
 			set {
 				if (_Category_id != value) _obj_category = null;
@@ -116,7 +96,7 @@ namespace pifa.Model {
 		}
 		public CategoryInfo Obj_category {
 			get {
-				if (_obj_category == null) _obj_category = Category.GetItem(_Category_id);
+				if (_obj_category == null) _obj_category = Category.GetItem(_Category_id.Value);
 				return _obj_category;
 			}
 			internal set { _obj_category = value; }
@@ -124,7 +104,7 @@ namespace pifa.Model {
 		/// <summary>
 		/// 父
 		/// </summary>
-		public uint? Parent_id {
+		[JsonProperty] public uint? Parent_id {
 			get { return _Parent_id; }
 			set {
 				if (_Parent_id != value) _obj_pattr = null;
@@ -133,7 +113,7 @@ namespace pifa.Model {
 		}
 		public PattrInfo Obj_pattr {
 			get {
-				if (_obj_pattr == null) _obj_pattr = Pattr.GetItem(_Parent_id);
+				if (_obj_pattr == null) _obj_pattr = Pattr.GetItem(_Parent_id.Value);
 				return _obj_pattr;
 			}
 			internal set { _obj_pattr = value; }
@@ -141,14 +121,14 @@ namespace pifa.Model {
 		/// <summary>
 		/// 是否过滤
 		/// </summary>
-		public bool? Is_filter {
+		[JsonProperty] public bool? Is_filter {
 			get { return _Is_filter; }
 			set { _Is_filter = value; }
 		}
 		/// <summary>
 		/// 属性名称
 		/// </summary>
-		public string Name {
+		[JsonProperty] public string Name {
 			get { return _Name; }
 			set { _Name = value; }
 		}
@@ -173,26 +153,31 @@ namespace pifa.Model {
 		#endregion
 
 		public pifa.DAL.Pattr.SqlUpdateBuild UpdateDiy {
-			get { return Pattr.UpdateDiy(this, _Id); }
+			get { return Pattr.UpdateDiy(this, _Id.Value); }
 		}
-		public PattrInfo AddPattr(CategoryInfo Category, bool? Is_filter, string Name) {
-			return AddPattr(Category.Id, Is_filter, Name);
+		public PattrInfo Save() {
+			if (this.Id != null) {
+				Pattr.Update(this);
+				return this;
+			}
+			return Pattr.Insert(this);
 		}
-		public PattrInfo AddPattr(uint? Category_id, bool? Is_filter, string Name) {
-			return Pattr.Insert(new PattrInfo {
+		public PattrInfo AddPattr(CategoryInfo Category, bool? Is_filter, string Name) => AddPattr(Category.Id, Is_filter, Name);
+		public PattrInfo AddPattr(uint? Category_id, bool? Is_filter, string Name) => Pattr.Insert(new PattrInfo {
 				Category_id = Category_id, 
-				Parent_id = this.Id, 
+			Parent_id = this.Id, 
 				Is_filter = Is_filter, 
 				Name = Name});
+		public PattrInfo AddPattr(PattrInfo item) {
+			item.Parent_id = this.Id;
+			return item.Save();
 		}
 
-		public Product_attrInfo FlagProduct_attr(ProductInfo Product, string Value) {
-			return FlagProduct_attr(Product.Id, Value);
-		}
+		public Product_attrInfo FlagProduct_attr(ProductInfo Product, string Value) => FlagProduct_attr(Product.Id, Value);
 		public Product_attrInfo FlagProduct_attr(uint? Product_id, string Value) {
-			Product_attrInfo item = Product_attr.GetItem(this.Id, Product_id);
+			Product_attrInfo item = Product_attr.GetItem(this.Id.Value, Product_id.Value);
 			if (item == null) item = Product_attr.Insert(new Product_attrInfo {
-				Pattr_id = this.Id, 
+			Pattr_id = this.Id, 
 				Product_id = Product_id, 
 				Value = Value});
 			else item.UpdateDiy
@@ -200,15 +185,9 @@ namespace pifa.Model {
 			return item;
 		}
 
-		public int UnflagProduct_attr(ProductInfo Product) {
-			return UnflagProduct_attr(Product.Id);
-		}
-		public int UnflagProduct_attr(uint? Product_id) {
-			return Product_attr.Delete(this.Id, Product_id);
-		}
-		public int UnflagProduct_attrALL() {
-			return Product_attr.DeleteByPattr_id(this.Id);
-		}
+		public int UnflagProduct_attr(ProductInfo Product) => UnflagProduct_attr(Product.Id);
+		public int UnflagProduct_attr(uint? Product_id) => Product_attr.Delete(this.Id.Value, Product_id.Value);
+		public int UnflagProduct_attrALL() => Product_attr.DeleteByPattr_id(this.Id);
 
 	}
 }

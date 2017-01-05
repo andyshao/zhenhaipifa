@@ -46,26 +46,24 @@ namespace pifa.DAL {
 			return GetItem(dr, ref index) as FactoryInfo;
 		}
 		public object GetItem(IDataReader dr, ref int index) {
-			return new FactoryInfo {
-				Id = dr.IsDBNull(++index) ? null : (uint?)dr.GetInt32(index), 
-				Area_id = dr.IsDBNull(++index) ? null : (uint?)dr.GetInt32(index), 
-				Capacity = dr.IsDBNull(++index) ? null : dr.GetString(index), 
-				Create_time = dr.IsDBNull(++index) ? null : (DateTime?)dr.GetDateTime(index), 
-				Main_business = dr.IsDBNull(++index) ? null : dr.GetString(index), 
-				Min_order = dr.IsDBNull(++index) ? null : dr.GetString(index), 
-				Process_cost = dr.IsDBNull(++index) ? null : dr.GetString(index), 
-				Sampling_period = dr.IsDBNull(++index) ? null : dr.GetString(index), 
-				Sampling_price = dr.IsDBNull(++index) ? null : dr.GetString(index), 
-				Telphone = dr.IsDBNull(++index) ? null : dr.GetString(index), 
-				Title = dr.IsDBNull(++index) ? null : dr.GetString(index), 
-				Turn_single_time = dr.IsDBNull(++index) ? null : dr.GetString(index)};
-		}
-		public SelectBuild<FactoryInfo> Select {
-			get { return SelectBuild<FactoryInfo>.From(this, SqlHelper.Instance); }
+			FactoryInfo item = new FactoryInfo();
+				if (!dr.IsDBNull(++index)) item.Id = (uint?)dr.GetInt32(index);
+				if (!dr.IsDBNull(++index)) item.Area_id = (uint?)dr.GetInt32(index);
+				if (!dr.IsDBNull(++index)) item.Capacity = dr.GetString(index);
+				if (!dr.IsDBNull(++index)) item.Create_time = (DateTime?)dr.GetDateTime(index);
+				if (!dr.IsDBNull(++index)) item.Main_business = dr.GetString(index);
+				if (!dr.IsDBNull(++index)) item.Min_order = dr.GetString(index);
+				if (!dr.IsDBNull(++index)) item.Process_cost = dr.GetString(index);
+				if (!dr.IsDBNull(++index)) item.Sampling_period = dr.GetString(index);
+				if (!dr.IsDBNull(++index)) item.Sampling_price = dr.GetString(index);
+				if (!dr.IsDBNull(++index)) item.Telphone = dr.GetString(index);
+				if (!dr.IsDBNull(++index)) item.Title = dr.GetString(index);
+				if (!dr.IsDBNull(++index)) item.Turn_single_time = dr.GetString(index);
+			return item;
 		}
 		#endregion
 
-		public int Delete(uint? Id) {
+		public int Delete(uint Id) {
 			return SqlHelper.ExecuteNonQuery(string.Concat(TSQL.Delete, "`id` = ?id"), 
 				GetParameter("?id", MySqlDbType.UInt32, 10, Id));
 		}
@@ -75,7 +73,7 @@ namespace pifa.DAL {
 		}
 
 		public int Update(FactoryInfo item) {
-			return new SqlUpdateBuild(null, item.Id)
+			return new SqlUpdateBuild(null, item.Id.Value)
 				.SetArea_id(item.Area_id)
 				.SetCapacity(item.Capacity)
 				.SetCreate_time(item.Create_time)
@@ -94,7 +92,7 @@ namespace pifa.DAL {
 			protected string _fields;
 			protected string _where;
 			protected List<MySqlParameter> _parameters = new List<MySqlParameter>();
-			public SqlUpdateBuild(FactoryInfo item, uint? Id) {
+			public SqlUpdateBuild(FactoryInfo item, uint Id) {
 				_item = item;
 				_where = SqlHelper.Addslashes("`id` = {0}", Id);
 			}
@@ -122,58 +120,58 @@ namespace pifa.DAL {
 			}
 			public SqlUpdateBuild SetArea_id(uint? value) {
 				if (_item != null) _item.Area_id = value;
-				return this.Set("`area_id`", string.Concat("?area_id_", _parameters.Count), 
-					GetParameter(string.Concat("?area_id_", _parameters.Count), MySqlDbType.UInt32, 10, value));
+				return this.Set("`area_id`", $"?area_id_{_parameters.Count}", 
+					GetParameter($"?area_id_{{_parameters.Count}}", MySqlDbType.UInt32, 10, value));
 			}
 			public SqlUpdateBuild SetCapacity(string value) {
 				if (_item != null) _item.Capacity = value;
-				return this.Set("`capacity`", string.Concat("?capacity_", _parameters.Count), 
-					GetParameter(string.Concat("?capacity_", _parameters.Count), MySqlDbType.VarChar, 32, value));
+				return this.Set("`capacity`", $"?capacity_{_parameters.Count}", 
+					GetParameter($"?capacity_{{_parameters.Count}}", MySqlDbType.VarChar, 32, value));
 			}
 			public SqlUpdateBuild SetCreate_time(DateTime? value) {
 				if (_item != null) _item.Create_time = value;
-				return this.Set("`create_time`", string.Concat("?create_time_", _parameters.Count), 
-					GetParameter(string.Concat("?create_time_", _parameters.Count), MySqlDbType.DateTime, -1, value));
+				return this.Set("`create_time`", $"?create_time_{_parameters.Count}", 
+					GetParameter($"?create_time_{{_parameters.Count}}", MySqlDbType.DateTime, -1, value));
 			}
 			public SqlUpdateBuild SetMain_business(string value) {
 				if (_item != null) _item.Main_business = value;
-				return this.Set("`main_business`", string.Concat("?main_business_", _parameters.Count), 
-					GetParameter(string.Concat("?main_business_", _parameters.Count), MySqlDbType.VarChar, 255, value));
+				return this.Set("`main_business`", $"?main_business_{_parameters.Count}", 
+					GetParameter($"?main_business_{{_parameters.Count}}", MySqlDbType.VarChar, 255, value));
 			}
 			public SqlUpdateBuild SetMin_order(string value) {
 				if (_item != null) _item.Min_order = value;
-				return this.Set("`min_order`", string.Concat("?min_order_", _parameters.Count), 
-					GetParameter(string.Concat("?min_order_", _parameters.Count), MySqlDbType.VarChar, 16, value));
+				return this.Set("`min_order`", $"?min_order_{_parameters.Count}", 
+					GetParameter($"?min_order_{{_parameters.Count}}", MySqlDbType.VarChar, 16, value));
 			}
 			public SqlUpdateBuild SetProcess_cost(string value) {
 				if (_item != null) _item.Process_cost = value;
-				return this.Set("`process_cost`", string.Concat("?process_cost_", _parameters.Count), 
-					GetParameter(string.Concat("?process_cost_", _parameters.Count), MySqlDbType.VarChar, 16, value));
+				return this.Set("`process_cost`", $"?process_cost_{_parameters.Count}", 
+					GetParameter($"?process_cost_{{_parameters.Count}}", MySqlDbType.VarChar, 16, value));
 			}
 			public SqlUpdateBuild SetSampling_period(string value) {
 				if (_item != null) _item.Sampling_period = value;
-				return this.Set("`sampling_period`", string.Concat("?sampling_period_", _parameters.Count), 
-					GetParameter(string.Concat("?sampling_period_", _parameters.Count), MySqlDbType.VarChar, 16, value));
+				return this.Set("`sampling_period`", $"?sampling_period_{_parameters.Count}", 
+					GetParameter($"?sampling_period_{{_parameters.Count}}", MySqlDbType.VarChar, 16, value));
 			}
 			public SqlUpdateBuild SetSampling_price(string value) {
 				if (_item != null) _item.Sampling_price = value;
-				return this.Set("`sampling_price`", string.Concat("?sampling_price_", _parameters.Count), 
-					GetParameter(string.Concat("?sampling_price_", _parameters.Count), MySqlDbType.VarChar, 16, value));
+				return this.Set("`sampling_price`", $"?sampling_price_{_parameters.Count}", 
+					GetParameter($"?sampling_price_{{_parameters.Count}}", MySqlDbType.VarChar, 16, value));
 			}
 			public SqlUpdateBuild SetTelphone(string value) {
 				if (_item != null) _item.Telphone = value;
-				return this.Set("`telphone`", string.Concat("?telphone_", _parameters.Count), 
-					GetParameter(string.Concat("?telphone_", _parameters.Count), MySqlDbType.VarChar, 32, value));
+				return this.Set("`telphone`", $"?telphone_{_parameters.Count}", 
+					GetParameter($"?telphone_{{_parameters.Count}}", MySqlDbType.VarChar, 32, value));
 			}
 			public SqlUpdateBuild SetTitle(string value) {
 				if (_item != null) _item.Title = value;
-				return this.Set("`title`", string.Concat("?title_", _parameters.Count), 
-					GetParameter(string.Concat("?title_", _parameters.Count), MySqlDbType.VarChar, 255, value));
+				return this.Set("`title`", $"?title_{_parameters.Count}", 
+					GetParameter($"?title_{{_parameters.Count}}", MySqlDbType.VarChar, 255, value));
 			}
 			public SqlUpdateBuild SetTurn_single_time(string value) {
 				if (_item != null) _item.Turn_single_time = value;
-				return this.Set("`turn_single_time`", string.Concat("?turn_single_time_", _parameters.Count), 
-					GetParameter(string.Concat("?turn_single_time_", _parameters.Count), MySqlDbType.VarChar, 16, value));
+				return this.Set("`turn_single_time`", $"?turn_single_time_{_parameters.Count}", 
+					GetParameter($"?turn_single_time_{{_parameters.Count}}", MySqlDbType.VarChar, 16, value));
 			}
 		}
 		#endregion
@@ -184,8 +182,5 @@ namespace pifa.DAL {
 			return item;
 		}
 
-		public FactoryInfo GetItem(uint? Id) {
-			return this.Select.Where("a.`id` = {0}", Id).ToOne();
-		}
 	}
 }

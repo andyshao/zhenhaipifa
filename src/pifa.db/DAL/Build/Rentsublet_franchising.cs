@@ -36,16 +36,14 @@ namespace pifa.DAL {
 			return GetItem(dr, ref index) as Rentsublet_franchisingInfo;
 		}
 		public object GetItem(IDataReader dr, ref int index) {
-			return new Rentsublet_franchisingInfo {
-				Franchising_id = dr.IsDBNull(++index) ? null : (uint?)dr.GetInt32(index), 
-				Rentsublet_id = dr.IsDBNull(++index) ? null : (uint?)dr.GetInt32(index)};
-		}
-		public SelectBuild<Rentsublet_franchisingInfo> Select {
-			get { return SelectBuild<Rentsublet_franchisingInfo>.From(this, SqlHelper.Instance); }
+			Rentsublet_franchisingInfo item = new Rentsublet_franchisingInfo();
+				if (!dr.IsDBNull(++index)) item.Franchising_id = (uint?)dr.GetInt32(index);
+				if (!dr.IsDBNull(++index)) item.Rentsublet_id = (uint?)dr.GetInt32(index);
+			return item;
 		}
 		#endregion
 
-		public int Delete(uint? Franchising_id, uint? Rentsublet_id) {
+		public int Delete(uint Franchising_id, uint Rentsublet_id) {
 			return SqlHelper.ExecuteNonQuery(string.Concat(TSQL.Delete, "`franchising_id` = ?franchising_id AND `rentsublet_id` = ?rentsublet_id"), 
 				GetParameter("?franchising_id", MySqlDbType.UInt32, 10, Franchising_id), 
 				GetParameter("?rentsublet_id", MySqlDbType.UInt32, 10, Rentsublet_id));
@@ -60,7 +58,7 @@ namespace pifa.DAL {
 		}
 
 		public int Update(Rentsublet_franchisingInfo item) {
-			return new SqlUpdateBuild(null, item.Franchising_id, item.Rentsublet_id).ExecuteNonQuery();
+			return new SqlUpdateBuild(null, item.Franchising_id.Value, item.Rentsublet_id.Value).ExecuteNonQuery();
 		}
 		#region class SqlUpdateBuild
 		public partial class SqlUpdateBuild {
@@ -68,7 +66,7 @@ namespace pifa.DAL {
 			protected string _fields;
 			protected string _where;
 			protected List<MySqlParameter> _parameters = new List<MySqlParameter>();
-			public SqlUpdateBuild(Rentsublet_franchisingInfo item, uint? Franchising_id, uint? Rentsublet_id) {
+			public SqlUpdateBuild(Rentsublet_franchisingInfo item, uint Franchising_id, uint Rentsublet_id) {
 				_item = item;
 				_where = SqlHelper.Addslashes("`franchising_id` = {0} AND `rentsublet_id` = {1}", Franchising_id, Rentsublet_id);
 			}
@@ -102,8 +100,5 @@ namespace pifa.DAL {
 			return item;
 		}
 
-		public Rentsublet_franchisingInfo GetItem(uint? Franchising_id, uint? Rentsublet_id) {
-			return this.Select.Where("a.`franchising_id` = {0} AND a.`rentsublet_id` = {1}", Franchising_id, Rentsublet_id).ToOne();
-		}
 	}
 }

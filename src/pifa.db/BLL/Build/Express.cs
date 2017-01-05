@@ -18,7 +18,7 @@ namespace pifa.BLL {
 
 		#region delete, update, insert
 
-		public static int Delete(uint? Id) {
+		public static int Delete(uint Id) {
 			if (itemCacheTimeout > 0) RemoveCache(GetItem(Id));
 			return dal.Delete(Id);
 		}
@@ -30,10 +30,10 @@ namespace pifa.BLL {
 			if (itemCacheTimeout > 0) RemoveCache(item);
 			return dal.Update(item);
 		}
-		public static pifa.DAL.Express.SqlUpdateBuild UpdateDiy(uint? Id) {
+		public static pifa.DAL.Express.SqlUpdateBuild UpdateDiy(uint Id) {
 			return UpdateDiy(null, Id);
 		}
-		public static pifa.DAL.Express.SqlUpdateBuild UpdateDiy(ExpressInfo item, uint? Id) {
+		public static pifa.DAL.Express.SqlUpdateBuild UpdateDiy(ExpressInfo item, uint Id) {
 			if (itemCacheTimeout > 0) RemoveCache(item != null ? item : GetItem(Id));
 			return new pifa.DAL.Express.SqlUpdateBuild(item, Id);
 		}
@@ -68,14 +68,13 @@ namespace pifa.BLL {
 		}
 		#endregion
 
-		public static ExpressInfo GetItem(uint? Id) {
-			if (Id == null) return null;
-			if (itemCacheTimeout <= 0) return dal.GetItem(Id);
+		public static ExpressInfo GetItem(uint Id) {
+			if (itemCacheTimeout <= 0) return Select.WhereId(Id).ToOne();
 			string key = string.Concat("pifa_BLL_Express_", Id);
 			string value = RedisHelper.Get(key);
 			if (!string.IsNullOrEmpty(value))
-				try { return new ExpressInfo(value); } catch { }
-			ExpressInfo item = dal.GetItem(Id);
+				try { return ExpressInfo.Parse(value); } catch { }
+			ExpressInfo item = Select.WhereId(Id).ToOne();
 			if (item == null) return null;
 			RedisHelper.Set(key, item.Stringify(), itemCacheTimeout);
 			return item;
@@ -99,7 +98,7 @@ namespace pifa.BLL {
 	}
 	public partial class ExpressSelectBuild : SelectBuild<ExpressInfo, ExpressSelectBuild> {
 		public ExpressSelectBuild WhereArea_id(params uint?[] Area_id) {
-			return this.Where1Or("a.`Area_id` = {0}", Area_id);
+			return this.Where1Or("a.`area_id` = {0}", Area_id);
 		}
 		public ExpressSelectBuild WhereId(params uint?[] Id) {
 			return this.Where1Or("a.`id` = {0}", Id);
@@ -108,7 +107,7 @@ namespace pifa.BLL {
 			return this.Where1Or("a.`address` = {0}", Address);
 		}
 		public ExpressSelectBuild WhereAddressLike(params string[] Address) {
-			if (Address == null) return this;
+			if (Address == null || Address.Where(a => !string.IsNullOrEmpty(a)).Any() == false) return this;
 			return this.Where1Or(@"a.`address` LIKE {0}", Address.Select(a => "%" + a + "%").ToArray());
 		}
 		public ExpressSelectBuild WhereCreate_timeRange(DateTime? begin) {
@@ -122,21 +121,21 @@ namespace pifa.BLL {
 			return this.Where1Or("a.`service_features` = {0}", Service_features);
 		}
 		public ExpressSelectBuild WhereService_featuresLike(params string[] Service_features) {
-			if (Service_features == null) return this;
+			if (Service_features == null || Service_features.Where(a => !string.IsNullOrEmpty(a)).Any() == false) return this;
 			return this.Where1Or(@"a.`service_features` LIKE {0}", Service_features.Select(a => "%" + a + "%").ToArray());
 		}
 		public ExpressSelectBuild WhereTelphone(params string[] Telphone) {
 			return this.Where1Or("a.`telphone` = {0}", Telphone);
 		}
 		public ExpressSelectBuild WhereTelphoneLike(params string[] Telphone) {
-			if (Telphone == null) return this;
+			if (Telphone == null || Telphone.Where(a => !string.IsNullOrEmpty(a)).Any() == false) return this;
 			return this.Where1Or(@"a.`telphone` LIKE {0}", Telphone.Select(a => "%" + a + "%").ToArray());
 		}
 		public ExpressSelectBuild WhereTitle(params string[] Title) {
 			return this.Where1Or("a.`title` = {0}", Title);
 		}
 		public ExpressSelectBuild WhereTitleLike(params string[] Title) {
-			if (Title == null) return this;
+			if (Title == null || Title.Where(a => !string.IsNullOrEmpty(a)).Any() == false) return this;
 			return this.Where1Or(@"a.`title` LIKE {0}", Title.Select(a => "%" + a + "%").ToArray());
 		}
 		protected new ExpressSelectBuild Where1Or(string filterFormat, Array values) {

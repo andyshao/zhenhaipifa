@@ -18,7 +18,7 @@ namespace pifa.BLL {
 
 		#region delete, update, insert
 
-		public static int Delete(uint? News_id, uint? Newstag_id) {
+		public static int Delete(uint News_id, uint Newstag_id) {
 			if (itemCacheTimeout > 0) RemoveCache(GetItem(News_id, Newstag_id));
 			return dal.Delete(News_id, Newstag_id);
 		}
@@ -33,10 +33,10 @@ namespace pifa.BLL {
 			if (itemCacheTimeout > 0) RemoveCache(item);
 			return dal.Update(item);
 		}
-		public static pifa.DAL.News_newstag.SqlUpdateBuild UpdateDiy(uint? News_id, uint? Newstag_id) {
+		public static pifa.DAL.News_newstag.SqlUpdateBuild UpdateDiy(uint News_id, uint Newstag_id) {
 			return UpdateDiy(null, News_id, Newstag_id);
 		}
-		public static pifa.DAL.News_newstag.SqlUpdateBuild UpdateDiy(News_newstagInfo item, uint? News_id, uint? Newstag_id) {
+		public static pifa.DAL.News_newstag.SqlUpdateBuild UpdateDiy(News_newstagInfo item, uint News_id, uint Newstag_id) {
 			if (itemCacheTimeout > 0) RemoveCache(item != null ? item : GetItem(News_id, Newstag_id));
 			return new pifa.DAL.News_newstag.SqlUpdateBuild(item, News_id, Newstag_id);
 		}
@@ -63,14 +63,13 @@ namespace pifa.BLL {
 		}
 		#endregion
 
-		public static News_newstagInfo GetItem(uint? News_id, uint? Newstag_id) {
-			if (News_id == null || Newstag_id == null) return null;
-			if (itemCacheTimeout <= 0) return dal.GetItem(News_id, Newstag_id);
+		public static News_newstagInfo GetItem(uint News_id, uint Newstag_id) {
+			if (itemCacheTimeout <= 0) return Select.WhereNews_id(News_id).WhereNewstag_id(Newstag_id).ToOne();
 			string key = string.Concat("pifa_BLL_News_newstag_", News_id, "_,_", Newstag_id);
 			string value = RedisHelper.Get(key);
 			if (!string.IsNullOrEmpty(value))
-				try { return new News_newstagInfo(value); } catch { }
-			News_newstagInfo item = dal.GetItem(News_id, Newstag_id);
+				try { return News_newstagInfo.Parse(value); } catch { }
+			News_newstagInfo item = Select.WhereNews_id(News_id).WhereNewstag_id(Newstag_id).ToOne();
 			if (item == null) return null;
 			RedisHelper.Set(key, item.Stringify(), itemCacheTimeout);
 			return item;
@@ -103,10 +102,10 @@ namespace pifa.BLL {
 	}
 	public partial class News_newstagSelectBuild : SelectBuild<News_newstagInfo, News_newstagSelectBuild> {
 		public News_newstagSelectBuild WhereNewstag_id(params uint?[] Newstag_id) {
-			return this.Where1Or("a.`Newstag_id` = {0}", Newstag_id);
+			return this.Where1Or("a.`newstag_id` = {0}", Newstag_id);
 		}
 		public News_newstagSelectBuild WhereNews_id(params uint?[] News_id) {
-			return this.Where1Or("a.`News_id` = {0}", News_id);
+			return this.Where1Or("a.`news_id` = {0}", News_id);
 		}
 		protected new News_newstagSelectBuild Where1Or(string filterFormat, Array values) {
 			return base.Where1Or(filterFormat, values) as News_newstagSelectBuild;

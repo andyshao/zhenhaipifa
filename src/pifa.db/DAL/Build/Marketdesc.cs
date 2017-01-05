@@ -37,23 +37,25 @@ namespace pifa.DAL {
 			return GetItem(dr, ref index) as MarketdescInfo;
 		}
 		public object GetItem(IDataReader dr, ref int index) {
-			return new MarketdescInfo {
-				Market_id = dr.IsDBNull(++index) ? null : (uint?)dr.GetInt32(index), 
-				Content = dr.IsDBNull(++index) ? null : dr.GetString(index), 
-				Url = dr.IsDBNull(++index) ? null : dr.GetString(index)};
-		}
-		public SelectBuild<MarketdescInfo> Select {
-			get { return SelectBuild<MarketdescInfo>.From(this, SqlHelper.Instance); }
+			MarketdescInfo item = new MarketdescInfo();
+				if (!dr.IsDBNull(++index)) item.Market_id = (uint?)dr.GetInt32(index);
+				if (!dr.IsDBNull(++index)) item.Content = dr.GetString(index);
+				if (!dr.IsDBNull(++index)) item.Url = dr.GetString(index);
+			return item;
 		}
 		#endregion
 
-		public int Delete(uint? Market_id) {
+		public int Delete(uint Market_id) {
+			return SqlHelper.ExecuteNonQuery(string.Concat(TSQL.Delete, "`market_id` = ?market_id"), 
+				GetParameter("?market_id", MySqlDbType.UInt32, 10, Market_id));
+		}
+		public int DeleteByMarket_id(uint? Market_id) {
 			return SqlHelper.ExecuteNonQuery(string.Concat(TSQL.Delete, "`market_id` = ?market_id"), 
 				GetParameter("?market_id", MySqlDbType.UInt32, 10, Market_id));
 		}
 
 		public int Update(MarketdescInfo item) {
-			return new SqlUpdateBuild(null, item.Market_id)
+			return new SqlUpdateBuild(null, item.Market_id.Value)
 				.SetContent(item.Content)
 				.SetUrl(item.Url).ExecuteNonQuery();
 		}
@@ -63,7 +65,7 @@ namespace pifa.DAL {
 			protected string _fields;
 			protected string _where;
 			protected List<MySqlParameter> _parameters = new List<MySqlParameter>();
-			public SqlUpdateBuild(MarketdescInfo item, uint? Market_id) {
+			public SqlUpdateBuild(MarketdescInfo item, uint Market_id) {
 				_item = item;
 				_where = SqlHelper.Addslashes("`market_id` = {0}", Market_id);
 			}
@@ -91,13 +93,13 @@ namespace pifa.DAL {
 			}
 			public SqlUpdateBuild SetContent(string value) {
 				if (_item != null) _item.Content = value;
-				return this.Set("`content`", string.Concat("?content_", _parameters.Count), 
-					GetParameter(string.Concat("?content_", _parameters.Count), MySqlDbType.Text, -1, value));
+				return this.Set("`content`", $"?content_{_parameters.Count}", 
+					GetParameter($"?content_{{_parameters.Count}}", MySqlDbType.Text, -1, value));
 			}
 			public SqlUpdateBuild SetUrl(string value) {
 				if (_item != null) _item.Url = value;
-				return this.Set("`url`", string.Concat("?url_", _parameters.Count), 
-					GetParameter(string.Concat("?url_", _parameters.Count), MySqlDbType.VarChar, 255, value));
+				return this.Set("`url`", $"?url_{_parameters.Count}", 
+					GetParameter($"?url_{{_parameters.Count}}", MySqlDbType.VarChar, 255, value));
 			}
 		}
 		#endregion
@@ -107,8 +109,5 @@ namespace pifa.DAL {
 			return item;
 		}
 
-		public MarketdescInfo GetItem(uint? Market_id) {
-			return this.Select.Where("a.`market_id` = {0}", Market_id).ToOne();
-		}
 	}
 }

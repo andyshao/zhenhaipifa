@@ -18,7 +18,7 @@ namespace pifa.BLL {
 
 		#region delete, update, insert
 
-		public static int Delete(uint? Id) {
+		public static int Delete(uint Id) {
 			if (itemCacheTimeout > 0) RemoveCache(GetItem(Id));
 			return dal.Delete(Id);
 		}
@@ -30,10 +30,10 @@ namespace pifa.BLL {
 			if (itemCacheTimeout > 0) RemoveCache(item);
 			return dal.Update(item);
 		}
-		public static pifa.DAL.Shop_friendly_links.SqlUpdateBuild UpdateDiy(uint? Id) {
+		public static pifa.DAL.Shop_friendly_links.SqlUpdateBuild UpdateDiy(uint Id) {
 			return UpdateDiy(null, Id);
 		}
-		public static pifa.DAL.Shop_friendly_links.SqlUpdateBuild UpdateDiy(Shop_friendly_linksInfo item, uint? Id) {
+		public static pifa.DAL.Shop_friendly_links.SqlUpdateBuild UpdateDiy(Shop_friendly_linksInfo item, uint Id) {
 			if (itemCacheTimeout > 0) RemoveCache(item != null ? item : GetItem(Id));
 			return new pifa.DAL.Shop_friendly_links.SqlUpdateBuild(item, Id);
 		}
@@ -67,14 +67,13 @@ namespace pifa.BLL {
 		}
 		#endregion
 
-		public static Shop_friendly_linksInfo GetItem(uint? Id) {
-			if (Id == null) return null;
-			if (itemCacheTimeout <= 0) return dal.GetItem(Id);
+		public static Shop_friendly_linksInfo GetItem(uint Id) {
+			if (itemCacheTimeout <= 0) return Select.WhereId(Id).ToOne();
 			string key = string.Concat("pifa_BLL_Shop_friendly_links_", Id);
 			string value = RedisHelper.Get(key);
 			if (!string.IsNullOrEmpty(value))
-				try { return new Shop_friendly_linksInfo(value); } catch { }
-			Shop_friendly_linksInfo item = dal.GetItem(Id);
+				try { return Shop_friendly_linksInfo.Parse(value); } catch { }
+			Shop_friendly_linksInfo item = Select.WhereId(Id).ToOne();
 			if (item == null) return null;
 			RedisHelper.Set(key, item.Stringify(), itemCacheTimeout);
 			return item;
@@ -98,7 +97,7 @@ namespace pifa.BLL {
 	}
 	public partial class Shop_friendly_linksSelectBuild : SelectBuild<Shop_friendly_linksInfo, Shop_friendly_linksSelectBuild> {
 		public Shop_friendly_linksSelectBuild WhereShop_id(params uint?[] Shop_id) {
-			return this.Where1Or("a.`Shop_id` = {0}", Shop_id);
+			return this.Where1Or("a.`shop_id` = {0}", Shop_id);
 		}
 		public Shop_friendly_linksSelectBuild WhereId(params uint?[] Id) {
 			return this.Where1Or("a.`id` = {0}", Id);
@@ -117,14 +116,14 @@ namespace pifa.BLL {
 			return this.Where1Or("a.`title` = {0}", Title);
 		}
 		public Shop_friendly_linksSelectBuild WhereTitleLike(params string[] Title) {
-			if (Title == null) return this;
+			if (Title == null || Title.Where(a => !string.IsNullOrEmpty(a)).Any() == false) return this;
 			return this.Where1Or(@"a.`title` LIKE {0}", Title.Select(a => "%" + a + "%").ToArray());
 		}
 		public Shop_friendly_linksSelectBuild WhereUrl(params string[] Url) {
 			return this.Where1Or("a.`url` = {0}", Url);
 		}
 		public Shop_friendly_linksSelectBuild WhereUrlLike(params string[] Url) {
-			if (Url == null) return this;
+			if (Url == null || Url.Where(a => !string.IsNullOrEmpty(a)).Any() == false) return this;
 			return this.Where1Or(@"a.`url` LIKE {0}", Url.Select(a => "%" + a + "%").ToArray());
 		}
 		protected new Shop_friendly_linksSelectBuild Where1Or(string filterFormat, Array values) {

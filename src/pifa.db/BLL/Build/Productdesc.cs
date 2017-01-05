@@ -18,19 +18,22 @@ namespace pifa.BLL {
 
 		#region delete, update, insert
 
-		public static int Delete(uint? Product_id) {
+		public static int Delete(uint Product_id) {
 			if (itemCacheTimeout > 0) RemoveCache(GetItem(Product_id));
 			return dal.Delete(Product_id);
+		}
+		public static int DeleteByProduct_id(uint? Product_id) {
+			return dal.DeleteByProduct_id(Product_id);
 		}
 
 		public static int Update(ProductdescInfo item) {
 			if (itemCacheTimeout > 0) RemoveCache(item);
 			return dal.Update(item);
 		}
-		public static pifa.DAL.Productdesc.SqlUpdateBuild UpdateDiy(uint? Product_id) {
+		public static pifa.DAL.Productdesc.SqlUpdateBuild UpdateDiy(uint Product_id) {
 			return UpdateDiy(null, Product_id);
 		}
-		public static pifa.DAL.Productdesc.SqlUpdateBuild UpdateDiy(ProductdescInfo item, uint? Product_id) {
+		public static pifa.DAL.Productdesc.SqlUpdateBuild UpdateDiy(ProductdescInfo item, uint Product_id) {
 			if (itemCacheTimeout > 0) RemoveCache(item != null ? item : GetItem(Product_id));
 			return new pifa.DAL.Productdesc.SqlUpdateBuild(item, Product_id);
 		}
@@ -57,14 +60,13 @@ namespace pifa.BLL {
 		}
 		#endregion
 
-		public static ProductdescInfo GetItem(uint? Product_id) {
-			if (Product_id == null) return null;
-			if (itemCacheTimeout <= 0) return dal.GetItem(Product_id);
+		public static ProductdescInfo GetItem(uint Product_id) {
+			if (itemCacheTimeout <= 0) return Select.WhereProduct_id(Product_id).ToOne();
 			string key = string.Concat("pifa_BLL_Productdesc_", Product_id);
 			string value = RedisHelper.Get(key);
 			if (!string.IsNullOrEmpty(value))
-				try { return new ProductdescInfo(value); } catch { }
-			ProductdescInfo item = dal.GetItem(Product_id);
+				try { return ProductdescInfo.Parse(value); } catch { }
+			ProductdescInfo item = Select.WhereProduct_id(Product_id).ToOne();
 			if (item == null) return null;
 			RedisHelper.Set(key, item.Stringify(), itemCacheTimeout);
 			return item;
@@ -88,10 +90,10 @@ namespace pifa.BLL {
 	}
 	public partial class ProductdescSelectBuild : SelectBuild<ProductdescInfo, ProductdescSelectBuild> {
 		public ProductdescSelectBuild WhereProduct_id(params uint?[] Product_id) {
-			return this.Where1Or("a.`Product_id` = {0}", Product_id);
+			return this.Where1Or("a.`product_id` = {0}", Product_id);
 		}
 		public ProductdescSelectBuild WhereContentLike(params string[] Content) {
-			if (Content == null) return this;
+			if (Content == null || Content.Where(a => !string.IsNullOrEmpty(a)).Any() == false) return this;
 			return this.Where1Or(@"a.`content` LIKE {0}", Content.Select(a => "%" + a + "%").ToArray());
 		}
 		protected new ProductdescSelectBuild Where1Or(string filterFormat, Array values) {

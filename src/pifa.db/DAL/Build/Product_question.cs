@@ -43,23 +43,21 @@ namespace pifa.DAL {
 			return GetItem(dr, ref index) as Product_questionInfo;
 		}
 		public object GetItem(IDataReader dr, ref int index) {
-			return new Product_questionInfo {
-				Id = dr.IsDBNull(++index) ? null : (uint?)dr.GetInt32(index), 
-				Member_id = dr.IsDBNull(++index) ? null : (uint?)dr.GetInt32(index), 
-				Parent_id = dr.IsDBNull(++index) ? null : (uint?)dr.GetInt32(index), 
-				Product_id = dr.IsDBNull(++index) ? null : (uint?)dr.GetInt32(index), 
-				Content = dr.IsDBNull(++index) ? null : dr.GetString(index), 
-				Create_time = dr.IsDBNull(++index) ? null : (DateTime?)dr.GetDateTime(index), 
-				Email = dr.IsDBNull(++index) ? null : dr.GetString(index), 
-				Name = dr.IsDBNull(++index) ? null : dr.GetString(index), 
-				State = dr.IsDBNull(++index) ? null : (Product_questionSTATE?)dr.GetInt64(index)};
-		}
-		public SelectBuild<Product_questionInfo> Select {
-			get { return SelectBuild<Product_questionInfo>.From(this, SqlHelper.Instance); }
+			Product_questionInfo item = new Product_questionInfo();
+				if (!dr.IsDBNull(++index)) item.Id = (uint?)dr.GetInt32(index);
+				if (!dr.IsDBNull(++index)) item.Member_id = (uint?)dr.GetInt32(index);
+				if (!dr.IsDBNull(++index)) item.Parent_id = (uint?)dr.GetInt32(index);
+				if (!dr.IsDBNull(++index)) item.Product_id = (uint?)dr.GetInt32(index);
+				if (!dr.IsDBNull(++index)) item.Content = dr.GetString(index);
+				if (!dr.IsDBNull(++index)) item.Create_time = (DateTime?)dr.GetDateTime(index);
+				if (!dr.IsDBNull(++index)) item.Email = dr.GetString(index);
+				if (!dr.IsDBNull(++index)) item.Name = dr.GetString(index);
+				if (!dr.IsDBNull(++index)) item.State = (Product_questionSTATE?)dr.GetInt64(index);
+			return item;
 		}
 		#endregion
 
-		public int Delete(uint? Id) {
+		public int Delete(uint Id) {
 			return SqlHelper.ExecuteNonQuery(string.Concat(TSQL.Delete, "`id` = ?id"), 
 				GetParameter("?id", MySqlDbType.UInt32, 10, Id));
 		}
@@ -77,7 +75,7 @@ namespace pifa.DAL {
 		}
 
 		public int Update(Product_questionInfo item) {
-			return new SqlUpdateBuild(null, item.Id)
+			return new SqlUpdateBuild(null, item.Id.Value)
 				.SetMember_id(item.Member_id)
 				.SetParent_id(item.Parent_id)
 				.SetProduct_id(item.Product_id)
@@ -93,7 +91,7 @@ namespace pifa.DAL {
 			protected string _fields;
 			protected string _where;
 			protected List<MySqlParameter> _parameters = new List<MySqlParameter>();
-			public SqlUpdateBuild(Product_questionInfo item, uint? Id) {
+			public SqlUpdateBuild(Product_questionInfo item, uint Id) {
 				_item = item;
 				_where = SqlHelper.Addslashes("`id` = {0}", Id);
 			}
@@ -121,43 +119,43 @@ namespace pifa.DAL {
 			}
 			public SqlUpdateBuild SetMember_id(uint? value) {
 				if (_item != null) _item.Member_id = value;
-				return this.Set("`member_id`", string.Concat("?member_id_", _parameters.Count), 
-					GetParameter(string.Concat("?member_id_", _parameters.Count), MySqlDbType.UInt32, 10, value));
+				return this.Set("`member_id`", $"?member_id_{_parameters.Count}", 
+					GetParameter($"?member_id_{{_parameters.Count}}", MySqlDbType.UInt32, 10, value));
 			}
 			public SqlUpdateBuild SetParent_id(uint? value) {
 				if (_item != null) _item.Parent_id = value;
-				return this.Set("`parent_id`", string.Concat("?parent_id_", _parameters.Count), 
-					GetParameter(string.Concat("?parent_id_", _parameters.Count), MySqlDbType.UInt32, 10, value));
+				return this.Set("`parent_id`", $"?parent_id_{_parameters.Count}", 
+					GetParameter($"?parent_id_{{_parameters.Count}}", MySqlDbType.UInt32, 10, value));
 			}
 			public SqlUpdateBuild SetProduct_id(uint? value) {
 				if (_item != null) _item.Product_id = value;
-				return this.Set("`product_id`", string.Concat("?product_id_", _parameters.Count), 
-					GetParameter(string.Concat("?product_id_", _parameters.Count), MySqlDbType.UInt32, 10, value));
+				return this.Set("`product_id`", $"?product_id_{_parameters.Count}", 
+					GetParameter($"?product_id_{{_parameters.Count}}", MySqlDbType.UInt32, 10, value));
 			}
 			public SqlUpdateBuild SetContent(string value) {
 				if (_item != null) _item.Content = value;
-				return this.Set("`content`", string.Concat("?content_", _parameters.Count), 
-					GetParameter(string.Concat("?content_", _parameters.Count), MySqlDbType.VarChar, 255, value));
+				return this.Set("`content`", $"?content_{_parameters.Count}", 
+					GetParameter($"?content_{{_parameters.Count}}", MySqlDbType.VarChar, 255, value));
 			}
 			public SqlUpdateBuild SetCreate_time(DateTime? value) {
 				if (_item != null) _item.Create_time = value;
-				return this.Set("`create_time`", string.Concat("?create_time_", _parameters.Count), 
-					GetParameter(string.Concat("?create_time_", _parameters.Count), MySqlDbType.DateTime, -1, value));
+				return this.Set("`create_time`", $"?create_time_{_parameters.Count}", 
+					GetParameter($"?create_time_{{_parameters.Count}}", MySqlDbType.DateTime, -1, value));
 			}
 			public SqlUpdateBuild SetEmail(string value) {
 				if (_item != null) _item.Email = value;
-				return this.Set("`email`", string.Concat("?email_", _parameters.Count), 
-					GetParameter(string.Concat("?email_", _parameters.Count), MySqlDbType.VarChar, 255, value));
+				return this.Set("`email`", $"?email_{_parameters.Count}", 
+					GetParameter($"?email_{{_parameters.Count}}", MySqlDbType.VarChar, 255, value));
 			}
 			public SqlUpdateBuild SetName(string value) {
 				if (_item != null) _item.Name = value;
-				return this.Set("`name`", string.Concat("?name_", _parameters.Count), 
-					GetParameter(string.Concat("?name_", _parameters.Count), MySqlDbType.VarChar, 255, value));
+				return this.Set("`name`", $"?name_{_parameters.Count}", 
+					GetParameter($"?name_{{_parameters.Count}}", MySqlDbType.VarChar, 255, value));
 			}
 			public SqlUpdateBuild SetState(Product_questionSTATE? value) {
 				if (_item != null) _item.State = value;
-				return this.Set("`state`", string.Concat("?state_", _parameters.Count), 
-					GetParameter(string.Concat("?state_", _parameters.Count), MySqlDbType.Enum, -1, value?.ToInt64()));
+				return this.Set("`state`", $"?state_{_parameters.Count}", 
+					GetParameter($"?state_{{_parameters.Count}}", MySqlDbType.Enum, -1, value?.ToInt64()));
 			}
 		}
 		#endregion
@@ -168,8 +166,5 @@ namespace pifa.DAL {
 			return item;
 		}
 
-		public Product_questionInfo GetItem(uint? Id) {
-			return this.Select.Where("a.`id` = {0}", Id).ToOne();
-		}
 	}
 }

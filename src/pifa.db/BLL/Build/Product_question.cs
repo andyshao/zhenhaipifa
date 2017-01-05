@@ -18,7 +18,7 @@ namespace pifa.BLL {
 
 		#region delete, update, insert
 
-		public static int Delete(uint? Id) {
+		public static int Delete(uint Id) {
 			if (itemCacheTimeout > 0) RemoveCache(GetItem(Id));
 			return dal.Delete(Id);
 		}
@@ -36,10 +36,10 @@ namespace pifa.BLL {
 			if (itemCacheTimeout > 0) RemoveCache(item);
 			return dal.Update(item);
 		}
-		public static pifa.DAL.Product_question.SqlUpdateBuild UpdateDiy(uint? Id) {
+		public static pifa.DAL.Product_question.SqlUpdateBuild UpdateDiy(uint Id) {
 			return UpdateDiy(null, Id);
 		}
-		public static pifa.DAL.Product_question.SqlUpdateBuild UpdateDiy(Product_questionInfo item, uint? Id) {
+		public static pifa.DAL.Product_question.SqlUpdateBuild UpdateDiy(Product_questionInfo item, uint Id) {
 			if (itemCacheTimeout > 0) RemoveCache(item != null ? item : GetItem(Id));
 			return new pifa.DAL.Product_question.SqlUpdateBuild(item, Id);
 		}
@@ -76,14 +76,13 @@ namespace pifa.BLL {
 		}
 		#endregion
 
-		public static Product_questionInfo GetItem(uint? Id) {
-			if (Id == null) return null;
-			if (itemCacheTimeout <= 0) return dal.GetItem(Id);
+		public static Product_questionInfo GetItem(uint Id) {
+			if (itemCacheTimeout <= 0) return Select.WhereId(Id).ToOne();
 			string key = string.Concat("pifa_BLL_Product_question_", Id);
 			string value = RedisHelper.Get(key);
 			if (!string.IsNullOrEmpty(value))
-				try { return new Product_questionInfo(value); } catch { }
-			Product_questionInfo item = dal.GetItem(Id);
+				try { return Product_questionInfo.Parse(value); } catch { }
+			Product_questionInfo item = Select.WhereId(Id).ToOne();
 			if (item == null) return null;
 			RedisHelper.Set(key, item.Stringify(), itemCacheTimeout);
 			return item;
@@ -125,13 +124,13 @@ namespace pifa.BLL {
 	}
 	public partial class Product_questionSelectBuild : SelectBuild<Product_questionInfo, Product_questionSelectBuild> {
 		public Product_questionSelectBuild WhereMember_id(params uint?[] Member_id) {
-			return this.Where1Or("a.`Member_id` = {0}", Member_id);
+			return this.Where1Or("a.`member_id` = {0}", Member_id);
 		}
 		public Product_questionSelectBuild WhereProduct_id(params uint?[] Product_id) {
-			return this.Where1Or("a.`Product_id` = {0}", Product_id);
+			return this.Where1Or("a.`product_id` = {0}", Product_id);
 		}
 		public Product_questionSelectBuild WhereParent_id(params uint?[] Parent_id) {
-			return this.Where1Or("a.`Parent_id` = {0}", Parent_id);
+			return this.Where1Or("a.`parent_id` = {0}", Parent_id);
 		}
 		public Product_questionSelectBuild WhereId(params uint?[] Id) {
 			return this.Where1Or("a.`id` = {0}", Id);
@@ -140,7 +139,7 @@ namespace pifa.BLL {
 			return this.Where1Or("a.`content` = {0}", Content);
 		}
 		public Product_questionSelectBuild WhereContentLike(params string[] Content) {
-			if (Content == null) return this;
+			if (Content == null || Content.Where(a => !string.IsNullOrEmpty(a)).Any() == false) return this;
 			return this.Where1Or(@"a.`content` LIKE {0}", Content.Select(a => "%" + a + "%").ToArray());
 		}
 		public Product_questionSelectBuild WhereCreate_timeRange(DateTime? begin) {
@@ -154,33 +153,33 @@ namespace pifa.BLL {
 			return this.Where1Or("a.`email` = {0}", Email);
 		}
 		public Product_questionSelectBuild WhereEmailLike(params string[] Email) {
-			if (Email == null) return this;
+			if (Email == null || Email.Where(a => !string.IsNullOrEmpty(a)).Any() == false) return this;
 			return this.Where1Or(@"a.`email` LIKE {0}", Email.Select(a => "%" + a + "%").ToArray());
 		}
 		public Product_questionSelectBuild WhereName(params string[] Name) {
 			return this.Where1Or("a.`name` = {0}", Name);
 		}
 		public Product_questionSelectBuild WhereNameLike(params string[] Name) {
-			if (Name == null) return this;
+			if (Name == null || Name.Where(a => !string.IsNullOrEmpty(a)).Any() == false) return this;
 			return this.Where1Or(@"a.`name` LIKE {0}", Name.Select(a => "%" + a + "%").ToArray());
 		}
 		public Product_questionSelectBuild WhereState_IN(params Product_questionSTATE?[] States) {
 			return this.Where1Or("a.`state` = {0}", States);
 		}
-		public Product_questionSelectBuild WhereState(Product_questionSTATE? State1) {
+		public Product_questionSelectBuild WhereState(Product_questionSTATE State1) {
 			return this.WhereState_IN(State1);
 		}
 		#region WhereState
-		public Product_questionSelectBuild WhereState(Product_questionSTATE? State1, Product_questionSTATE? State2) {
+		public Product_questionSelectBuild WhereState(Product_questionSTATE State1, Product_questionSTATE State2) {
 			return this.WhereState_IN(State1, State2);
 		}
-		public Product_questionSelectBuild WhereState(Product_questionSTATE? State1, Product_questionSTATE? State2, Product_questionSTATE? State3) {
+		public Product_questionSelectBuild WhereState(Product_questionSTATE State1, Product_questionSTATE State2, Product_questionSTATE State3) {
 			return this.WhereState_IN(State1, State2, State3);
 		}
-		public Product_questionSelectBuild WhereState(Product_questionSTATE? State1, Product_questionSTATE? State2, Product_questionSTATE? State3, Product_questionSTATE? State4) {
+		public Product_questionSelectBuild WhereState(Product_questionSTATE State1, Product_questionSTATE State2, Product_questionSTATE State3, Product_questionSTATE State4) {
 			return this.WhereState_IN(State1, State2, State3, State4);
 		}
-		public Product_questionSelectBuild WhereState(Product_questionSTATE? State1, Product_questionSTATE? State2, Product_questionSTATE? State3, Product_questionSTATE? State4, Product_questionSTATE? State5) {
+		public Product_questionSelectBuild WhereState(Product_questionSTATE State1, Product_questionSTATE State2, Product_questionSTATE State3, Product_questionSTATE State4, Product_questionSTATE State5) {
 			return this.WhereState_IN(State1, State2, State3, State4, State5);
 		}
 		#endregion

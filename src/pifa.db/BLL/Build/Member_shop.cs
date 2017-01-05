@@ -18,7 +18,7 @@ namespace pifa.BLL {
 
 		#region delete, update, insert
 
-		public static int Delete(uint? Member_id, uint? Shop_id) {
+		public static int Delete(uint Member_id, uint Shop_id) {
 			if (itemCacheTimeout > 0) RemoveCache(GetItem(Member_id, Shop_id));
 			return dal.Delete(Member_id, Shop_id);
 		}
@@ -33,10 +33,10 @@ namespace pifa.BLL {
 			if (itemCacheTimeout > 0) RemoveCache(item);
 			return dal.Update(item);
 		}
-		public static pifa.DAL.Member_shop.SqlUpdateBuild UpdateDiy(uint? Member_id, uint? Shop_id) {
+		public static pifa.DAL.Member_shop.SqlUpdateBuild UpdateDiy(uint Member_id, uint Shop_id) {
 			return UpdateDiy(null, Member_id, Shop_id);
 		}
-		public static pifa.DAL.Member_shop.SqlUpdateBuild UpdateDiy(Member_shopInfo item, uint? Member_id, uint? Shop_id) {
+		public static pifa.DAL.Member_shop.SqlUpdateBuild UpdateDiy(Member_shopInfo item, uint Member_id, uint Shop_id) {
 			if (itemCacheTimeout > 0) RemoveCache(item != null ? item : GetItem(Member_id, Shop_id));
 			return new pifa.DAL.Member_shop.SqlUpdateBuild(item, Member_id, Shop_id);
 		}
@@ -64,14 +64,13 @@ namespace pifa.BLL {
 		}
 		#endregion
 
-		public static Member_shopInfo GetItem(uint? Member_id, uint? Shop_id) {
-			if (Member_id == null || Shop_id == null) return null;
-			if (itemCacheTimeout <= 0) return dal.GetItem(Member_id, Shop_id);
+		public static Member_shopInfo GetItem(uint Member_id, uint Shop_id) {
+			if (itemCacheTimeout <= 0) return Select.WhereMember_id(Member_id).WhereShop_id(Shop_id).ToOne();
 			string key = string.Concat("pifa_BLL_Member_shop_", Member_id, "_,_", Shop_id);
 			string value = RedisHelper.Get(key);
 			if (!string.IsNullOrEmpty(value))
-				try { return new Member_shopInfo(value); } catch { }
-			Member_shopInfo item = dal.GetItem(Member_id, Shop_id);
+				try { return Member_shopInfo.Parse(value); } catch { }
+			Member_shopInfo item = Select.WhereMember_id(Member_id).WhereShop_id(Shop_id).ToOne();
 			if (item == null) return null;
 			RedisHelper.Set(key, item.Stringify(), itemCacheTimeout);
 			return item;
@@ -104,10 +103,10 @@ namespace pifa.BLL {
 	}
 	public partial class Member_shopSelectBuild : SelectBuild<Member_shopInfo, Member_shopSelectBuild> {
 		public Member_shopSelectBuild WhereMember_id(params uint?[] Member_id) {
-			return this.Where1Or("a.`Member_id` = {0}", Member_id);
+			return this.Where1Or("a.`member_id` = {0}", Member_id);
 		}
 		public Member_shopSelectBuild WhereShop_id(params uint?[] Shop_id) {
-			return this.Where1Or("a.`Shop_id` = {0}", Shop_id);
+			return this.Where1Or("a.`shop_id` = {0}", Shop_id);
 		}
 		public Member_shopSelectBuild WhereCreate_timeRange(DateTime? begin) {
 			return base.Where("a.`create_time` >= {0}", begin) as Member_shopSelectBuild;

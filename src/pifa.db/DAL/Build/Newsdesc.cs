@@ -36,22 +36,24 @@ namespace pifa.DAL {
 			return GetItem(dr, ref index) as NewsdescInfo;
 		}
 		public object GetItem(IDataReader dr, ref int index) {
-			return new NewsdescInfo {
-				News_id = dr.IsDBNull(++index) ? null : (uint?)dr.GetInt32(index), 
-				Content = dr.IsDBNull(++index) ? null : dr.GetString(index)};
-		}
-		public SelectBuild<NewsdescInfo> Select {
-			get { return SelectBuild<NewsdescInfo>.From(this, SqlHelper.Instance); }
+			NewsdescInfo item = new NewsdescInfo();
+				if (!dr.IsDBNull(++index)) item.News_id = (uint?)dr.GetInt32(index);
+				if (!dr.IsDBNull(++index)) item.Content = dr.GetString(index);
+			return item;
 		}
 		#endregion
 
-		public int Delete(uint? News_id) {
+		public int Delete(uint News_id) {
+			return SqlHelper.ExecuteNonQuery(string.Concat(TSQL.Delete, "`news_id` = ?news_id"), 
+				GetParameter("?news_id", MySqlDbType.UInt32, 10, News_id));
+		}
+		public int DeleteByNews_id(uint? News_id) {
 			return SqlHelper.ExecuteNonQuery(string.Concat(TSQL.Delete, "`news_id` = ?news_id"), 
 				GetParameter("?news_id", MySqlDbType.UInt32, 10, News_id));
 		}
 
 		public int Update(NewsdescInfo item) {
-			return new SqlUpdateBuild(null, item.News_id)
+			return new SqlUpdateBuild(null, item.News_id.Value)
 				.SetContent(item.Content).ExecuteNonQuery();
 		}
 		#region class SqlUpdateBuild
@@ -60,7 +62,7 @@ namespace pifa.DAL {
 			protected string _fields;
 			protected string _where;
 			protected List<MySqlParameter> _parameters = new List<MySqlParameter>();
-			public SqlUpdateBuild(NewsdescInfo item, uint? News_id) {
+			public SqlUpdateBuild(NewsdescInfo item, uint News_id) {
 				_item = item;
 				_where = SqlHelper.Addslashes("`news_id` = {0}", News_id);
 			}
@@ -88,8 +90,8 @@ namespace pifa.DAL {
 			}
 			public SqlUpdateBuild SetContent(string value) {
 				if (_item != null) _item.Content = value;
-				return this.Set("`content`", string.Concat("?content_", _parameters.Count), 
-					GetParameter(string.Concat("?content_", _parameters.Count), MySqlDbType.Text, -1, value));
+				return this.Set("`content`", $"?content_{_parameters.Count}", 
+					GetParameter($"?content_{{_parameters.Count}}", MySqlDbType.Text, -1, value));
 			}
 		}
 		#endregion
@@ -99,8 +101,5 @@ namespace pifa.DAL {
 			return item;
 		}
 
-		public NewsdescInfo GetItem(uint? News_id) {
-			return this.Select.Where("a.`news_id` = {0}", News_id).ToOne();
-		}
 	}
 }

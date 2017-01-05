@@ -18,7 +18,7 @@ namespace pifa.BLL {
 
 		#region delete, update, insert
 
-		public static int Delete(uint? Member_id, uint? Product_id) {
+		public static int Delete(uint Member_id, uint Product_id) {
 			if (itemCacheTimeout > 0) RemoveCache(GetItem(Member_id, Product_id));
 			return dal.Delete(Member_id, Product_id);
 		}
@@ -33,10 +33,10 @@ namespace pifa.BLL {
 			if (itemCacheTimeout > 0) RemoveCache(item);
 			return dal.Update(item);
 		}
-		public static pifa.DAL.Member_product.SqlUpdateBuild UpdateDiy(uint? Member_id, uint? Product_id) {
+		public static pifa.DAL.Member_product.SqlUpdateBuild UpdateDiy(uint Member_id, uint Product_id) {
 			return UpdateDiy(null, Member_id, Product_id);
 		}
-		public static pifa.DAL.Member_product.SqlUpdateBuild UpdateDiy(Member_productInfo item, uint? Member_id, uint? Product_id) {
+		public static pifa.DAL.Member_product.SqlUpdateBuild UpdateDiy(Member_productInfo item, uint Member_id, uint Product_id) {
 			if (itemCacheTimeout > 0) RemoveCache(item != null ? item : GetItem(Member_id, Product_id));
 			return new pifa.DAL.Member_product.SqlUpdateBuild(item, Member_id, Product_id);
 		}
@@ -64,14 +64,13 @@ namespace pifa.BLL {
 		}
 		#endregion
 
-		public static Member_productInfo GetItem(uint? Member_id, uint? Product_id) {
-			if (Member_id == null || Product_id == null) return null;
-			if (itemCacheTimeout <= 0) return dal.GetItem(Member_id, Product_id);
+		public static Member_productInfo GetItem(uint Member_id, uint Product_id) {
+			if (itemCacheTimeout <= 0) return Select.WhereMember_id(Member_id).WhereProduct_id(Product_id).ToOne();
 			string key = string.Concat("pifa_BLL_Member_product_", Member_id, "_,_", Product_id);
 			string value = RedisHelper.Get(key);
 			if (!string.IsNullOrEmpty(value))
-				try { return new Member_productInfo(value); } catch { }
-			Member_productInfo item = dal.GetItem(Member_id, Product_id);
+				try { return Member_productInfo.Parse(value); } catch { }
+			Member_productInfo item = Select.WhereMember_id(Member_id).WhereProduct_id(Product_id).ToOne();
 			if (item == null) return null;
 			RedisHelper.Set(key, item.Stringify(), itemCacheTimeout);
 			return item;
@@ -104,10 +103,10 @@ namespace pifa.BLL {
 	}
 	public partial class Member_productSelectBuild : SelectBuild<Member_productInfo, Member_productSelectBuild> {
 		public Member_productSelectBuild WhereMember_id(params uint?[] Member_id) {
-			return this.Where1Or("a.`Member_id` = {0}", Member_id);
+			return this.Where1Or("a.`member_id` = {0}", Member_id);
 		}
 		public Member_productSelectBuild WhereProduct_id(params uint?[] Product_id) {
-			return this.Where1Or("a.`Product_id` = {0}", Product_id);
+			return this.Where1Or("a.`product_id` = {0}", Product_id);
 		}
 		public Member_productSelectBuild WhereCreate_timeRange(DateTime? begin) {
 			return base.Where("a.`create_time` >= {0}", begin) as Member_productSelectBuild;

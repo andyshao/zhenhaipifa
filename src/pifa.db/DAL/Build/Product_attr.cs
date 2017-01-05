@@ -37,17 +37,15 @@ namespace pifa.DAL {
 			return GetItem(dr, ref index) as Product_attrInfo;
 		}
 		public object GetItem(IDataReader dr, ref int index) {
-			return new Product_attrInfo {
-				Pattr_id = dr.IsDBNull(++index) ? null : (uint?)dr.GetInt32(index), 
-				Product_id = dr.IsDBNull(++index) ? null : (uint?)dr.GetInt32(index), 
-				Value = dr.IsDBNull(++index) ? null : dr.GetString(index)};
-		}
-		public SelectBuild<Product_attrInfo> Select {
-			get { return SelectBuild<Product_attrInfo>.From(this, SqlHelper.Instance); }
+			Product_attrInfo item = new Product_attrInfo();
+				if (!dr.IsDBNull(++index)) item.Pattr_id = (uint?)dr.GetInt32(index);
+				if (!dr.IsDBNull(++index)) item.Product_id = (uint?)dr.GetInt32(index);
+				if (!dr.IsDBNull(++index)) item.Value = dr.GetString(index);
+			return item;
 		}
 		#endregion
 
-		public int Delete(uint? Pattr_id, uint? Product_id) {
+		public int Delete(uint Pattr_id, uint Product_id) {
 			return SqlHelper.ExecuteNonQuery(string.Concat(TSQL.Delete, "`pattr_id` = ?pattr_id AND `product_id` = ?product_id"), 
 				GetParameter("?pattr_id", MySqlDbType.UInt32, 10, Pattr_id), 
 				GetParameter("?product_id", MySqlDbType.UInt32, 10, Product_id));
@@ -62,7 +60,7 @@ namespace pifa.DAL {
 		}
 
 		public int Update(Product_attrInfo item) {
-			return new SqlUpdateBuild(null, item.Pattr_id, item.Product_id)
+			return new SqlUpdateBuild(null, item.Pattr_id.Value, item.Product_id.Value)
 				.SetValue(item.Value).ExecuteNonQuery();
 		}
 		#region class SqlUpdateBuild
@@ -71,7 +69,7 @@ namespace pifa.DAL {
 			protected string _fields;
 			protected string _where;
 			protected List<MySqlParameter> _parameters = new List<MySqlParameter>();
-			public SqlUpdateBuild(Product_attrInfo item, uint? Pattr_id, uint? Product_id) {
+			public SqlUpdateBuild(Product_attrInfo item, uint Pattr_id, uint Product_id) {
 				_item = item;
 				_where = SqlHelper.Addslashes("`pattr_id` = {0} AND `product_id` = {1}", Pattr_id, Product_id);
 			}
@@ -99,8 +97,8 @@ namespace pifa.DAL {
 			}
 			public SqlUpdateBuild SetValue(string value) {
 				if (_item != null) _item.Value = value;
-				return this.Set("`value`", string.Concat("?value_", _parameters.Count), 
-					GetParameter(string.Concat("?value_", _parameters.Count), MySqlDbType.VarChar, 255, value));
+				return this.Set("`value`", $"?value_{_parameters.Count}", 
+					GetParameter($"?value_{{_parameters.Count}}", MySqlDbType.VarChar, 255, value));
 			}
 		}
 		#endregion
@@ -110,8 +108,5 @@ namespace pifa.DAL {
 			return item;
 		}
 
-		public Product_attrInfo GetItem(uint? Pattr_id, uint? Product_id) {
-			return this.Select.Where("a.`pattr_id` = {0} AND a.`product_id` = {1}", Pattr_id, Product_id).ToOne();
-		}
 	}
 }

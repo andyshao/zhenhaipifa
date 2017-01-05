@@ -18,7 +18,7 @@ namespace pifa.BLL {
 
 		#region delete, update, insert
 
-		public static int Delete(uint? Id) {
+		public static int Delete(uint Id) {
 			if (itemCacheTimeout > 0) RemoveCache(GetItem(Id));
 			return dal.Delete(Id);
 		}
@@ -36,10 +36,10 @@ namespace pifa.BLL {
 			if (itemCacheTimeout > 0) RemoveCache(item);
 			return dal.Update(item);
 		}
-		public static pifa.DAL.Shop.SqlUpdateBuild UpdateDiy(uint? Id) {
+		public static pifa.DAL.Shop.SqlUpdateBuild UpdateDiy(uint Id) {
 			return UpdateDiy(null, Id);
 		}
-		public static pifa.DAL.Shop.SqlUpdateBuild UpdateDiy(ShopInfo item, uint? Id) {
+		public static pifa.DAL.Shop.SqlUpdateBuild UpdateDiy(ShopInfo item, uint Id) {
 			if (itemCacheTimeout > 0) RemoveCache(item != null ? item : GetItem(Id));
 			return new pifa.DAL.Shop.SqlUpdateBuild(item, Id);
 		}
@@ -83,26 +83,24 @@ namespace pifa.BLL {
 		}
 		#endregion
 
-		public static ShopInfo GetItem(uint? Id) {
-			if (Id == null) return null;
-			if (itemCacheTimeout <= 0) return dal.GetItem(Id);
+		public static ShopInfo GetItem(uint Id) {
+			if (itemCacheTimeout <= 0) return Select.WhereId(Id).ToOne();
 			string key = string.Concat("pifa_BLL_Shop_", Id);
 			string value = RedisHelper.Get(key);
 			if (!string.IsNullOrEmpty(value))
-				try { return new ShopInfo(value); } catch { }
-			ShopInfo item = dal.GetItem(Id);
+				try { return ShopInfo.Parse(value); } catch { }
+			ShopInfo item = Select.WhereId(Id).ToOne();
 			if (item == null) return null;
 			RedisHelper.Set(key, item.Stringify(), itemCacheTimeout);
 			return item;
 		}
 		public static ShopInfo GetItemByCode(string Code) {
-			if (Code == null) return null;
-			if (itemCacheTimeout <= 0) return dal.GetItemByCode(Code);
+			if (itemCacheTimeout <= 0) return Select.WhereCode(Code).ToOne();
 			string key = string.Concat("pifa_BLL_ShopByCode_", Code);
 			string value = RedisHelper.Get(key);
 			if (!string.IsNullOrEmpty(value))
-				try { return new ShopInfo(value); } catch { }
-			ShopInfo item = dal.GetItemByCode(Code);
+				try { return ShopInfo.Parse(value); } catch { }
+			ShopInfo item = Select.WhereCode(Code).ToOne();
 			if (item == null) return null;
 			RedisHelper.Set(key, item.Stringify(), itemCacheTimeout);
 			return item;
@@ -147,10 +145,10 @@ namespace pifa.BLL {
 	}
 	public partial class ShopSelectBuild : SelectBuild<ShopInfo, ShopSelectBuild> {
 		public ShopSelectBuild WhereMarkettype_id(params uint?[] Markettype_id) {
-			return this.Where1Or("a.`Markettype_id` = {0}", Markettype_id);
+			return this.Where1Or("a.`markettype_id` = {0}", Markettype_id);
 		}
 		public ShopSelectBuild WhereMember_id(params uint?[] Member_id) {
-			return this.Where1Or("a.`Member_id` = {0}", Member_id);
+			return this.Where1Or("a.`member_id` = {0}", Member_id);
 		}
 		public ShopSelectBuild WhereMember(params MemberInfo[] items) {
 			if (items == null) return this;
@@ -175,7 +173,7 @@ namespace pifa.BLL {
 			return this.Where1Or("a.`address` = {0}", Address);
 		}
 		public ShopSelectBuild WhereAddressLike(params string[] Address) {
-			if (Address == null) return this;
+			if (Address == null || Address.Where(a => !string.IsNullOrEmpty(a)).Any() == false) return this;
 			return this.Where1Or(@"a.`address` LIKE {0}", Address.Select(a => "%" + a + "%").ToArray());
 		}
 		public ShopSelectBuild WhereArea(params decimal?[] Area) {
@@ -192,7 +190,7 @@ namespace pifa.BLL {
 			return this.Where1Or("a.`code` = {0}", Code);
 		}
 		public ShopSelectBuild WhereCodeLike(params string[] Code) {
-			if (Code == null) return this;
+			if (Code == null || Code.Where(a => !string.IsNullOrEmpty(a)).Any() == false) return this;
 			return this.Where1Or(@"a.`code` LIKE {0}", Code.Select(a => "%" + a + "%").ToArray());
 		}
 		public ShopSelectBuild WhereCreate_timeRange(DateTime? begin) {
@@ -206,46 +204,46 @@ namespace pifa.BLL {
 			return this.Where1Or("a.`fax` = {0}", Fax);
 		}
 		public ShopSelectBuild WhereFaxLike(params string[] Fax) {
-			if (Fax == null) return this;
+			if (Fax == null || Fax.Where(a => !string.IsNullOrEmpty(a)).Any() == false) return this;
 			return this.Where1Or(@"a.`fax` LIKE {0}", Fax.Select(a => "%" + a + "%").ToArray());
 		}
-		public ShopSelectBuild WhereFunc_switch_IN(params ShopFUNC_SWITCH?[] Func_switchs) {
+		public ShopSelectBuild WhereFunc_switch_IN(params ShopFUNC_SWITCH[] Func_switchs) {
 			return this.Where1Or("(a.`func_switch` & {0}) = {0}", Func_switchs);
 		}
-		public ShopSelectBuild WhereFunc_switch(ShopFUNC_SWITCH? Func_switch1) {
+		public ShopSelectBuild WhereFunc_switch(ShopFUNC_SWITCH Func_switch1) {
 			return this.WhereFunc_switch_IN(Func_switch1);
 		}
 		#region WhereFunc_switch
-		public ShopSelectBuild WhereFunc_switch(ShopFUNC_SWITCH? Func_switch1, ShopFUNC_SWITCH? Func_switch2) {
+		public ShopSelectBuild WhereFunc_switch(ShopFUNC_SWITCH Func_switch1, ShopFUNC_SWITCH Func_switch2) {
 			return this.WhereFunc_switch_IN(Func_switch1, Func_switch2);
 		}
-		public ShopSelectBuild WhereFunc_switch(ShopFUNC_SWITCH? Func_switch1, ShopFUNC_SWITCH? Func_switch2, ShopFUNC_SWITCH? Func_switch3) {
+		public ShopSelectBuild WhereFunc_switch(ShopFUNC_SWITCH Func_switch1, ShopFUNC_SWITCH Func_switch2, ShopFUNC_SWITCH Func_switch3) {
 			return this.WhereFunc_switch_IN(Func_switch1, Func_switch2, Func_switch3);
 		}
-		public ShopSelectBuild WhereFunc_switch(ShopFUNC_SWITCH? Func_switch1, ShopFUNC_SWITCH? Func_switch2, ShopFUNC_SWITCH? Func_switch3, ShopFUNC_SWITCH? Func_switch4) {
+		public ShopSelectBuild WhereFunc_switch(ShopFUNC_SWITCH Func_switch1, ShopFUNC_SWITCH Func_switch2, ShopFUNC_SWITCH Func_switch3, ShopFUNC_SWITCH Func_switch4) {
 			return this.WhereFunc_switch_IN(Func_switch1, Func_switch2, Func_switch3, Func_switch4);
 		}
-		public ShopSelectBuild WhereFunc_switch(ShopFUNC_SWITCH? Func_switch1, ShopFUNC_SWITCH? Func_switch2, ShopFUNC_SWITCH? Func_switch3, ShopFUNC_SWITCH? Func_switch4, ShopFUNC_SWITCH? Func_switch5) {
+		public ShopSelectBuild WhereFunc_switch(ShopFUNC_SWITCH Func_switch1, ShopFUNC_SWITCH Func_switch2, ShopFUNC_SWITCH Func_switch3, ShopFUNC_SWITCH Func_switch4, ShopFUNC_SWITCH Func_switch5) {
 			return this.WhereFunc_switch_IN(Func_switch1, Func_switch2, Func_switch3, Func_switch4, Func_switch5);
 		}
 		#endregion
-		public ShopSelectBuild WhereIcon_IN(params ShopICON?[] Icons) {
+		public ShopSelectBuild WhereIcon_IN(params ShopICON[] Icons) {
 			return this.Where1Or("(a.`icon` & {0}) = {0}", Icons);
 		}
-		public ShopSelectBuild WhereIcon(ShopICON? Icon1) {
+		public ShopSelectBuild WhereIcon(ShopICON Icon1) {
 			return this.WhereIcon_IN(Icon1);
 		}
 		#region WhereIcon
-		public ShopSelectBuild WhereIcon(ShopICON? Icon1, ShopICON? Icon2) {
+		public ShopSelectBuild WhereIcon(ShopICON Icon1, ShopICON Icon2) {
 			return this.WhereIcon_IN(Icon1, Icon2);
 		}
-		public ShopSelectBuild WhereIcon(ShopICON? Icon1, ShopICON? Icon2, ShopICON? Icon3) {
+		public ShopSelectBuild WhereIcon(ShopICON Icon1, ShopICON Icon2, ShopICON Icon3) {
 			return this.WhereIcon_IN(Icon1, Icon2, Icon3);
 		}
-		public ShopSelectBuild WhereIcon(ShopICON? Icon1, ShopICON? Icon2, ShopICON? Icon3, ShopICON? Icon4) {
+		public ShopSelectBuild WhereIcon(ShopICON Icon1, ShopICON Icon2, ShopICON Icon3, ShopICON Icon4) {
 			return this.WhereIcon_IN(Icon1, Icon2, Icon3, Icon4);
 		}
-		public ShopSelectBuild WhereIcon(ShopICON? Icon1, ShopICON? Icon2, ShopICON? Icon3, ShopICON? Icon4, ShopICON? Icon5) {
+		public ShopSelectBuild WhereIcon(ShopICON Icon1, ShopICON Icon2, ShopICON Icon3, ShopICON Icon4, ShopICON Icon5) {
 			return this.WhereIcon_IN(Icon1, Icon2, Icon3, Icon4, Icon5);
 		}
 		#endregion
@@ -253,40 +251,40 @@ namespace pifa.BLL {
 			return this.Where1Or("a.`kefu` = {0}", Kefu);
 		}
 		public ShopSelectBuild WhereKefuLike(params string[] Kefu) {
-			if (Kefu == null) return this;
+			if (Kefu == null || Kefu.Where(a => !string.IsNullOrEmpty(a)).Any() == false) return this;
 			return this.Where1Or(@"a.`kefu` LIKE {0}", Kefu.Select(a => "%" + a + "%").ToArray());
 		}
 		public ShopSelectBuild WhereMain_business(params string[] Main_business) {
 			return this.Where1Or("a.`main_business` = {0}", Main_business);
 		}
 		public ShopSelectBuild WhereMain_businessLike(params string[] Main_business) {
-			if (Main_business == null) return this;
+			if (Main_business == null || Main_business.Where(a => !string.IsNullOrEmpty(a)).Any() == false) return this;
 			return this.Where1Or(@"a.`main_business` LIKE {0}", Main_business.Select(a => "%" + a + "%").ToArray());
 		}
 		public ShopSelectBuild WhereNickname(params string[] Nickname) {
 			return this.Where1Or("a.`nickname` = {0}", Nickname);
 		}
 		public ShopSelectBuild WhereNicknameLike(params string[] Nickname) {
-			if (Nickname == null) return this;
+			if (Nickname == null || Nickname.Where(a => !string.IsNullOrEmpty(a)).Any() == false) return this;
 			return this.Where1Or(@"a.`nickname` LIKE {0}", Nickname.Select(a => "%" + a + "%").ToArray());
 		}
 		public ShopSelectBuild WhereState_IN(params ShopSTATE?[] States) {
 			return this.Where1Or("a.`state` = {0}", States);
 		}
-		public ShopSelectBuild WhereState(ShopSTATE? State1) {
+		public ShopSelectBuild WhereState(ShopSTATE State1) {
 			return this.WhereState_IN(State1);
 		}
 		#region WhereState
-		public ShopSelectBuild WhereState(ShopSTATE? State1, ShopSTATE? State2) {
+		public ShopSelectBuild WhereState(ShopSTATE State1, ShopSTATE State2) {
 			return this.WhereState_IN(State1, State2);
 		}
-		public ShopSelectBuild WhereState(ShopSTATE? State1, ShopSTATE? State2, ShopSTATE? State3) {
+		public ShopSelectBuild WhereState(ShopSTATE State1, ShopSTATE State2, ShopSTATE State3) {
 			return this.WhereState_IN(State1, State2, State3);
 		}
-		public ShopSelectBuild WhereState(ShopSTATE? State1, ShopSTATE? State2, ShopSTATE? State3, ShopSTATE? State4) {
+		public ShopSelectBuild WhereState(ShopSTATE State1, ShopSTATE State2, ShopSTATE State3, ShopSTATE State4) {
 			return this.WhereState_IN(State1, State2, State3, State4);
 		}
-		public ShopSelectBuild WhereState(ShopSTATE? State1, ShopSTATE? State2, ShopSTATE? State3, ShopSTATE? State4, ShopSTATE? State5) {
+		public ShopSelectBuild WhereState(ShopSTATE State1, ShopSTATE State2, ShopSTATE State3, ShopSTATE State4, ShopSTATE State5) {
 			return this.WhereState_IN(State1, State2, State3, State4, State5);
 		}
 		#endregion
@@ -294,7 +292,7 @@ namespace pifa.BLL {
 			return this.Where1Or("a.`title` = {0}", Title);
 		}
 		public ShopSelectBuild WhereTitleLike(params string[] Title) {
-			if (Title == null) return this;
+			if (Title == null || Title.Where(a => !string.IsNullOrEmpty(a)).Any() == false) return this;
 			return this.Where1Or(@"a.`title` LIKE {0}", Title.Select(a => "%" + a + "%").ToArray());
 		}
 		protected new ShopSelectBuild Where1Or(string filterFormat, Array values) {

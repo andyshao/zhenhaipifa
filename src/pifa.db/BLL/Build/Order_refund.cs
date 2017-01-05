@@ -18,7 +18,7 @@ namespace pifa.BLL {
 
 		#region delete, update, insert
 
-		public static int Delete(uint? Id) {
+		public static int Delete(uint Id) {
 			if (itemCacheTimeout > 0) RemoveCache(GetItem(Id));
 			return dal.Delete(Id);
 		}
@@ -33,10 +33,10 @@ namespace pifa.BLL {
 			if (itemCacheTimeout > 0) RemoveCache(item);
 			return dal.Update(item);
 		}
-		public static pifa.DAL.Order_refund.SqlUpdateBuild UpdateDiy(uint? Id) {
+		public static pifa.DAL.Order_refund.SqlUpdateBuild UpdateDiy(uint Id) {
 			return UpdateDiy(null, Id);
 		}
-		public static pifa.DAL.Order_refund.SqlUpdateBuild UpdateDiy(Order_refundInfo item, uint? Id) {
+		public static pifa.DAL.Order_refund.SqlUpdateBuild UpdateDiy(Order_refundInfo item, uint Id) {
 			if (itemCacheTimeout > 0) RemoveCache(item != null ? item : GetItem(Id));
 			return new pifa.DAL.Order_refund.SqlUpdateBuild(item, Id);
 		}
@@ -75,14 +75,13 @@ namespace pifa.BLL {
 		}
 		#endregion
 
-		public static Order_refundInfo GetItem(uint? Id) {
-			if (Id == null) return null;
-			if (itemCacheTimeout <= 0) return dal.GetItem(Id);
+		public static Order_refundInfo GetItem(uint Id) {
+			if (itemCacheTimeout <= 0) return Select.WhereId(Id).ToOne();
 			string key = string.Concat("pifa_BLL_Order_refund_", Id);
 			string value = RedisHelper.Get(key);
 			if (!string.IsNullOrEmpty(value))
-				try { return new Order_refundInfo(value); } catch { }
-			Order_refundInfo item = dal.GetItem(Id);
+				try { return Order_refundInfo.Parse(value); } catch { }
+			Order_refundInfo item = Select.WhereId(Id).ToOne();
 			if (item == null) return null;
 			RedisHelper.Set(key, item.Stringify(), itemCacheTimeout);
 			return item;
@@ -115,10 +114,10 @@ namespace pifa.BLL {
 	}
 	public partial class Order_refundSelectBuild : SelectBuild<Order_refundInfo, Order_refundSelectBuild> {
 		public Order_refundSelectBuild WhereOrder_id(params uint?[] Order_id) {
-			return this.Where1Or("a.`Order_id` = {0}", Order_id);
+			return this.Where1Or("a.`order_id` = {0}", Order_id);
 		}
 		public Order_refundSelectBuild WhereProductitem_id(params uint?[] Productitem_id) {
-			return this.Where1Or("a.`Productitem_id` = {0}", Productitem_id);
+			return this.Where1Or("a.`productitem_id` = {0}", Productitem_id);
 		}
 		public Order_refundSelectBuild WhereId(params uint?[] Id) {
 			return this.Where1Or("a.`id` = {0}", Id);
@@ -131,40 +130,40 @@ namespace pifa.BLL {
 			return base.Where("a.`create_time` between {0} and {1}", begin, end) as Order_refundSelectBuild;
 		}
 		public Order_refundSelectBuild WhereDescriptLike(params string[] Descript) {
-			if (Descript == null) return this;
+			if (Descript == null || Descript.Where(a => !string.IsNullOrEmpty(a)).Any() == false) return this;
 			return this.Where1Or(@"a.`descript` LIKE {0}", Descript.Select(a => "%" + a + "%").ToArray());
 		}
 		public Order_refundSelectBuild WhereEmail(params string[] Email) {
 			return this.Where1Or("a.`email` = {0}", Email);
 		}
 		public Order_refundSelectBuild WhereEmailLike(params string[] Email) {
-			if (Email == null) return this;
+			if (Email == null || Email.Where(a => !string.IsNullOrEmpty(a)).Any() == false) return this;
 			return this.Where1Or(@"a.`email` LIKE {0}", Email.Select(a => "%" + a + "%").ToArray());
 		}
 		public Order_refundSelectBuild WhereImg_url(params string[] Img_url) {
 			return this.Where1Or("a.`img_url` = {0}", Img_url);
 		}
 		public Order_refundSelectBuild WhereImg_urlLike(params string[] Img_url) {
-			if (Img_url == null) return this;
+			if (Img_url == null || Img_url.Where(a => !string.IsNullOrEmpty(a)).Any() == false) return this;
 			return this.Where1Or(@"a.`img_url` LIKE {0}", Img_url.Select(a => "%" + a + "%").ToArray());
 		}
 		public Order_refundSelectBuild WhereState_IN(params Order_refundSTATE?[] States) {
 			return this.Where1Or("a.`state` = {0}", States);
 		}
-		public Order_refundSelectBuild WhereState(Order_refundSTATE? State1) {
+		public Order_refundSelectBuild WhereState(Order_refundSTATE State1) {
 			return this.WhereState_IN(State1);
 		}
 		#region WhereState
-		public Order_refundSelectBuild WhereState(Order_refundSTATE? State1, Order_refundSTATE? State2) {
+		public Order_refundSelectBuild WhereState(Order_refundSTATE State1, Order_refundSTATE State2) {
 			return this.WhereState_IN(State1, State2);
 		}
-		public Order_refundSelectBuild WhereState(Order_refundSTATE? State1, Order_refundSTATE? State2, Order_refundSTATE? State3) {
+		public Order_refundSelectBuild WhereState(Order_refundSTATE State1, Order_refundSTATE State2, Order_refundSTATE State3) {
 			return this.WhereState_IN(State1, State2, State3);
 		}
-		public Order_refundSelectBuild WhereState(Order_refundSTATE? State1, Order_refundSTATE? State2, Order_refundSTATE? State3, Order_refundSTATE? State4) {
+		public Order_refundSelectBuild WhereState(Order_refundSTATE State1, Order_refundSTATE State2, Order_refundSTATE State3, Order_refundSTATE State4) {
 			return this.WhereState_IN(State1, State2, State3, State4);
 		}
-		public Order_refundSelectBuild WhereState(Order_refundSTATE? State1, Order_refundSTATE? State2, Order_refundSTATE? State3, Order_refundSTATE? State4, Order_refundSTATE? State5) {
+		public Order_refundSelectBuild WhereState(Order_refundSTATE State1, Order_refundSTATE State2, Order_refundSTATE State3, Order_refundSTATE State4, Order_refundSTATE State5) {
 			return this.WhereState_IN(State1, State2, State3, State4, State5);
 		}
 		#endregion
@@ -172,14 +171,14 @@ namespace pifa.BLL {
 			return this.Where1Or("a.`tel` = {0}", Tel);
 		}
 		public Order_refundSelectBuild WhereTelLike(params string[] Tel) {
-			if (Tel == null) return this;
+			if (Tel == null || Tel.Where(a => !string.IsNullOrEmpty(a)).Any() == false) return this;
 			return this.Where1Or(@"a.`tel` LIKE {0}", Tel.Select(a => "%" + a + "%").ToArray());
 		}
 		public Order_refundSelectBuild WhereTelphone(params string[] Telphone) {
 			return this.Where1Or("a.`telphone` = {0}", Telphone);
 		}
 		public Order_refundSelectBuild WhereTelphoneLike(params string[] Telphone) {
-			if (Telphone == null) return this;
+			if (Telphone == null || Telphone.Where(a => !string.IsNullOrEmpty(a)).Any() == false) return this;
 			return this.Where1Or(@"a.`telphone` LIKE {0}", Telphone.Select(a => "%" + a + "%").ToArray());
 		}
 		public Order_refundSelectBuild WhereWealth(params decimal?[] Wealth) {

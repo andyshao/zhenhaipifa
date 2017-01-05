@@ -37,17 +37,15 @@ namespace pifa.DAL {
 			return GetItem(dr, ref index) as Member_marketInfo;
 		}
 		public object GetItem(IDataReader dr, ref int index) {
-			return new Member_marketInfo {
-				Market_id = dr.IsDBNull(++index) ? null : (uint?)dr.GetInt32(index), 
-				Member_id = dr.IsDBNull(++index) ? null : (uint?)dr.GetInt32(index), 
-				Create_time = dr.IsDBNull(++index) ? null : (DateTime?)dr.GetDateTime(index)};
-		}
-		public SelectBuild<Member_marketInfo> Select {
-			get { return SelectBuild<Member_marketInfo>.From(this, SqlHelper.Instance); }
+			Member_marketInfo item = new Member_marketInfo();
+				if (!dr.IsDBNull(++index)) item.Market_id = (uint?)dr.GetInt32(index);
+				if (!dr.IsDBNull(++index)) item.Member_id = (uint?)dr.GetInt32(index);
+				if (!dr.IsDBNull(++index)) item.Create_time = (DateTime?)dr.GetDateTime(index);
+			return item;
 		}
 		#endregion
 
-		public int Delete(uint? Market_id, uint? Member_id) {
+		public int Delete(uint Market_id, uint Member_id) {
 			return SqlHelper.ExecuteNonQuery(string.Concat(TSQL.Delete, "`market_id` = ?market_id AND `member_id` = ?member_id"), 
 				GetParameter("?market_id", MySqlDbType.UInt32, 10, Market_id), 
 				GetParameter("?member_id", MySqlDbType.UInt32, 10, Member_id));
@@ -62,7 +60,7 @@ namespace pifa.DAL {
 		}
 
 		public int Update(Member_marketInfo item) {
-			return new SqlUpdateBuild(null, item.Market_id, item.Member_id)
+			return new SqlUpdateBuild(null, item.Market_id.Value, item.Member_id.Value)
 				.SetCreate_time(item.Create_time).ExecuteNonQuery();
 		}
 		#region class SqlUpdateBuild
@@ -71,7 +69,7 @@ namespace pifa.DAL {
 			protected string _fields;
 			protected string _where;
 			protected List<MySqlParameter> _parameters = new List<MySqlParameter>();
-			public SqlUpdateBuild(Member_marketInfo item, uint? Market_id, uint? Member_id) {
+			public SqlUpdateBuild(Member_marketInfo item, uint Market_id, uint Member_id) {
 				_item = item;
 				_where = SqlHelper.Addslashes("`market_id` = {0} AND `member_id` = {1}", Market_id, Member_id);
 			}
@@ -99,8 +97,8 @@ namespace pifa.DAL {
 			}
 			public SqlUpdateBuild SetCreate_time(DateTime? value) {
 				if (_item != null) _item.Create_time = value;
-				return this.Set("`create_time`", string.Concat("?create_time_", _parameters.Count), 
-					GetParameter(string.Concat("?create_time_", _parameters.Count), MySqlDbType.DateTime, -1, value));
+				return this.Set("`create_time`", $"?create_time_{_parameters.Count}", 
+					GetParameter($"?create_time_{{_parameters.Count}}", MySqlDbType.DateTime, -1, value));
 			}
 		}
 		#endregion
@@ -110,8 +108,5 @@ namespace pifa.DAL {
 			return item;
 		}
 
-		public Member_marketInfo GetItem(uint? Market_id, uint? Member_id) {
-			return this.Select.Where("a.`market_id` = {0} AND a.`member_id` = {1}", Market_id, Member_id).ToOne();
-		}
 	}
 }

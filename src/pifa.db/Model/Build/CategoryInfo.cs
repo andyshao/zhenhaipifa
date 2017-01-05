@@ -3,10 +3,12 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using Newtonsoft.Json;
 using pifa.BLL;
 
 namespace pifa.Model {
 
+	[JsonObject(MemberSerialization.OptIn)]
 	public partial class CategoryInfo {
 		#region fields
 		private uint? _Id;
@@ -17,7 +19,7 @@ namespace pifa.Model {
 
 		public CategoryInfo() { }
 
-		#region 独创的序列化，反序列化
+		#region 序列化，反序列化
 		protected static readonly string StringifySplit = "@<Category(Info]?#>";
 		public string Stringify() {
 			return string.Concat(
@@ -25,62 +27,40 @@ namespace pifa.Model {
 				_Parent_id == null ? "null" : _Parent_id.ToString(), "|",
 				_Title == null ? "null" : _Title.Replace("|", StringifySplit));
 		}
-		public CategoryInfo(string stringify) {
+		public static CategoryInfo Parse(string stringify) {
 			string[] ret = stringify.Split(new char[] { '|' }, 3, StringSplitOptions.None);
 			if (ret.Length != 3) throw new Exception("格式不正确，CategoryInfo：" + stringify);
-			if (string.Compare("null", ret[0]) != 0) _Id = uint.Parse(ret[0]);
-			if (string.Compare("null", ret[1]) != 0) _Parent_id = uint.Parse(ret[1]);
-			if (string.Compare("null", ret[2]) != 0) _Title = ret[2].Replace(StringifySplit, "|");
+			CategoryInfo item = new CategoryInfo();
+			if (string.Compare("null", ret[0]) != 0) item.Id = uint.Parse(ret[0]);
+			if (string.Compare("null", ret[1]) != 0) item.Parent_id = uint.Parse(ret[1]);
+			if (string.Compare("null", ret[2]) != 0) item.Title = ret[2].Replace(StringifySplit, "|");
+			return item;
 		}
 		#endregion
 
 		#region override
-		private static Dictionary<string, bool> __jsonIgnore;
-		private static object __jsonIgnore_lock = new object();
+		private static Lazy<Dictionary<string, bool>> __jsonIgnoreLazy = new Lazy<Dictionary<string, bool>>(() => {
+			FieldInfo field = typeof(CategoryInfo).GetField("JsonIgnore");
+			Dictionary<string, bool> ret = new Dictionary<string, bool>();
+			if (field != null) string.Concat(field.GetValue(null)).Split(',').ToList().ForEach(f => {
+				if (!string.IsNullOrEmpty(f)) ret[f] = true;
+			});
+			return ret;
+		});
+		private static Dictionary<string, bool> __jsonIgnore => __jsonIgnoreLazy.Value;
 		public override string ToString() {
-			this.Init__jsonIgnore();
 			string json = string.Concat(
 				__jsonIgnore.ContainsKey("Id") ? string.Empty : string.Format(", Id : {0}", Id == null ? "null" : Id.ToString()), 
 				__jsonIgnore.ContainsKey("Parent_id") ? string.Empty : string.Format(", Parent_id : {0}", Parent_id == null ? "null" : Parent_id.ToString()), 
 				__jsonIgnore.ContainsKey("Title") ? string.Empty : string.Format(", Title : {0}", Title == null ? "null" : string.Format("'{0}'", Title.Replace("\\", "\\\\").Replace("\r\n", "\\r\\n").Replace("'", "\\'"))), " }");
 			return string.Concat("{", json.Substring(1));
 		}
-		public IDictionary ToBson() {
-			this.Init__jsonIgnore();
+		public IDictionary ToBson(bool allField = false) {
 			IDictionary ht = new Hashtable();
-			if (!__jsonIgnore.ContainsKey("Id")) ht["Id"] = Id;
-			if (!__jsonIgnore.ContainsKey("Parent_id")) ht["Parent_id"] = Parent_id;
-			if (!__jsonIgnore.ContainsKey("Title")) ht["Title"] = Title;
+			if (allField || !__jsonIgnore.ContainsKey("Id")) ht["Id"] = Id;
+			if (allField || !__jsonIgnore.ContainsKey("Parent_id")) ht["Parent_id"] = Parent_id;
+			if (allField || !__jsonIgnore.ContainsKey("Title")) ht["Title"] = Title;
 			return ht;
-		}
-		private void Init__jsonIgnore() {
-			if (__jsonIgnore == null) {
-				lock (__jsonIgnore_lock) {
-					if (__jsonIgnore == null) {
-						FieldInfo field = typeof(CategoryInfo).GetField("JsonIgnore");
-						__jsonIgnore = new Dictionary<string, bool>();
-						if (field != null) {
-							string[] fs = string.Concat(field.GetValue(null)).Split(',');
-							foreach (string f in fs) if (!string.IsNullOrEmpty(f)) __jsonIgnore[f] = true;
-						}
-					}
-				}
-			}
-		}
-		public override bool Equals(object obj) {
-			CategoryInfo item = obj as CategoryInfo;
-			if (item == null) return false;
-			return this.ToString().Equals(item.ToString());
-		}
-		public override int GetHashCode() {
-			return this.ToString().GetHashCode();
-		}
-		public static bool operator ==(CategoryInfo op1, CategoryInfo op2) {
-			if (object.Equals(op1, null)) return object.Equals(op2, null);
-			return op1.Equals(op2);
-		}
-		public static bool operator !=(CategoryInfo op1, CategoryInfo op2) {
-			return !(op1 == op2);
 		}
 		public object this[string key] {
 			get { return this.GetType().GetProperty(key).GetValue(this); }
@@ -89,14 +69,14 @@ namespace pifa.Model {
 		#endregion
 
 		#region properties
-		public uint? Id {
+		[JsonProperty] public uint? Id {
 			get { return _Id; }
 			set { _Id = value; }
 		}
 		/// <summary>
 		/// 父
 		/// </summary>
-		public uint? Parent_id {
+		[JsonProperty] public uint? Parent_id {
 			get { return _Parent_id; }
 			set {
 				if (_Parent_id != value) _obj_category = null;
@@ -105,7 +85,7 @@ namespace pifa.Model {
 		}
 		public CategoryInfo Obj_category {
 			get {
-				if (_obj_category == null) _obj_category = Category.GetItem(_Parent_id);
+				if (_obj_category == null) _obj_category = Category.GetItem(_Parent_id.Value);
 				return _obj_category;
 			}
 			internal set { _obj_category = value; }
@@ -113,7 +93,7 @@ namespace pifa.Model {
 		/// <summary>
 		/// 分类名称
 		/// </summary>
-		public string Title {
+		[JsonProperty] public string Title {
 			get { return _Title; }
 			set { _Title = value; }
 		}
@@ -155,73 +135,63 @@ namespace pifa.Model {
 		#endregion
 
 		public pifa.DAL.Category.SqlUpdateBuild UpdateDiy {
-			get { return Category.UpdateDiy(this, _Id); }
+			get { return Category.UpdateDiy(this, _Id.Value); }
 		}
-		public Area_categoryInfo FlagArea(AreaInfo Area) {
-			return FlagArea(Area.Id);
+		public CategoryInfo Save() {
+			if (this.Id != null) {
+				Category.Update(this);
+				return this;
+			}
+			return Category.Insert(this);
 		}
+		public Area_categoryInfo FlagArea(AreaInfo Area) => FlagArea(Area.Id);
 		public Area_categoryInfo FlagArea(uint? Area_id) {
-			Area_categoryInfo item = Area_category.GetItem(Area_id, this.Id);
+			Area_categoryInfo item = Area_category.GetItem(Area_id.Value, this.Id.Value);
 			if (item == null) item = Area_category.Insert(new Area_categoryInfo {
 				Area_id = Area_id, 
-				Category_id = this.Id});
+			Category_id = this.Id});
 			return item;
 		}
 
-		public int UnflagArea(AreaInfo Area) {
-			return UnflagArea(Area.Id);
-		}
-		public int UnflagArea(uint? Area_id) {
-			return Area_category.Delete(Area_id, this.Id);
-		}
-		public int UnflagAreaALL() {
-			return Area_category.DeleteByCategory_id(this.Id);
-		}
+		public int UnflagArea(AreaInfo Area) => UnflagArea(Area.Id);
+		public int UnflagArea(uint? Area_id) => Area_category.Delete(Area_id.Value, this.Id.Value);
+		public int UnflagAreaALL() => Area_category.DeleteByCategory_id(this.Id);
 
-		public CategoryInfo AddCategory(string Title) {
-			return Category.Insert(new CategoryInfo {
-				Parent_id = this.Id, 
+		public CategoryInfo AddCategory(string Title) => Category.Insert(new CategoryInfo {
+			Parent_id = this.Id, 
 				Title = Title});
+		public CategoryInfo AddCategory(CategoryInfo item) {
+			item.Parent_id = this.Id;
+			return item.Save();
 		}
 
-		public Markettype_categoryInfo FlagMarkettype(MarkettypeInfo Markettype) {
-			return FlagMarkettype(Markettype.Id);
-		}
+		public Markettype_categoryInfo FlagMarkettype(MarkettypeInfo Markettype) => FlagMarkettype(Markettype.Id);
 		public Markettype_categoryInfo FlagMarkettype(uint? Markettype_id) {
-			Markettype_categoryInfo item = Markettype_category.GetItem(this.Id, Markettype_id);
+			Markettype_categoryInfo item = Markettype_category.GetItem(this.Id.Value, Markettype_id.Value);
 			if (item == null) item = Markettype_category.Insert(new Markettype_categoryInfo {
-				Category_id = this.Id, 
+			Category_id = this.Id, 
 				Markettype_id = Markettype_id});
 			return item;
 		}
 
-		public int UnflagMarkettype(MarkettypeInfo Markettype) {
-			return UnflagMarkettype(Markettype.Id);
-		}
-		public int UnflagMarkettype(uint? Markettype_id) {
-			return Markettype_category.Delete(this.Id, Markettype_id);
-		}
-		public int UnflagMarkettypeALL() {
-			return Markettype_category.DeleteByCategory_id(this.Id);
-		}
+		public int UnflagMarkettype(MarkettypeInfo Markettype) => UnflagMarkettype(Markettype.Id);
+		public int UnflagMarkettype(uint? Markettype_id) => Markettype_category.Delete(this.Id.Value, Markettype_id.Value);
+		public int UnflagMarkettypeALL() => Markettype_category.DeleteByCategory_id(this.Id);
 
-		public PattrInfo AddPattr(PattrInfo Pattr, bool? Is_filter, string Name) {
-			return AddPattr(Pattr.Id, Is_filter, Name);
-		}
-		public PattrInfo AddPattr(uint? Parent_id, bool? Is_filter, string Name) {
-			return Pattr.Insert(new PattrInfo {
-				Category_id = this.Id, 
+		public PattrInfo AddPattr(PattrInfo Pattr, bool? Is_filter, string Name) => AddPattr(Pattr.Id, Is_filter, Name);
+		public PattrInfo AddPattr(uint? Parent_id, bool? Is_filter, string Name) => Pattr.Insert(new PattrInfo {
+			Category_id = this.Id, 
 				Parent_id = Parent_id, 
 				Is_filter = Is_filter, 
 				Name = Name});
+		public PattrInfo AddPattr(PattrInfo item) {
+			item.Category_id = this.Id;
+			return item.Save();
 		}
 
-		public ProductInfo AddProduct(ShopInfo Shop, DateTime? Create_time, ProductICON? Icon, decimal? Price, uint? Stock, string Title, string Unit) {
-			return AddProduct(Shop.Id, Create_time, Icon, Price, Stock, Title, Unit);
-		}
-		public ProductInfo AddProduct(uint? Shop_id, DateTime? Create_time, ProductICON? Icon, decimal? Price, uint? Stock, string Title, string Unit) {
-			return Product.Insert(new ProductInfo {
-				Category_id = this.Id, 
+		public ProductInfo AddProduct(ShopInfo Shop, DateTime? Create_time, ProductICON? Icon, decimal? Price, uint? Stock, string Title, string Unit) => AddProduct(Shop.Id, Create_time, Icon, Price, Stock, Title, Unit);
+		public ProductInfo AddProduct(uint? Shop_id, DateTime? Create_time, ProductICON? Icon, decimal? Price, uint? Stock, string Title, string Unit) => Product.Insert(new ProductInfo {
+			Category_id = this.Id, 
 				Shop_id = Shop_id, 
 				Create_time = Create_time, 
 				Icon = Icon, 
@@ -229,6 +199,9 @@ namespace pifa.Model {
 				Stock = Stock, 
 				Title = Title, 
 				Unit = Unit});
+		public ProductInfo AddProduct(ProductInfo item) {
+			item.Category_id = this.Id;
+			return item.Save();
 		}
 
 	}

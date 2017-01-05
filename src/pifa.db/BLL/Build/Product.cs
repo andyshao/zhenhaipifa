@@ -18,7 +18,7 @@ namespace pifa.BLL {
 
 		#region delete, update, insert
 
-		public static int Delete(uint? Id) {
+		public static int Delete(uint Id) {
 			if (itemCacheTimeout > 0) RemoveCache(GetItem(Id));
 			return dal.Delete(Id);
 		}
@@ -33,10 +33,10 @@ namespace pifa.BLL {
 			if (itemCacheTimeout > 0) RemoveCache(item);
 			return dal.Update(item);
 		}
-		public static pifa.DAL.Product.SqlUpdateBuild UpdateDiy(uint? Id) {
+		public static pifa.DAL.Product.SqlUpdateBuild UpdateDiy(uint Id) {
 			return UpdateDiy(null, Id);
 		}
-		public static pifa.DAL.Product.SqlUpdateBuild UpdateDiy(ProductInfo item, uint? Id) {
+		public static pifa.DAL.Product.SqlUpdateBuild UpdateDiy(ProductInfo item, uint Id) {
 			if (itemCacheTimeout > 0) RemoveCache(item != null ? item : GetItem(Id));
 			return new pifa.DAL.Product.SqlUpdateBuild(item, Id);
 		}
@@ -73,14 +73,13 @@ namespace pifa.BLL {
 		}
 		#endregion
 
-		public static ProductInfo GetItem(uint? Id) {
-			if (Id == null) return null;
-			if (itemCacheTimeout <= 0) return dal.GetItem(Id);
+		public static ProductInfo GetItem(uint Id) {
+			if (itemCacheTimeout <= 0) return Select.WhereId(Id).ToOne();
 			string key = string.Concat("pifa_BLL_Product_", Id);
 			string value = RedisHelper.Get(key);
 			if (!string.IsNullOrEmpty(value))
-				try { return new ProductInfo(value); } catch { }
-			ProductInfo item = dal.GetItem(Id);
+				try { return ProductInfo.Parse(value); } catch { }
+			ProductInfo item = Select.WhereId(Id).ToOne();
 			if (item == null) return null;
 			RedisHelper.Set(key, item.Stringify(), itemCacheTimeout);
 			return item;
@@ -125,10 +124,10 @@ namespace pifa.BLL {
 	}
 	public partial class ProductSelectBuild : SelectBuild<ProductInfo, ProductSelectBuild> {
 		public ProductSelectBuild WhereCategory_id(params uint?[] Category_id) {
-			return this.Where1Or("a.`Category_id` = {0}", Category_id);
+			return this.Where1Or("a.`category_id` = {0}", Category_id);
 		}
 		public ProductSelectBuild WhereShop_id(params uint?[] Shop_id) {
-			return this.Where1Or("a.`Shop_id` = {0}", Shop_id);
+			return this.Where1Or("a.`shop_id` = {0}", Shop_id);
 		}
 		public ProductSelectBuild WhereMember(params MemberInfo[] items) {
 			if (items == null) return this;
@@ -156,23 +155,23 @@ namespace pifa.BLL {
 			if (end == null) return WhereCreate_timeRange(begin);
 			return base.Where("a.`create_time` between {0} and {1}", begin, end) as ProductSelectBuild;
 		}
-		public ProductSelectBuild WhereIcon_IN(params ProductICON?[] Icons) {
+		public ProductSelectBuild WhereIcon_IN(params ProductICON[] Icons) {
 			return this.Where1Or("(a.`icon` & {0}) = {0}", Icons);
 		}
-		public ProductSelectBuild WhereIcon(ProductICON? Icon1) {
+		public ProductSelectBuild WhereIcon(ProductICON Icon1) {
 			return this.WhereIcon_IN(Icon1);
 		}
 		#region WhereIcon
-		public ProductSelectBuild WhereIcon(ProductICON? Icon1, ProductICON? Icon2) {
+		public ProductSelectBuild WhereIcon(ProductICON Icon1, ProductICON Icon2) {
 			return this.WhereIcon_IN(Icon1, Icon2);
 		}
-		public ProductSelectBuild WhereIcon(ProductICON? Icon1, ProductICON? Icon2, ProductICON? Icon3) {
+		public ProductSelectBuild WhereIcon(ProductICON Icon1, ProductICON Icon2, ProductICON Icon3) {
 			return this.WhereIcon_IN(Icon1, Icon2, Icon3);
 		}
-		public ProductSelectBuild WhereIcon(ProductICON? Icon1, ProductICON? Icon2, ProductICON? Icon3, ProductICON? Icon4) {
+		public ProductSelectBuild WhereIcon(ProductICON Icon1, ProductICON Icon2, ProductICON Icon3, ProductICON Icon4) {
 			return this.WhereIcon_IN(Icon1, Icon2, Icon3, Icon4);
 		}
-		public ProductSelectBuild WhereIcon(ProductICON? Icon1, ProductICON? Icon2, ProductICON? Icon3, ProductICON? Icon4, ProductICON? Icon5) {
+		public ProductSelectBuild WhereIcon(ProductICON Icon1, ProductICON Icon2, ProductICON Icon3, ProductICON Icon4, ProductICON Icon5) {
 			return this.WhereIcon_IN(Icon1, Icon2, Icon3, Icon4, Icon5);
 		}
 		#endregion
@@ -193,14 +192,14 @@ namespace pifa.BLL {
 			return this.Where1Or("a.`title` = {0}", Title);
 		}
 		public ProductSelectBuild WhereTitleLike(params string[] Title) {
-			if (Title == null) return this;
+			if (Title == null || Title.Where(a => !string.IsNullOrEmpty(a)).Any() == false) return this;
 			return this.Where1Or(@"a.`title` LIKE {0}", Title.Select(a => "%" + a + "%").ToArray());
 		}
 		public ProductSelectBuild WhereUnit(params string[] Unit) {
 			return this.Where1Or("a.`unit` = {0}", Unit);
 		}
 		public ProductSelectBuild WhereUnitLike(params string[] Unit) {
-			if (Unit == null) return this;
+			if (Unit == null || Unit.Where(a => !string.IsNullOrEmpty(a)).Any() == false) return this;
 			return this.Where1Or(@"a.`unit` LIKE {0}", Unit.Select(a => "%" + a + "%").ToArray());
 		}
 		protected new ProductSelectBuild Where1Or(string filterFormat, Array values) {

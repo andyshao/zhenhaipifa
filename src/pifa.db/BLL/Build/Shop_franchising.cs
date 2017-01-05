@@ -18,7 +18,7 @@ namespace pifa.BLL {
 
 		#region delete, update, insert
 
-		public static int Delete(uint? Franchising_id, uint? Shop_id) {
+		public static int Delete(uint Franchising_id, uint Shop_id) {
 			if (itemCacheTimeout > 0) RemoveCache(GetItem(Franchising_id, Shop_id));
 			return dal.Delete(Franchising_id, Shop_id);
 		}
@@ -33,10 +33,10 @@ namespace pifa.BLL {
 			if (itemCacheTimeout > 0) RemoveCache(item);
 			return dal.Update(item);
 		}
-		public static pifa.DAL.Shop_franchising.SqlUpdateBuild UpdateDiy(uint? Franchising_id, uint? Shop_id) {
+		public static pifa.DAL.Shop_franchising.SqlUpdateBuild UpdateDiy(uint Franchising_id, uint Shop_id) {
 			return UpdateDiy(null, Franchising_id, Shop_id);
 		}
-		public static pifa.DAL.Shop_franchising.SqlUpdateBuild UpdateDiy(Shop_franchisingInfo item, uint? Franchising_id, uint? Shop_id) {
+		public static pifa.DAL.Shop_franchising.SqlUpdateBuild UpdateDiy(Shop_franchisingInfo item, uint Franchising_id, uint Shop_id) {
 			if (itemCacheTimeout > 0) RemoveCache(item != null ? item : GetItem(Franchising_id, Shop_id));
 			return new pifa.DAL.Shop_franchising.SqlUpdateBuild(item, Franchising_id, Shop_id);
 		}
@@ -63,14 +63,13 @@ namespace pifa.BLL {
 		}
 		#endregion
 
-		public static Shop_franchisingInfo GetItem(uint? Franchising_id, uint? Shop_id) {
-			if (Franchising_id == null || Shop_id == null) return null;
-			if (itemCacheTimeout <= 0) return dal.GetItem(Franchising_id, Shop_id);
+		public static Shop_franchisingInfo GetItem(uint Franchising_id, uint Shop_id) {
+			if (itemCacheTimeout <= 0) return Select.WhereFranchising_id(Franchising_id).WhereShop_id(Shop_id).ToOne();
 			string key = string.Concat("pifa_BLL_Shop_franchising_", Franchising_id, "_,_", Shop_id);
 			string value = RedisHelper.Get(key);
 			if (!string.IsNullOrEmpty(value))
-				try { return new Shop_franchisingInfo(value); } catch { }
-			Shop_franchisingInfo item = dal.GetItem(Franchising_id, Shop_id);
+				try { return Shop_franchisingInfo.Parse(value); } catch { }
+			Shop_franchisingInfo item = Select.WhereFranchising_id(Franchising_id).WhereShop_id(Shop_id).ToOne();
 			if (item == null) return null;
 			RedisHelper.Set(key, item.Stringify(), itemCacheTimeout);
 			return item;
@@ -103,10 +102,10 @@ namespace pifa.BLL {
 	}
 	public partial class Shop_franchisingSelectBuild : SelectBuild<Shop_franchisingInfo, Shop_franchisingSelectBuild> {
 		public Shop_franchisingSelectBuild WhereFranchising_id(params uint?[] Franchising_id) {
-			return this.Where1Or("a.`Franchising_id` = {0}", Franchising_id);
+			return this.Where1Or("a.`franchising_id` = {0}", Franchising_id);
 		}
 		public Shop_franchisingSelectBuild WhereShop_id(params uint?[] Shop_id) {
-			return this.Where1Or("a.`Shop_id` = {0}", Shop_id);
+			return this.Where1Or("a.`shop_id` = {0}", Shop_id);
 		}
 		protected new Shop_franchisingSelectBuild Where1Or(string filterFormat, Array values) {
 			return base.Where1Or(filterFormat, values) as Shop_franchisingSelectBuild;

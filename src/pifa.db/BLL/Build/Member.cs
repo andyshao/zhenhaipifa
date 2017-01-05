@@ -18,7 +18,7 @@ namespace pifa.BLL {
 
 		#region delete, update, insert
 
-		public static int Delete(uint? Id) {
+		public static int Delete(uint Id) {
 			if (itemCacheTimeout > 0) RemoveCache(GetItem(Id));
 			return dal.Delete(Id);
 		}
@@ -36,10 +36,10 @@ namespace pifa.BLL {
 			if (itemCacheTimeout > 0) RemoveCache(item);
 			return dal.Update(item);
 		}
-		public static pifa.DAL.Member.SqlUpdateBuild UpdateDiy(uint? Id) {
+		public static pifa.DAL.Member.SqlUpdateBuild UpdateDiy(uint Id) {
 			return UpdateDiy(null, Id);
 		}
-		public static pifa.DAL.Member.SqlUpdateBuild UpdateDiy(MemberInfo item, uint? Id) {
+		public static pifa.DAL.Member.SqlUpdateBuild UpdateDiy(MemberInfo item, uint Id) {
 			if (itemCacheTimeout > 0) RemoveCache(item != null ? item : GetItem(Id));
 			return new pifa.DAL.Member.SqlUpdateBuild(item, Id);
 		}
@@ -77,50 +77,46 @@ namespace pifa.BLL {
 		}
 		#endregion
 
-		public static MemberInfo GetItem(uint? Id) {
-			if (Id == null) return null;
-			if (itemCacheTimeout <= 0) return dal.GetItem(Id);
+		public static MemberInfo GetItem(uint Id) {
+			if (itemCacheTimeout <= 0) return Select.WhereId(Id).ToOne();
 			string key = string.Concat("pifa_BLL_Member_", Id);
 			string value = RedisHelper.Get(key);
 			if (!string.IsNullOrEmpty(value))
-				try { return new MemberInfo(value); } catch { }
-			MemberInfo item = dal.GetItem(Id);
+				try { return MemberInfo.Parse(value); } catch { }
+			MemberInfo item = Select.WhereId(Id).ToOne();
 			if (item == null) return null;
 			RedisHelper.Set(key, item.Stringify(), itemCacheTimeout);
 			return item;
 		}
 		public static MemberInfo GetItemByUsername(string Username) {
-			if (Username == null) return null;
-			if (itemCacheTimeout <= 0) return dal.GetItemByUsername(Username);
+			if (itemCacheTimeout <= 0) return Select.WhereUsername(Username).ToOne();
 			string key = string.Concat("pifa_BLL_MemberByUsername_", Username);
 			string value = RedisHelper.Get(key);
 			if (!string.IsNullOrEmpty(value))
-				try { return new MemberInfo(value); } catch { }
-			MemberInfo item = dal.GetItemByUsername(Username);
+				try { return MemberInfo.Parse(value); } catch { }
+			MemberInfo item = Select.WhereUsername(Username).ToOne();
 			if (item == null) return null;
 			RedisHelper.Set(key, item.Stringify(), itemCacheTimeout);
 			return item;
 		}
 		public static MemberInfo GetItemByTelphone(string Telphone) {
-			if (Telphone == null) return null;
-			if (itemCacheTimeout <= 0) return dal.GetItemByTelphone(Telphone);
+			if (itemCacheTimeout <= 0) return Select.WhereTelphone(Telphone).ToOne();
 			string key = string.Concat("pifa_BLL_MemberByTelphone_", Telphone);
 			string value = RedisHelper.Get(key);
 			if (!string.IsNullOrEmpty(value))
-				try { return new MemberInfo(value); } catch { }
-			MemberInfo item = dal.GetItemByTelphone(Telphone);
+				try { return MemberInfo.Parse(value); } catch { }
+			MemberInfo item = Select.WhereTelphone(Telphone).ToOne();
 			if (item == null) return null;
 			RedisHelper.Set(key, item.Stringify(), itemCacheTimeout);
 			return item;
 		}
 		public static MemberInfo GetItemByEmail(string Email) {
-			if (Email == null) return null;
-			if (itemCacheTimeout <= 0) return dal.GetItemByEmail(Email);
+			if (itemCacheTimeout <= 0) return Select.WhereEmail(Email).ToOne();
 			string key = string.Concat("pifa_BLL_MemberByEmail_", Email);
 			string value = RedisHelper.Get(key);
 			if (!string.IsNullOrEmpty(value))
-				try { return new MemberInfo(value); } catch { }
-			MemberInfo item = dal.GetItemByEmail(Email);
+				try { return MemberInfo.Parse(value); } catch { }
+			MemberInfo item = Select.WhereEmail(Email).ToOne();
 			if (item == null) return null;
 			RedisHelper.Set(key, item.Stringify(), itemCacheTimeout);
 			return item;
@@ -190,7 +186,7 @@ namespace pifa.BLL {
 			return this.Where1Or("a.`email` = {0}", Email);
 		}
 		public MemberSelectBuild WhereEmailLike(params string[] Email) {
-			if (Email == null) return this;
+			if (Email == null || Email.Where(a => !string.IsNullOrEmpty(a)).Any() == false) return this;
 			return this.Where1Or(@"a.`email` LIKE {0}", Email.Select(a => "%" + a + "%").ToArray());
 		}
 		public MemberSelectBuild WhereLastlogin_timeRange(DateTime? begin) {
@@ -204,14 +200,14 @@ namespace pifa.BLL {
 			return this.Where1Or("a.`telphone` = {0}", Telphone);
 		}
 		public MemberSelectBuild WhereTelphoneLike(params string[] Telphone) {
-			if (Telphone == null) return this;
+			if (Telphone == null || Telphone.Where(a => !string.IsNullOrEmpty(a)).Any() == false) return this;
 			return this.Where1Or(@"a.`telphone` LIKE {0}", Telphone.Select(a => "%" + a + "%").ToArray());
 		}
 		public MemberSelectBuild WhereUsername(params string[] Username) {
 			return this.Where1Or("a.`username` = {0}", Username);
 		}
 		public MemberSelectBuild WhereUsernameLike(params string[] Username) {
-			if (Username == null) return this;
+			if (Username == null || Username.Where(a => !string.IsNullOrEmpty(a)).Any() == false) return this;
 			return this.Where1Or(@"a.`username` LIKE {0}", Username.Select(a => "%" + a + "%").ToArray());
 		}
 		protected new MemberSelectBuild Where1Or(string filterFormat, Array values) {

@@ -18,19 +18,22 @@ namespace pifa.BLL {
 
 		#region delete, update, insert
 
-		public static int Delete(uint? Member_id) {
+		public static int Delete(uint Member_id) {
 			if (itemCacheTimeout > 0) RemoveCache(GetItem(Member_id));
 			return dal.Delete(Member_id);
+		}
+		public static int DeleteByMember_id(uint? Member_id) {
+			return dal.DeleteByMember_id(Member_id);
 		}
 
 		public static int Update(Member_securityInfo item) {
 			if (itemCacheTimeout > 0) RemoveCache(item);
 			return dal.Update(item);
 		}
-		public static pifa.DAL.Member_security.SqlUpdateBuild UpdateDiy(uint? Member_id) {
+		public static pifa.DAL.Member_security.SqlUpdateBuild UpdateDiy(uint Member_id) {
 			return UpdateDiy(null, Member_id);
 		}
-		public static pifa.DAL.Member_security.SqlUpdateBuild UpdateDiy(Member_securityInfo item, uint? Member_id) {
+		public static pifa.DAL.Member_security.SqlUpdateBuild UpdateDiy(Member_securityInfo item, uint Member_id) {
 			if (itemCacheTimeout > 0) RemoveCache(item != null ? item : GetItem(Member_id));
 			return new pifa.DAL.Member_security.SqlUpdateBuild(item, Member_id);
 		}
@@ -57,14 +60,13 @@ namespace pifa.BLL {
 		}
 		#endregion
 
-		public static Member_securityInfo GetItem(uint? Member_id) {
-			if (Member_id == null) return null;
-			if (itemCacheTimeout <= 0) return dal.GetItem(Member_id);
+		public static Member_securityInfo GetItem(uint Member_id) {
+			if (itemCacheTimeout <= 0) return Select.WhereMember_id(Member_id).ToOne();
 			string key = string.Concat("pifa_BLL_Member_security_", Member_id);
 			string value = RedisHelper.Get(key);
 			if (!string.IsNullOrEmpty(value))
-				try { return new Member_securityInfo(value); } catch { }
-			Member_securityInfo item = dal.GetItem(Member_id);
+				try { return Member_securityInfo.Parse(value); } catch { }
+			Member_securityInfo item = Select.WhereMember_id(Member_id).ToOne();
 			if (item == null) return null;
 			RedisHelper.Set(key, item.Stringify(), itemCacheTimeout);
 			return item;
@@ -88,13 +90,13 @@ namespace pifa.BLL {
 	}
 	public partial class Member_securitySelectBuild : SelectBuild<Member_securityInfo, Member_securitySelectBuild> {
 		public Member_securitySelectBuild WhereMember_id(params uint?[] Member_id) {
-			return this.Where1Or("a.`Member_id` = {0}", Member_id);
+			return this.Where1Or("a.`member_id` = {0}", Member_id);
 		}
 		public Member_securitySelectBuild WherePassword(params string[] Password) {
 			return this.Where1Or("a.`password` = {0}", Password);
 		}
 		public Member_securitySelectBuild WherePasswordLike(params string[] Password) {
-			if (Password == null) return this;
+			if (Password == null || Password.Where(a => !string.IsNullOrEmpty(a)).Any() == false) return this;
 			return this.Where1Or(@"a.`password` LIKE {0}", Password.Select(a => "%" + a + "%").ToArray());
 		}
 		protected new Member_securitySelectBuild Where1Or(string filterFormat, Array values) {

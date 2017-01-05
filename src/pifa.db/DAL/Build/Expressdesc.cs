@@ -36,22 +36,24 @@ namespace pifa.DAL {
 			return GetItem(dr, ref index) as ExpressdescInfo;
 		}
 		public object GetItem(IDataReader dr, ref int index) {
-			return new ExpressdescInfo {
-				Express_id = dr.IsDBNull(++index) ? null : (uint?)dr.GetInt32(index), 
-				Content = dr.IsDBNull(++index) ? null : dr.GetString(index)};
-		}
-		public SelectBuild<ExpressdescInfo> Select {
-			get { return SelectBuild<ExpressdescInfo>.From(this, SqlHelper.Instance); }
+			ExpressdescInfo item = new ExpressdescInfo();
+				if (!dr.IsDBNull(++index)) item.Express_id = (uint?)dr.GetInt32(index);
+				if (!dr.IsDBNull(++index)) item.Content = dr.GetString(index);
+			return item;
 		}
 		#endregion
 
-		public int Delete(uint? Express_id) {
+		public int Delete(uint Express_id) {
+			return SqlHelper.ExecuteNonQuery(string.Concat(TSQL.Delete, "`express_id` = ?express_id"), 
+				GetParameter("?express_id", MySqlDbType.UInt32, 10, Express_id));
+		}
+		public int DeleteByExpress_id(uint? Express_id) {
 			return SqlHelper.ExecuteNonQuery(string.Concat(TSQL.Delete, "`express_id` = ?express_id"), 
 				GetParameter("?express_id", MySqlDbType.UInt32, 10, Express_id));
 		}
 
 		public int Update(ExpressdescInfo item) {
-			return new SqlUpdateBuild(null, item.Express_id)
+			return new SqlUpdateBuild(null, item.Express_id.Value)
 				.SetContent(item.Content).ExecuteNonQuery();
 		}
 		#region class SqlUpdateBuild
@@ -60,7 +62,7 @@ namespace pifa.DAL {
 			protected string _fields;
 			protected string _where;
 			protected List<MySqlParameter> _parameters = new List<MySqlParameter>();
-			public SqlUpdateBuild(ExpressdescInfo item, uint? Express_id) {
+			public SqlUpdateBuild(ExpressdescInfo item, uint Express_id) {
 				_item = item;
 				_where = SqlHelper.Addslashes("`express_id` = {0}", Express_id);
 			}
@@ -88,8 +90,8 @@ namespace pifa.DAL {
 			}
 			public SqlUpdateBuild SetContent(string value) {
 				if (_item != null) _item.Content = value;
-				return this.Set("`content`", string.Concat("?content_", _parameters.Count), 
-					GetParameter(string.Concat("?content_", _parameters.Count), MySqlDbType.Text, -1, value));
+				return this.Set("`content`", $"?content_{_parameters.Count}", 
+					GetParameter($"?content_{{_parameters.Count}}", MySqlDbType.Text, -1, value));
 			}
 		}
 		#endregion
@@ -99,8 +101,5 @@ namespace pifa.DAL {
 			return item;
 		}
 
-		public ExpressdescInfo GetItem(uint? Express_id) {
-			return this.Select.Where("a.`express_id` = {0}", Express_id).ToOne();
-		}
 	}
 }

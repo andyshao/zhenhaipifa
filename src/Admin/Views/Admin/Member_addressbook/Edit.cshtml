@@ -1,0 +1,92 @@
+﻿@{
+	Layout = "";
+	Member_addressbookInfo item = ViewBag.item;
+	var fk_Members = Member.Select.ToList();
+}
+
+<div class="box">
+	<div class="box-header with-border">
+		<h3 class="box-title" id="box-title"></h3>
+	</div>
+	<div class="box-body">
+		<div class="table-responsive">
+			<form id="form_add" method="post">
+				@Html.AntiForgeryToken()
+				<input type="hidden" name="__callback" value="edit_callback" />
+				<div>
+					<table cellspacing="0" rules="all" class="table table-bordered table-hover" border="1" style="border-collapse:collapse;">
+						@if (item != null) {
+							<tr>
+								<td>id</td>
+								<td><input name="Id" type="text" readonly class="datepicker" style="width:20%;background-color:#ddd;" /></td>
+							</tr>
+						}
+						<tr>
+							<td>会员</td>
+							<td>
+								<select name="Member_id">
+									<option value="">------ 请选择 ------</option>
+									@foreach (var fk in fk_Members) { <option value="@fk.Id">@fk.Username</option> }
+								</select>
+							</td>
+						</tr>
+						<tr>
+							<td>收货地址</td>
+							<td><input name="Address" type="text" class="datepicker" style="width:60%;" /></td>
+						</tr>
+						<tr>
+							<td>默认地址</td>
+							<td id="Is_default_td"><input name="Is_default" type="checkbox" value="true" /></td>
+						</tr>
+						<tr>
+							<td>收件人</td>
+							<td><input name="Name" type="text" class="datepicker" style="width:60%;" /></td>
+						</tr>
+						<tr>
+							<td>电话</td>
+							<td><input name="Tel" type="text" class="datepicker" style="width:60%;" /></td>
+						</tr>
+						<tr>
+							<td>手机</td>
+							<td><input name="Telphone" type="text" class="datepicker" style="width:60%;" /></td>
+						</tr>
+						<tr>
+							<td>邮编</td>
+							<td><input name="Zip" type="text" class="datepicker" style="width:60%;" /></td>
+						</tr>
+						@if (item != null) {
+							<tr>
+								<td>创建时间</td>
+								<td><input name="Create_time" type="text" readonly class="datepicker" style="width:20%;background-color:#ddd;" /></td>
+							</tr>
+						}
+						<tr>
+							<td width="8%">&nbsp</td>
+							<td><input type="submit" value="@(item == null ? "添加" : "更新")" />&nbsp;<input type="button" value="取消" /></td>
+						</tr>
+					</table>
+				</div>
+			</form>
+
+		</div>
+	</div>
+</div>
+
+<script type="text/javascript">
+	(function () {
+		top.edit_callback = function (rt) {
+			if (rt.success) return top.mainViewNav.goto('./');
+			alert(rt.message);
+		};
+
+		var form = $('#form_add')[0];
+		var item = null;
+		@if (item != null) {
+			<text>
+			item = @Html.Raw(item.ToJson());
+			fillForm(form, item);
+			</text>
+		}
+		top.mainViewInit();
+	})();
+</script>

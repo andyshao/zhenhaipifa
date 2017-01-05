@@ -18,7 +18,7 @@ namespace pifa.BLL {
 
 		#region delete, update, insert
 
-		public static int Delete(uint? Id) {
+		public static int Delete(uint Id) {
 			if (itemCacheTimeout > 0) RemoveCache(GetItem(Id));
 			return dal.Delete(Id);
 		}
@@ -27,10 +27,10 @@ namespace pifa.BLL {
 			if (itemCacheTimeout > 0) RemoveCache(item);
 			return dal.Update(item);
 		}
-		public static pifa.DAL.Franchising.SqlUpdateBuild UpdateDiy(uint? Id) {
+		public static pifa.DAL.Franchising.SqlUpdateBuild UpdateDiy(uint Id) {
 			return UpdateDiy(null, Id);
 		}
-		public static pifa.DAL.Franchising.SqlUpdateBuild UpdateDiy(FranchisingInfo item, uint? Id) {
+		public static pifa.DAL.Franchising.SqlUpdateBuild UpdateDiy(FranchisingInfo item, uint Id) {
 			if (itemCacheTimeout > 0) RemoveCache(item != null ? item : GetItem(Id));
 			return new pifa.DAL.Franchising.SqlUpdateBuild(item, Id);
 		}
@@ -56,14 +56,13 @@ namespace pifa.BLL {
 		}
 		#endregion
 
-		public static FranchisingInfo GetItem(uint? Id) {
-			if (Id == null) return null;
-			if (itemCacheTimeout <= 0) return dal.GetItem(Id);
+		public static FranchisingInfo GetItem(uint Id) {
+			if (itemCacheTimeout <= 0) return Select.WhereId(Id).ToOne();
 			string key = string.Concat("pifa_BLL_Franchising_", Id);
 			string value = RedisHelper.Get(key);
 			if (!string.IsNullOrEmpty(value))
-				try { return new FranchisingInfo(value); } catch { }
-			FranchisingInfo item = dal.GetItem(Id);
+				try { return FranchisingInfo.Parse(value); } catch { }
+			FranchisingInfo item = Select.WhereId(Id).ToOne();
 			if (item == null) return null;
 			RedisHelper.Set(key, item.Stringify(), itemCacheTimeout);
 			return item;
@@ -126,7 +125,7 @@ namespace pifa.BLL {
 			return this.Where1Or("a.`title` = {0}", Title);
 		}
 		public FranchisingSelectBuild WhereTitleLike(params string[] Title) {
-			if (Title == null) return this;
+			if (Title == null || Title.Where(a => !string.IsNullOrEmpty(a)).Any() == false) return this;
 			return this.Where1Or(@"a.`title` LIKE {0}", Title.Select(a => "%" + a + "%").ToArray());
 		}
 		protected new FranchisingSelectBuild Where1Or(string filterFormat, Array values) {

@@ -4,10 +4,12 @@ using System.Collections.Generic;
 using System.Linq;
 using System.ComponentModel;
 using System.Reflection;
+using Newtonsoft.Json;
 using pifa.BLL;
 
 namespace pifa.Model {
 
+	[JsonObject(MemberSerialization.OptIn)]
 	public partial class ProductInfo {
 		#region fields
 		private uint? _Id;
@@ -25,7 +27,7 @@ namespace pifa.Model {
 
 		public ProductInfo() { }
 
-		#region 独创的序列化，反序列化
+		#region 序列化，反序列化
 		protected static readonly string StringifySplit = "@<Product(Info]?#>";
 		public string Stringify() {
 			return string.Concat(
@@ -39,26 +41,34 @@ namespace pifa.Model {
 				_Title == null ? "null" : _Title.Replace("|", StringifySplit), "|",
 				_Unit == null ? "null" : _Unit.Replace("|", StringifySplit));
 		}
-		public ProductInfo(string stringify) {
+		public static ProductInfo Parse(string stringify) {
 			string[] ret = stringify.Split(new char[] { '|' }, 9, StringSplitOptions.None);
 			if (ret.Length != 9) throw new Exception("格式不正确，ProductInfo：" + stringify);
-			if (string.Compare("null", ret[0]) != 0) _Id = uint.Parse(ret[0]);
-			if (string.Compare("null", ret[1]) != 0) _Category_id = uint.Parse(ret[1]);
-			if (string.Compare("null", ret[2]) != 0) _Shop_id = uint.Parse(ret[2]);
-			if (string.Compare("null", ret[3]) != 0) _Create_time = new DateTime(long.Parse(ret[3]));
-			if (string.Compare("null", ret[4]) != 0) _Icon = (ProductICON)long.Parse(ret[4]);
-			if (string.Compare("null", ret[5]) != 0) _Price = decimal.Parse(ret[5]);
-			if (string.Compare("null", ret[6]) != 0) _Stock = uint.Parse(ret[6]);
-			if (string.Compare("null", ret[7]) != 0) _Title = ret[7].Replace(StringifySplit, "|");
-			if (string.Compare("null", ret[8]) != 0) _Unit = ret[8].Replace(StringifySplit, "|");
+			ProductInfo item = new ProductInfo();
+			if (string.Compare("null", ret[0]) != 0) item.Id = uint.Parse(ret[0]);
+			if (string.Compare("null", ret[1]) != 0) item.Category_id = uint.Parse(ret[1]);
+			if (string.Compare("null", ret[2]) != 0) item.Shop_id = uint.Parse(ret[2]);
+			if (string.Compare("null", ret[3]) != 0) item.Create_time = new DateTime(long.Parse(ret[3]));
+			if (string.Compare("null", ret[4]) != 0) item.Icon = (ProductICON)long.Parse(ret[4]);
+			if (string.Compare("null", ret[5]) != 0) item.Price = decimal.Parse(ret[5]);
+			if (string.Compare("null", ret[6]) != 0) item.Stock = uint.Parse(ret[6]);
+			if (string.Compare("null", ret[7]) != 0) item.Title = ret[7].Replace(StringifySplit, "|");
+			if (string.Compare("null", ret[8]) != 0) item.Unit = ret[8].Replace(StringifySplit, "|");
+			return item;
 		}
 		#endregion
 
 		#region override
-		private static Dictionary<string, bool> __jsonIgnore;
-		private static object __jsonIgnore_lock = new object();
+		private static Lazy<Dictionary<string, bool>> __jsonIgnoreLazy = new Lazy<Dictionary<string, bool>>(() => {
+			FieldInfo field = typeof(ProductInfo).GetField("JsonIgnore");
+			Dictionary<string, bool> ret = new Dictionary<string, bool>();
+			if (field != null) string.Concat(field.GetValue(null)).Split(',').ToList().ForEach(f => {
+				if (!string.IsNullOrEmpty(f)) ret[f] = true;
+			});
+			return ret;
+		});
+		private static Dictionary<string, bool> __jsonIgnore => __jsonIgnoreLazy.Value;
 		public override string ToString() {
-			this.Init__jsonIgnore();
 			string json = string.Concat(
 				__jsonIgnore.ContainsKey("Id") ? string.Empty : string.Format(", Id : {0}", Id == null ? "null" : Id.ToString()), 
 				__jsonIgnore.ContainsKey("Category_id") ? string.Empty : string.Format(", Category_id : {0}", Category_id == null ? "null" : Category_id.ToString()), 
@@ -71,48 +81,18 @@ namespace pifa.Model {
 				__jsonIgnore.ContainsKey("Unit") ? string.Empty : string.Format(", Unit : {0}", Unit == null ? "null" : string.Format("'{0}'", Unit.Replace("\\", "\\\\").Replace("\r\n", "\\r\\n").Replace("'", "\\'"))), " }");
 			return string.Concat("{", json.Substring(1));
 		}
-		public IDictionary ToBson() {
-			this.Init__jsonIgnore();
+		public IDictionary ToBson(bool allField = false) {
 			IDictionary ht = new Hashtable();
-			if (!__jsonIgnore.ContainsKey("Id")) ht["Id"] = Id;
-			if (!__jsonIgnore.ContainsKey("Category_id")) ht["Category_id"] = Category_id;
-			if (!__jsonIgnore.ContainsKey("Shop_id")) ht["Shop_id"] = Shop_id;
-			if (!__jsonIgnore.ContainsKey("Create_time")) ht["Create_time"] = Create_time;
-			if (!__jsonIgnore.ContainsKey("Icon")) ht["Icon"] = Icon?.ToInt64().ToSet<ProductICON>().Select<ProductICON, string>(a => a.ToDescriptionOrString());
-			if (!__jsonIgnore.ContainsKey("Price")) ht["Price"] = Price;
-			if (!__jsonIgnore.ContainsKey("Stock")) ht["Stock"] = Stock;
-			if (!__jsonIgnore.ContainsKey("Title")) ht["Title"] = Title;
-			if (!__jsonIgnore.ContainsKey("Unit")) ht["Unit"] = Unit;
+			if (allField || !__jsonIgnore.ContainsKey("Id")) ht["Id"] = Id;
+			if (allField || !__jsonIgnore.ContainsKey("Category_id")) ht["Category_id"] = Category_id;
+			if (allField || !__jsonIgnore.ContainsKey("Shop_id")) ht["Shop_id"] = Shop_id;
+			if (allField || !__jsonIgnore.ContainsKey("Create_time")) ht["Create_time"] = Create_time;
+			if (allField || !__jsonIgnore.ContainsKey("Icon")) ht["Icon"] = Icon?.ToInt64().ToSet<ProductICON>().Select(a => a.ToDescriptionOrString());
+			if (allField || !__jsonIgnore.ContainsKey("Price")) ht["Price"] = Price;
+			if (allField || !__jsonIgnore.ContainsKey("Stock")) ht["Stock"] = Stock;
+			if (allField || !__jsonIgnore.ContainsKey("Title")) ht["Title"] = Title;
+			if (allField || !__jsonIgnore.ContainsKey("Unit")) ht["Unit"] = Unit;
 			return ht;
-		}
-		private void Init__jsonIgnore() {
-			if (__jsonIgnore == null) {
-				lock (__jsonIgnore_lock) {
-					if (__jsonIgnore == null) {
-						FieldInfo field = typeof(ProductInfo).GetField("JsonIgnore");
-						__jsonIgnore = new Dictionary<string, bool>();
-						if (field != null) {
-							string[] fs = string.Concat(field.GetValue(null)).Split(',');
-							foreach (string f in fs) if (!string.IsNullOrEmpty(f)) __jsonIgnore[f] = true;
-						}
-					}
-				}
-			}
-		}
-		public override bool Equals(object obj) {
-			ProductInfo item = obj as ProductInfo;
-			if (item == null) return false;
-			return this.ToString().Equals(item.ToString());
-		}
-		public override int GetHashCode() {
-			return this.ToString().GetHashCode();
-		}
-		public static bool operator ==(ProductInfo op1, ProductInfo op2) {
-			if (object.Equals(op1, null)) return object.Equals(op2, null);
-			return op1.Equals(op2);
-		}
-		public static bool operator !=(ProductInfo op1, ProductInfo op2) {
-			return !(op1 == op2);
 		}
 		public object this[string key] {
 			get { return this.GetType().GetProperty(key).GetValue(this); }
@@ -121,14 +101,14 @@ namespace pifa.Model {
 		#endregion
 
 		#region properties
-		public uint? Id {
+		[JsonProperty] public uint? Id {
 			get { return _Id; }
 			set { _Id = value; }
 		}
 		/// <summary>
 		/// 分类
 		/// </summary>
-		public uint? Category_id {
+		[JsonProperty] public uint? Category_id {
 			get { return _Category_id; }
 			set {
 				if (_Category_id != value) _obj_category = null;
@@ -137,7 +117,7 @@ namespace pifa.Model {
 		}
 		public CategoryInfo Obj_category {
 			get {
-				if (_obj_category == null) _obj_category = Category.GetItem(_Category_id);
+				if (_obj_category == null) _obj_category = Category.GetItem(_Category_id.Value);
 				return _obj_category;
 			}
 			internal set { _obj_category = value; }
@@ -145,7 +125,7 @@ namespace pifa.Model {
 		/// <summary>
 		/// 店铺
 		/// </summary>
-		public uint? Shop_id {
+		[JsonProperty] public uint? Shop_id {
 			get { return _Shop_id; }
 			set {
 				if (_Shop_id != value) _obj_shop = null;
@@ -154,7 +134,7 @@ namespace pifa.Model {
 		}
 		public ShopInfo Obj_shop {
 			get {
-				if (_obj_shop == null) _obj_shop = Shop.GetItem(_Shop_id);
+				if (_obj_shop == null) _obj_shop = Shop.GetItem(_Shop_id.Value);
 				return _obj_shop;
 			}
 			internal set { _obj_shop = value; }
@@ -162,42 +142,42 @@ namespace pifa.Model {
 		/// <summary>
 		/// 创建时间
 		/// </summary>
-		public DateTime? Create_time {
+		[JsonProperty] public DateTime? Create_time {
 			get { return _Create_time; }
 			set { _Create_time = value; }
 		}
 		/// <summary>
 		/// 点亮图标
 		/// </summary>
-		public ProductICON? Icon {
+		[JsonProperty] public ProductICON? Icon {
 			get { return _Icon; }
 			set { _Icon = value; }
 		}
 		/// <summary>
 		/// 价格
 		/// </summary>
-		public decimal? Price {
+		[JsonProperty] public decimal? Price {
 			get { return _Price; }
 			set { _Price = value; }
 		}
 		/// <summary>
 		/// 库存
 		/// </summary>
-		public uint? Stock {
+		[JsonProperty] public uint? Stock {
 			get { return _Stock; }
 			set { _Stock = value; }
 		}
 		/// <summary>
 		/// 产品名称
 		/// </summary>
-		public string Title {
+		[JsonProperty] public string Title {
 			get { return _Title; }
 			set { _Title = value; }
 		}
 		/// <summary>
 		/// 单位
 		/// </summary>
-		public string Unit {
+		[JsonProperty] public string Unit {
 			get { return _Unit; }
 			set { _Unit = value; }
 		}
@@ -261,72 +241,63 @@ namespace pifa.Model {
 		#endregion
 
 		public pifa.DAL.Product.SqlUpdateBuild UpdateDiy {
-			get { return Product.UpdateDiy(this, _Id); }
+			get { return Product.UpdateDiy(this, _Id.Value); }
 		}
-		public Member_productInfo FlagMember(MemberInfo Member, DateTime? Create_time) {
-			return FlagMember(Member.Id, Create_time);
+		public ProductInfo Save() {
+			if (this.Id != null) {
+				Product.Update(this);
+				return this;
+			}
+			this.Create_time = DateTime.Now;
+			return Product.Insert(this);
 		}
+		public Member_productInfo FlagMember(MemberInfo Member, DateTime? Create_time) => FlagMember(Member.Id, Create_time);
 		public Member_productInfo FlagMember(uint? Member_id, DateTime? Create_time) {
-			Member_productInfo item = Member_product.GetItem(Member_id, this.Id);
+			Member_productInfo item = Member_product.GetItem(Member_id.Value, this.Id.Value);
 			if (item == null) item = Member_product.Insert(new Member_productInfo {
 				Member_id = Member_id, 
-				Product_id = this.Id, 
+			Product_id = this.Id, 
 				Create_time = Create_time});
 			else item.UpdateDiy
 					.SetCreate_time(Create_time).ExecuteNonQuery();
 			return item;
 		}
 
-		public int UnflagMember(MemberInfo Member) {
-			return UnflagMember(Member.Id);
-		}
-		public int UnflagMember(uint? Member_id) {
-			return Member_product.Delete(Member_id, this.Id);
-		}
-		public int UnflagMemberALL() {
-			return Member_product.DeleteByProduct_id(this.Id);
-		}
+		public int UnflagMember(MemberInfo Member) => UnflagMember(Member.Id);
+		public int UnflagMember(uint? Member_id) => Member_product.Delete(Member_id.Value, this.Id.Value);
+		public int UnflagMemberALL() => Member_product.DeleteByProduct_id(this.Id);
 
-		public Product_attrInfo FlagAttr(PattrInfo Pattr, string Value) {
-			return FlagAttr(Pattr.Id, Value);
-		}
+		public Product_attrInfo FlagAttr(PattrInfo Pattr, string Value) => FlagAttr(Pattr.Id, Value);
 		public Product_attrInfo FlagAttr(uint? Pattr_id, string Value) {
-			Product_attrInfo item = Product_attr.GetItem(Pattr_id, this.Id);
+			Product_attrInfo item = Product_attr.GetItem(Pattr_id.Value, this.Id.Value);
 			if (item == null) item = Product_attr.Insert(new Product_attrInfo {
 				Pattr_id = Pattr_id, 
-				Product_id = this.Id, 
+			Product_id = this.Id, 
 				Value = Value});
 			else item.UpdateDiy
 					.SetValue(Value).ExecuteNonQuery();
 			return item;
 		}
 
-		public int UnflagAttr(PattrInfo Pattr) {
-			return UnflagAttr(Pattr.Id);
-		}
-		public int UnflagAttr(uint? Pattr_id) {
-			return Product_attr.Delete(Pattr_id, this.Id);
-		}
-		public int UnflagAttrALL() {
-			return Product_attr.DeleteByProduct_id(this.Id);
-		}
+		public int UnflagAttr(PattrInfo Pattr) => UnflagAttr(Pattr.Id);
+		public int UnflagAttr(uint? Pattr_id) => Product_attr.Delete(Pattr_id.Value, this.Id.Value);
+		public int UnflagAttrALL() => Product_attr.DeleteByProduct_id(this.Id);
 
-		public Product_buyruleInfo AddBuyrule(uint? Discount, uint? Ordering_end, uint? Ordering_start) {
-			return Product_buyrule.Insert(new Product_buyruleInfo {
-				Product_id = this.Id, 
+		public Product_buyruleInfo AddBuyrule(uint? Discount, uint? Ordering_end, uint? Ordering_start) => Product_buyrule.Insert(new Product_buyruleInfo {
+			Product_id = this.Id, 
 				Discount = Discount, 
 				Ordering_end = Ordering_end, 
 				Ordering_start = Ordering_start});
+		public Product_buyruleInfo AddBuyrule(Product_buyruleInfo item) {
+			item.Product_id = this.Id;
+			return item.Save();
 		}
 
-		public Product_commentInfo AddComment(MemberInfo Member, OrderInfo Order, ProductitemInfo Productitem, string Content, DateTime? Create_time, string Nickname, byte? Star_price, byte? Star_quality, byte? Star_value, Product_commentSTATE? State, string Title, string Upload_image_url) {
-			return AddComment(Member.Id, Order.Id, Productitem.Id, Content, Create_time, Nickname, Star_price, Star_quality, Star_value, State, Title, Upload_image_url);
-		}
-		public Product_commentInfo AddComment(uint? Member_id, uint? Order_id, uint? Productitem_id, string Content, DateTime? Create_time, string Nickname, byte? Star_price, byte? Star_quality, byte? Star_value, Product_commentSTATE? State, string Title, string Upload_image_url) {
-			return Product_comment.Insert(new Product_commentInfo {
+		public Product_commentInfo AddComment(MemberInfo Member, OrderInfo Order, ProductitemInfo Productitem, string Content, DateTime? Create_time, string Nickname, byte? Star_price, byte? Star_quality, byte? Star_value, Product_commentSTATE? State, string Title, string Upload_image_url) => AddComment(Member.Id, Order.Id, Productitem.Id, Content, Create_time, Nickname, Star_price, Star_quality, Star_value, State, Title, Upload_image_url);
+		public Product_commentInfo AddComment(uint? Member_id, uint? Order_id, uint? Productitem_id, string Content, DateTime? Create_time, string Nickname, byte? Star_price, byte? Star_quality, byte? Star_value, Product_commentSTATE? State, string Title, string Upload_image_url) => Product_comment.Insert(new Product_commentInfo {
 				Member_id = Member_id, 
 				Order_id = Order_id, 
-				Product_id = this.Id, 
+			Product_id = this.Id, 
 				Productitem_id = Productitem_id, 
 				Content = Content, 
 				Create_time = Create_time, 
@@ -337,37 +308,44 @@ namespace pifa.Model {
 				State = State, 
 				Title = Title, 
 				Upload_image_url = Upload_image_url});
+		public Product_commentInfo AddComment(Product_commentInfo item) {
+			item.Product_id = this.Id;
+			return item.Save();
 		}
 
-		public Product_questionInfo AddQuestion(MemberInfo Member, Product_questionInfo Product_question, string Content, DateTime? Create_time, string Email, string Name, Product_questionSTATE? State) {
-			return AddQuestion(Member.Id, Product_question.Id, Content, Create_time, Email, Name, State);
-		}
-		public Product_questionInfo AddQuestion(uint? Member_id, uint? Parent_id, string Content, DateTime? Create_time, string Email, string Name, Product_questionSTATE? State) {
-			return Product_question.Insert(new Product_questionInfo {
+		public Product_questionInfo AddQuestion(MemberInfo Member, Product_questionInfo Product_question, string Content, DateTime? Create_time, string Email, string Name, Product_questionSTATE? State) => AddQuestion(Member.Id, Product_question.Id, Content, Create_time, Email, Name, State);
+		public Product_questionInfo AddQuestion(uint? Member_id, uint? Parent_id, string Content, DateTime? Create_time, string Email, string Name, Product_questionSTATE? State) => Product_question.Insert(new Product_questionInfo {
 				Member_id = Member_id, 
 				Parent_id = Parent_id, 
-				Product_id = this.Id, 
+			Product_id = this.Id, 
 				Content = Content, 
 				Create_time = Create_time, 
 				Email = Email, 
 				Name = Name, 
 				State = State});
+		public Product_questionInfo AddQuestion(Product_questionInfo item) {
+			item.Product_id = this.Id;
+			return item.Save();
 		}
 
-		public ProductdescInfo AddProductdesc(string Content) {
-			return Productdesc.Insert(new ProductdescInfo {
-				Product_id = this.Id, 
+		public ProductdescInfo AddProductdesc(string Content) => Productdesc.Insert(new ProductdescInfo {
+			Product_id = this.Id, 
 				Content = Content});
+		public ProductdescInfo AddProductdesc(ProductdescInfo item) {
+			item.Product_id = this.Id;
+			return item.Save();
 		}
 
-		public ProductitemInfo AddProductitem(string Img_url, string Name, decimal? Original_price, decimal? Price, uint? Stock) {
-			return Productitem.Insert(new ProductitemInfo {
-				Product_id = this.Id, 
+		public ProductitemInfo AddProductitem(string Img_url, string Name, decimal? Original_price, decimal? Price, uint? Stock) => Productitem.Insert(new ProductitemInfo {
+			Product_id = this.Id, 
 				Img_url = Img_url, 
 				Name = Name, 
 				Original_price = Original_price, 
 				Price = Price, 
 				Stock = Stock});
+		public ProductitemInfo AddProductitem(ProductitemInfo item) {
+			item.Product_id = this.Id;
+			return item.Save();
 		}
 
 	}

@@ -4,10 +4,12 @@ using System.Collections.Generic;
 using System.Linq;
 using System.ComponentModel;
 using System.Reflection;
+using Newtonsoft.Json;
 using pifa.BLL;
 
 namespace pifa.Model {
 
+	[JsonObject(MemberSerialization.OptIn)]
 	public partial class Order_refundInfo {
 		#region fields
 		private uint? _Id;
@@ -27,7 +29,7 @@ namespace pifa.Model {
 
 		public Order_refundInfo() { }
 
-		#region 独创的序列化，反序列化
+		#region 序列化，反序列化
 		protected static readonly string StringifySplit = "@<Order_refund(Info]?#>";
 		public string Stringify() {
 			return string.Concat(
@@ -43,28 +45,36 @@ namespace pifa.Model {
 				_Telphone == null ? "null" : _Telphone.Replace("|", StringifySplit), "|",
 				_Wealth == null ? "null" : _Wealth.ToString());
 		}
-		public Order_refundInfo(string stringify) {
+		public static Order_refundInfo Parse(string stringify) {
 			string[] ret = stringify.Split(new char[] { '|' }, 11, StringSplitOptions.None);
 			if (ret.Length != 11) throw new Exception("格式不正确，Order_refundInfo：" + stringify);
-			if (string.Compare("null", ret[0]) != 0) _Id = uint.Parse(ret[0]);
-			if (string.Compare("null", ret[1]) != 0) _Order_id = uint.Parse(ret[1]);
-			if (string.Compare("null", ret[2]) != 0) _Productitem_id = uint.Parse(ret[2]);
-			if (string.Compare("null", ret[3]) != 0) _Create_time = new DateTime(long.Parse(ret[3]));
-			if (string.Compare("null", ret[4]) != 0) _Descript = ret[4].Replace(StringifySplit, "|");
-			if (string.Compare("null", ret[5]) != 0) _Email = ret[5].Replace(StringifySplit, "|");
-			if (string.Compare("null", ret[6]) != 0) _Img_url = ret[6].Replace(StringifySplit, "|");
-			if (string.Compare("null", ret[7]) != 0) _State = (Order_refundSTATE)long.Parse(ret[7]);
-			if (string.Compare("null", ret[8]) != 0) _Tel = ret[8].Replace(StringifySplit, "|");
-			if (string.Compare("null", ret[9]) != 0) _Telphone = ret[9].Replace(StringifySplit, "|");
-			if (string.Compare("null", ret[10]) != 0) _Wealth = decimal.Parse(ret[10]);
+			Order_refundInfo item = new Order_refundInfo();
+			if (string.Compare("null", ret[0]) != 0) item.Id = uint.Parse(ret[0]);
+			if (string.Compare("null", ret[1]) != 0) item.Order_id = uint.Parse(ret[1]);
+			if (string.Compare("null", ret[2]) != 0) item.Productitem_id = uint.Parse(ret[2]);
+			if (string.Compare("null", ret[3]) != 0) item.Create_time = new DateTime(long.Parse(ret[3]));
+			if (string.Compare("null", ret[4]) != 0) item.Descript = ret[4].Replace(StringifySplit, "|");
+			if (string.Compare("null", ret[5]) != 0) item.Email = ret[5].Replace(StringifySplit, "|");
+			if (string.Compare("null", ret[6]) != 0) item.Img_url = ret[6].Replace(StringifySplit, "|");
+			if (string.Compare("null", ret[7]) != 0) item.State = (Order_refundSTATE)long.Parse(ret[7]);
+			if (string.Compare("null", ret[8]) != 0) item.Tel = ret[8].Replace(StringifySplit, "|");
+			if (string.Compare("null", ret[9]) != 0) item.Telphone = ret[9].Replace(StringifySplit, "|");
+			if (string.Compare("null", ret[10]) != 0) item.Wealth = decimal.Parse(ret[10]);
+			return item;
 		}
 		#endregion
 
 		#region override
-		private static Dictionary<string, bool> __jsonIgnore;
-		private static object __jsonIgnore_lock = new object();
+		private static Lazy<Dictionary<string, bool>> __jsonIgnoreLazy = new Lazy<Dictionary<string, bool>>(() => {
+			FieldInfo field = typeof(Order_refundInfo).GetField("JsonIgnore");
+			Dictionary<string, bool> ret = new Dictionary<string, bool>();
+			if (field != null) string.Concat(field.GetValue(null)).Split(',').ToList().ForEach(f => {
+				if (!string.IsNullOrEmpty(f)) ret[f] = true;
+			});
+			return ret;
+		});
+		private static Dictionary<string, bool> __jsonIgnore => __jsonIgnoreLazy.Value;
 		public override string ToString() {
-			this.Init__jsonIgnore();
 			string json = string.Concat(
 				__jsonIgnore.ContainsKey("Id") ? string.Empty : string.Format(", Id : {0}", Id == null ? "null" : Id.ToString()), 
 				__jsonIgnore.ContainsKey("Order_id") ? string.Empty : string.Format(", Order_id : {0}", Order_id == null ? "null" : Order_id.ToString()), 
@@ -79,50 +89,20 @@ namespace pifa.Model {
 				__jsonIgnore.ContainsKey("Wealth") ? string.Empty : string.Format(", Wealth : {0}", Wealth == null ? "null" : Wealth.ToString()), " }");
 			return string.Concat("{", json.Substring(1));
 		}
-		public IDictionary ToBson() {
-			this.Init__jsonIgnore();
+		public IDictionary ToBson(bool allField = false) {
 			IDictionary ht = new Hashtable();
-			if (!__jsonIgnore.ContainsKey("Id")) ht["Id"] = Id;
-			if (!__jsonIgnore.ContainsKey("Order_id")) ht["Order_id"] = Order_id;
-			if (!__jsonIgnore.ContainsKey("Productitem_id")) ht["Productitem_id"] = Productitem_id;
-			if (!__jsonIgnore.ContainsKey("Create_time")) ht["Create_time"] = Create_time;
-			if (!__jsonIgnore.ContainsKey("Descript")) ht["Descript"] = Descript;
-			if (!__jsonIgnore.ContainsKey("Email")) ht["Email"] = Email;
-			if (!__jsonIgnore.ContainsKey("Img_url")) ht["Img_url"] = Img_url;
-			if (!__jsonIgnore.ContainsKey("State")) ht["State"] = State?.ToDescriptionOrString();
-			if (!__jsonIgnore.ContainsKey("Tel")) ht["Tel"] = Tel;
-			if (!__jsonIgnore.ContainsKey("Telphone")) ht["Telphone"] = Telphone;
-			if (!__jsonIgnore.ContainsKey("Wealth")) ht["Wealth"] = Wealth;
+			if (allField || !__jsonIgnore.ContainsKey("Id")) ht["Id"] = Id;
+			if (allField || !__jsonIgnore.ContainsKey("Order_id")) ht["Order_id"] = Order_id;
+			if (allField || !__jsonIgnore.ContainsKey("Productitem_id")) ht["Productitem_id"] = Productitem_id;
+			if (allField || !__jsonIgnore.ContainsKey("Create_time")) ht["Create_time"] = Create_time;
+			if (allField || !__jsonIgnore.ContainsKey("Descript")) ht["Descript"] = Descript;
+			if (allField || !__jsonIgnore.ContainsKey("Email")) ht["Email"] = Email;
+			if (allField || !__jsonIgnore.ContainsKey("Img_url")) ht["Img_url"] = Img_url;
+			if (allField || !__jsonIgnore.ContainsKey("State")) ht["State"] = State?.ToDescriptionOrString();
+			if (allField || !__jsonIgnore.ContainsKey("Tel")) ht["Tel"] = Tel;
+			if (allField || !__jsonIgnore.ContainsKey("Telphone")) ht["Telphone"] = Telphone;
+			if (allField || !__jsonIgnore.ContainsKey("Wealth")) ht["Wealth"] = Wealth;
 			return ht;
-		}
-		private void Init__jsonIgnore() {
-			if (__jsonIgnore == null) {
-				lock (__jsonIgnore_lock) {
-					if (__jsonIgnore == null) {
-						FieldInfo field = typeof(Order_refundInfo).GetField("JsonIgnore");
-						__jsonIgnore = new Dictionary<string, bool>();
-						if (field != null) {
-							string[] fs = string.Concat(field.GetValue(null)).Split(',');
-							foreach (string f in fs) if (!string.IsNullOrEmpty(f)) __jsonIgnore[f] = true;
-						}
-					}
-				}
-			}
-		}
-		public override bool Equals(object obj) {
-			Order_refundInfo item = obj as Order_refundInfo;
-			if (item == null) return false;
-			return this.ToString().Equals(item.ToString());
-		}
-		public override int GetHashCode() {
-			return this.ToString().GetHashCode();
-		}
-		public static bool operator ==(Order_refundInfo op1, Order_refundInfo op2) {
-			if (object.Equals(op1, null)) return object.Equals(op2, null);
-			return op1.Equals(op2);
-		}
-		public static bool operator !=(Order_refundInfo op1, Order_refundInfo op2) {
-			return !(op1 == op2);
 		}
 		public object this[string key] {
 			get { return this.GetType().GetProperty(key).GetValue(this); }
@@ -131,14 +111,14 @@ namespace pifa.Model {
 		#endregion
 
 		#region properties
-		public uint? Id {
+		[JsonProperty] public uint? Id {
 			get { return _Id; }
 			set { _Id = value; }
 		}
 		/// <summary>
 		/// 订单
 		/// </summary>
-		public uint? Order_id {
+		[JsonProperty] public uint? Order_id {
 			get { return _Order_id; }
 			set {
 				if (_Order_id != value) _obj_order = null;
@@ -147,7 +127,7 @@ namespace pifa.Model {
 		}
 		public OrderInfo Obj_order {
 			get {
-				if (_obj_order == null) _obj_order = Order.GetItem(_Order_id);
+				if (_obj_order == null) _obj_order = Order.GetItem(_Order_id.Value);
 				return _obj_order;
 			}
 			internal set { _obj_order = value; }
@@ -155,7 +135,7 @@ namespace pifa.Model {
 		/// <summary>
 		/// 商品项
 		/// </summary>
-		public uint? Productitem_id {
+		[JsonProperty] public uint? Productitem_id {
 			get { return _Productitem_id; }
 			set {
 				if (_Productitem_id != value) _obj_productitem = null;
@@ -164,7 +144,7 @@ namespace pifa.Model {
 		}
 		public ProductitemInfo Obj_productitem {
 			get {
-				if (_obj_productitem == null) _obj_productitem = Productitem.GetItem(_Productitem_id);
+				if (_obj_productitem == null) _obj_productitem = Productitem.GetItem(_Productitem_id.Value);
 				return _obj_productitem;
 			}
 			internal set { _obj_productitem = value; }
@@ -172,63 +152,71 @@ namespace pifa.Model {
 		/// <summary>
 		/// 创建时间
 		/// </summary>
-		public DateTime? Create_time {
+		[JsonProperty] public DateTime? Create_time {
 			get { return _Create_time; }
 			set { _Create_time = value; }
 		}
 		/// <summary>
 		/// 说明
 		/// </summary>
-		public string Descript {
+		[JsonProperty] public string Descript {
 			get { return _Descript; }
 			set { _Descript = value; }
 		}
 		/// <summary>
 		/// 邮箱
 		/// </summary>
-		public string Email {
+		[JsonProperty] public string Email {
 			get { return _Email; }
 			set { _Email = value; }
 		}
 		/// <summary>
 		/// 图片
 		/// </summary>
-		public string Img_url {
+		[JsonProperty] public string Img_url {
 			get { return _Img_url; }
 			set { _Img_url = value; }
 		}
 		/// <summary>
 		/// 状态
 		/// </summary>
-		public Order_refundSTATE? State {
+		[JsonProperty] public Order_refundSTATE? State {
 			get { return _State; }
 			set { _State = value; }
 		}
 		/// <summary>
 		/// 电话
 		/// </summary>
-		public string Tel {
+		[JsonProperty] public string Tel {
 			get { return _Tel; }
 			set { _Tel = value; }
 		}
 		/// <summary>
 		/// 手机
 		/// </summary>
-		public string Telphone {
+		[JsonProperty] public string Telphone {
 			get { return _Telphone; }
 			set { _Telphone = value; }
 		}
 		/// <summary>
 		/// 退款金额
 		/// </summary>
-		public decimal? Wealth {
+		[JsonProperty] public decimal? Wealth {
 			get { return _Wealth; }
 			set { _Wealth = value; }
 		}
 		#endregion
 
 		public pifa.DAL.Order_refund.SqlUpdateBuild UpdateDiy {
-			get { return Order_refund.UpdateDiy(this, _Id); }
+			get { return Order_refund.UpdateDiy(this, _Id.Value); }
+		}
+		public Order_refundInfo Save() {
+			if (this.Id != null) {
+				Order_refund.Update(this);
+				return this;
+			}
+			this.Create_time = DateTime.Now;
+			return Order_refund.Insert(this);
 		}
 	}
 	public enum Order_refundSTATE {

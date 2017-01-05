@@ -39,19 +39,17 @@ namespace pifa.DAL {
 			return GetItem(dr, ref index) as PattrInfo;
 		}
 		public object GetItem(IDataReader dr, ref int index) {
-			return new PattrInfo {
-				Id = dr.IsDBNull(++index) ? null : (uint?)dr.GetInt32(index), 
-				Category_id = dr.IsDBNull(++index) ? null : (uint?)dr.GetInt32(index), 
-				Parent_id = dr.IsDBNull(++index) ? null : (uint?)dr.GetInt32(index), 
-				Is_filter = dr.IsDBNull(++index) ? null : (bool?)dr.GetBoolean(index), 
-				Name = dr.IsDBNull(++index) ? null : dr.GetString(index)};
-		}
-		public SelectBuild<PattrInfo> Select {
-			get { return SelectBuild<PattrInfo>.From(this, SqlHelper.Instance); }
+			PattrInfo item = new PattrInfo();
+				if (!dr.IsDBNull(++index)) item.Id = (uint?)dr.GetInt32(index);
+				if (!dr.IsDBNull(++index)) item.Category_id = (uint?)dr.GetInt32(index);
+				if (!dr.IsDBNull(++index)) item.Parent_id = (uint?)dr.GetInt32(index);
+				if (!dr.IsDBNull(++index)) item.Is_filter = (bool?)dr.GetBoolean(index);
+				if (!dr.IsDBNull(++index)) item.Name = dr.GetString(index);
+			return item;
 		}
 		#endregion
 
-		public int Delete(uint? Id) {
+		public int Delete(uint Id) {
 			return SqlHelper.ExecuteNonQuery(string.Concat(TSQL.Delete, "`id` = ?id"), 
 				GetParameter("?id", MySqlDbType.UInt32, 10, Id));
 		}
@@ -65,7 +63,7 @@ namespace pifa.DAL {
 		}
 
 		public int Update(PattrInfo item) {
-			return new SqlUpdateBuild(null, item.Id)
+			return new SqlUpdateBuild(null, item.Id.Value)
 				.SetCategory_id(item.Category_id)
 				.SetParent_id(item.Parent_id)
 				.SetIs_filter(item.Is_filter)
@@ -77,7 +75,7 @@ namespace pifa.DAL {
 			protected string _fields;
 			protected string _where;
 			protected List<MySqlParameter> _parameters = new List<MySqlParameter>();
-			public SqlUpdateBuild(PattrInfo item, uint? Id) {
+			public SqlUpdateBuild(PattrInfo item, uint Id) {
 				_item = item;
 				_where = SqlHelper.Addslashes("`id` = {0}", Id);
 			}
@@ -105,23 +103,23 @@ namespace pifa.DAL {
 			}
 			public SqlUpdateBuild SetCategory_id(uint? value) {
 				if (_item != null) _item.Category_id = value;
-				return this.Set("`category_id`", string.Concat("?category_id_", _parameters.Count), 
-					GetParameter(string.Concat("?category_id_", _parameters.Count), MySqlDbType.UInt32, 10, value));
+				return this.Set("`category_id`", $"?category_id_{_parameters.Count}", 
+					GetParameter($"?category_id_{{_parameters.Count}}", MySqlDbType.UInt32, 10, value));
 			}
 			public SqlUpdateBuild SetParent_id(uint? value) {
 				if (_item != null) _item.Parent_id = value;
-				return this.Set("`parent_id`", string.Concat("?parent_id_", _parameters.Count), 
-					GetParameter(string.Concat("?parent_id_", _parameters.Count), MySqlDbType.UInt32, 10, value));
+				return this.Set("`parent_id`", $"?parent_id_{_parameters.Count}", 
+					GetParameter($"?parent_id_{{_parameters.Count}}", MySqlDbType.UInt32, 10, value));
 			}
 			public SqlUpdateBuild SetIs_filter(bool? value) {
 				if (_item != null) _item.Is_filter = value;
-				return this.Set("`is_filter`", string.Concat("?is_filter_", _parameters.Count), 
-					GetParameter(string.Concat("?is_filter_", _parameters.Count), MySqlDbType.Bit, 1, value));
+				return this.Set("`is_filter`", $"?is_filter_{_parameters.Count}", 
+					GetParameter($"?is_filter_{{_parameters.Count}}", MySqlDbType.Bit, 1, value));
 			}
 			public SqlUpdateBuild SetName(string value) {
 				if (_item != null) _item.Name = value;
-				return this.Set("`name`", string.Concat("?name_", _parameters.Count), 
-					GetParameter(string.Concat("?name_", _parameters.Count), MySqlDbType.VarChar, 255, value));
+				return this.Set("`name`", $"?name_{_parameters.Count}", 
+					GetParameter($"?name_{{_parameters.Count}}", MySqlDbType.VarChar, 255, value));
 			}
 		}
 		#endregion
@@ -132,8 +130,5 @@ namespace pifa.DAL {
 			return item;
 		}
 
-		public PattrInfo GetItem(uint? Id) {
-			return this.Select.Where("a.`id` = {0}", Id).ToOne();
-		}
 	}
 }

@@ -18,7 +18,7 @@ namespace pifa.BLL {
 
 		#region delete, update, insert
 
-		public static int Delete(uint? Category_id, uint? Markettype_id) {
+		public static int Delete(uint Category_id, uint Markettype_id) {
 			if (itemCacheTimeout > 0) RemoveCache(GetItem(Category_id, Markettype_id));
 			return dal.Delete(Category_id, Markettype_id);
 		}
@@ -33,10 +33,10 @@ namespace pifa.BLL {
 			if (itemCacheTimeout > 0) RemoveCache(item);
 			return dal.Update(item);
 		}
-		public static pifa.DAL.Markettype_category.SqlUpdateBuild UpdateDiy(uint? Category_id, uint? Markettype_id) {
+		public static pifa.DAL.Markettype_category.SqlUpdateBuild UpdateDiy(uint Category_id, uint Markettype_id) {
 			return UpdateDiy(null, Category_id, Markettype_id);
 		}
-		public static pifa.DAL.Markettype_category.SqlUpdateBuild UpdateDiy(Markettype_categoryInfo item, uint? Category_id, uint? Markettype_id) {
+		public static pifa.DAL.Markettype_category.SqlUpdateBuild UpdateDiy(Markettype_categoryInfo item, uint Category_id, uint Markettype_id) {
 			if (itemCacheTimeout > 0) RemoveCache(item != null ? item : GetItem(Category_id, Markettype_id));
 			return new pifa.DAL.Markettype_category.SqlUpdateBuild(item, Category_id, Markettype_id);
 		}
@@ -63,14 +63,13 @@ namespace pifa.BLL {
 		}
 		#endregion
 
-		public static Markettype_categoryInfo GetItem(uint? Category_id, uint? Markettype_id) {
-			if (Category_id == null || Markettype_id == null) return null;
-			if (itemCacheTimeout <= 0) return dal.GetItem(Category_id, Markettype_id);
+		public static Markettype_categoryInfo GetItem(uint Category_id, uint Markettype_id) {
+			if (itemCacheTimeout <= 0) return Select.WhereCategory_id(Category_id).WhereMarkettype_id(Markettype_id).ToOne();
 			string key = string.Concat("pifa_BLL_Markettype_category_", Category_id, "_,_", Markettype_id);
 			string value = RedisHelper.Get(key);
 			if (!string.IsNullOrEmpty(value))
-				try { return new Markettype_categoryInfo(value); } catch { }
-			Markettype_categoryInfo item = dal.GetItem(Category_id, Markettype_id);
+				try { return Markettype_categoryInfo.Parse(value); } catch { }
+			Markettype_categoryInfo item = Select.WhereCategory_id(Category_id).WhereMarkettype_id(Markettype_id).ToOne();
 			if (item == null) return null;
 			RedisHelper.Set(key, item.Stringify(), itemCacheTimeout);
 			return item;
@@ -103,10 +102,10 @@ namespace pifa.BLL {
 	}
 	public partial class Markettype_categorySelectBuild : SelectBuild<Markettype_categoryInfo, Markettype_categorySelectBuild> {
 		public Markettype_categorySelectBuild WhereCategory_id(params uint?[] Category_id) {
-			return this.Where1Or("a.`Category_id` = {0}", Category_id);
+			return this.Where1Or("a.`category_id` = {0}", Category_id);
 		}
 		public Markettype_categorySelectBuild WhereMarkettype_id(params uint?[] Markettype_id) {
-			return this.Where1Or("a.`Markettype_id` = {0}", Markettype_id);
+			return this.Where1Or("a.`markettype_id` = {0}", Markettype_id);
 		}
 		protected new Markettype_categorySelectBuild Where1Or(string filterFormat, Array values) {
 			return base.Where1Or(filterFormat, values) as Markettype_categorySelectBuild;

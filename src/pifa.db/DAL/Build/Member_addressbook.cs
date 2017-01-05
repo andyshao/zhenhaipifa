@@ -43,23 +43,21 @@ namespace pifa.DAL {
 			return GetItem(dr, ref index) as Member_addressbookInfo;
 		}
 		public object GetItem(IDataReader dr, ref int index) {
-			return new Member_addressbookInfo {
-				Id = dr.IsDBNull(++index) ? null : (uint?)dr.GetInt32(index), 
-				Member_id = dr.IsDBNull(++index) ? null : (uint?)dr.GetInt32(index), 
-				Address = dr.IsDBNull(++index) ? null : dr.GetString(index), 
-				Create_time = dr.IsDBNull(++index) ? null : (DateTime?)dr.GetDateTime(index), 
-				Is_default = dr.IsDBNull(++index) ? null : (bool?)dr.GetBoolean(index), 
-				Name = dr.IsDBNull(++index) ? null : dr.GetString(index), 
-				Tel = dr.IsDBNull(++index) ? null : dr.GetString(index), 
-				Telphone = dr.IsDBNull(++index) ? null : dr.GetString(index), 
-				Zip = dr.IsDBNull(++index) ? null : dr.GetString(index)};
-		}
-		public SelectBuild<Member_addressbookInfo> Select {
-			get { return SelectBuild<Member_addressbookInfo>.From(this, SqlHelper.Instance); }
+			Member_addressbookInfo item = new Member_addressbookInfo();
+				if (!dr.IsDBNull(++index)) item.Id = (uint?)dr.GetInt32(index);
+				if (!dr.IsDBNull(++index)) item.Member_id = (uint?)dr.GetInt32(index);
+				if (!dr.IsDBNull(++index)) item.Address = dr.GetString(index);
+				if (!dr.IsDBNull(++index)) item.Create_time = (DateTime?)dr.GetDateTime(index);
+				if (!dr.IsDBNull(++index)) item.Is_default = (bool?)dr.GetBoolean(index);
+				if (!dr.IsDBNull(++index)) item.Name = dr.GetString(index);
+				if (!dr.IsDBNull(++index)) item.Tel = dr.GetString(index);
+				if (!dr.IsDBNull(++index)) item.Telphone = dr.GetString(index);
+				if (!dr.IsDBNull(++index)) item.Zip = dr.GetString(index);
+			return item;
 		}
 		#endregion
 
-		public int Delete(uint? Id) {
+		public int Delete(uint Id) {
 			return SqlHelper.ExecuteNonQuery(string.Concat(TSQL.Delete, "`id` = ?id"), 
 				GetParameter("?id", MySqlDbType.UInt32, 10, Id));
 		}
@@ -69,7 +67,7 @@ namespace pifa.DAL {
 		}
 
 		public int Update(Member_addressbookInfo item) {
-			return new SqlUpdateBuild(null, item.Id)
+			return new SqlUpdateBuild(null, item.Id.Value)
 				.SetMember_id(item.Member_id)
 				.SetAddress(item.Address)
 				.SetCreate_time(item.Create_time)
@@ -85,7 +83,7 @@ namespace pifa.DAL {
 			protected string _fields;
 			protected string _where;
 			protected List<MySqlParameter> _parameters = new List<MySqlParameter>();
-			public SqlUpdateBuild(Member_addressbookInfo item, uint? Id) {
+			public SqlUpdateBuild(Member_addressbookInfo item, uint Id) {
 				_item = item;
 				_where = SqlHelper.Addslashes("`id` = {0}", Id);
 			}
@@ -113,43 +111,43 @@ namespace pifa.DAL {
 			}
 			public SqlUpdateBuild SetMember_id(uint? value) {
 				if (_item != null) _item.Member_id = value;
-				return this.Set("`member_id`", string.Concat("?member_id_", _parameters.Count), 
-					GetParameter(string.Concat("?member_id_", _parameters.Count), MySqlDbType.UInt32, 10, value));
+				return this.Set("`member_id`", $"?member_id_{_parameters.Count}", 
+					GetParameter($"?member_id_{{_parameters.Count}}", MySqlDbType.UInt32, 10, value));
 			}
 			public SqlUpdateBuild SetAddress(string value) {
 				if (_item != null) _item.Address = value;
-				return this.Set("`address`", string.Concat("?address_", _parameters.Count), 
-					GetParameter(string.Concat("?address_", _parameters.Count), MySqlDbType.VarChar, 255, value));
+				return this.Set("`address`", $"?address_{_parameters.Count}", 
+					GetParameter($"?address_{{_parameters.Count}}", MySqlDbType.VarChar, 255, value));
 			}
 			public SqlUpdateBuild SetCreate_time(DateTime? value) {
 				if (_item != null) _item.Create_time = value;
-				return this.Set("`create_time`", string.Concat("?create_time_", _parameters.Count), 
-					GetParameter(string.Concat("?create_time_", _parameters.Count), MySqlDbType.DateTime, -1, value));
+				return this.Set("`create_time`", $"?create_time_{_parameters.Count}", 
+					GetParameter($"?create_time_{{_parameters.Count}}", MySqlDbType.DateTime, -1, value));
 			}
 			public SqlUpdateBuild SetIs_default(bool? value) {
 				if (_item != null) _item.Is_default = value;
-				return this.Set("`is_default`", string.Concat("?is_default_", _parameters.Count), 
-					GetParameter(string.Concat("?is_default_", _parameters.Count), MySqlDbType.Bit, 1, value));
+				return this.Set("`is_default`", $"?is_default_{_parameters.Count}", 
+					GetParameter($"?is_default_{{_parameters.Count}}", MySqlDbType.Bit, 1, value));
 			}
 			public SqlUpdateBuild SetName(string value) {
 				if (_item != null) _item.Name = value;
-				return this.Set("`name`", string.Concat("?name_", _parameters.Count), 
-					GetParameter(string.Concat("?name_", _parameters.Count), MySqlDbType.VarChar, 32, value));
+				return this.Set("`name`", $"?name_{_parameters.Count}", 
+					GetParameter($"?name_{{_parameters.Count}}", MySqlDbType.VarChar, 32, value));
 			}
 			public SqlUpdateBuild SetTel(string value) {
 				if (_item != null) _item.Tel = value;
-				return this.Set("`tel`", string.Concat("?tel_", _parameters.Count), 
-					GetParameter(string.Concat("?tel_", _parameters.Count), MySqlDbType.VarChar, 32, value));
+				return this.Set("`tel`", $"?tel_{_parameters.Count}", 
+					GetParameter($"?tel_{{_parameters.Count}}", MySqlDbType.VarChar, 32, value));
 			}
 			public SqlUpdateBuild SetTelphone(string value) {
 				if (_item != null) _item.Telphone = value;
-				return this.Set("`telphone`", string.Concat("?telphone_", _parameters.Count), 
-					GetParameter(string.Concat("?telphone_", _parameters.Count), MySqlDbType.VarChar, 32, value));
+				return this.Set("`telphone`", $"?telphone_{_parameters.Count}", 
+					GetParameter($"?telphone_{{_parameters.Count}}", MySqlDbType.VarChar, 32, value));
 			}
 			public SqlUpdateBuild SetZip(string value) {
 				if (_item != null) _item.Zip = value;
-				return this.Set("`zip`", string.Concat("?zip_", _parameters.Count), 
-					GetParameter(string.Concat("?zip_", _parameters.Count), MySqlDbType.VarChar, 16, value));
+				return this.Set("`zip`", $"?zip_{_parameters.Count}", 
+					GetParameter($"?zip_{{_parameters.Count}}", MySqlDbType.VarChar, 16, value));
 			}
 		}
 		#endregion
@@ -160,8 +158,5 @@ namespace pifa.DAL {
 			return item;
 		}
 
-		public Member_addressbookInfo GetItem(uint? Id) {
-			return this.Select.Where("a.`id` = {0}", Id).ToOne();
-		}
 	}
 }

@@ -36,22 +36,20 @@ namespace pifa.DAL {
 			return GetItem(dr, ref index) as FranchisingInfo;
 		}
 		public object GetItem(IDataReader dr, ref int index) {
-			return new FranchisingInfo {
-				Id = dr.IsDBNull(++index) ? null : (uint?)dr.GetInt32(index), 
-				Title = dr.IsDBNull(++index) ? null : dr.GetString(index)};
-		}
-		public SelectBuild<FranchisingInfo> Select {
-			get { return SelectBuild<FranchisingInfo>.From(this, SqlHelper.Instance); }
+			FranchisingInfo item = new FranchisingInfo();
+				if (!dr.IsDBNull(++index)) item.Id = (uint?)dr.GetInt32(index);
+				if (!dr.IsDBNull(++index)) item.Title = dr.GetString(index);
+			return item;
 		}
 		#endregion
 
-		public int Delete(uint? Id) {
+		public int Delete(uint Id) {
 			return SqlHelper.ExecuteNonQuery(string.Concat(TSQL.Delete, "`id` = ?id"), 
 				GetParameter("?id", MySqlDbType.UInt32, 10, Id));
 		}
 
 		public int Update(FranchisingInfo item) {
-			return new SqlUpdateBuild(null, item.Id)
+			return new SqlUpdateBuild(null, item.Id.Value)
 				.SetTitle(item.Title).ExecuteNonQuery();
 		}
 		#region class SqlUpdateBuild
@@ -60,7 +58,7 @@ namespace pifa.DAL {
 			protected string _fields;
 			protected string _where;
 			protected List<MySqlParameter> _parameters = new List<MySqlParameter>();
-			public SqlUpdateBuild(FranchisingInfo item, uint? Id) {
+			public SqlUpdateBuild(FranchisingInfo item, uint Id) {
 				_item = item;
 				_where = SqlHelper.Addslashes("`id` = {0}", Id);
 			}
@@ -88,8 +86,8 @@ namespace pifa.DAL {
 			}
 			public SqlUpdateBuild SetTitle(string value) {
 				if (_item != null) _item.Title = value;
-				return this.Set("`title`", string.Concat("?title_", _parameters.Count), 
-					GetParameter(string.Concat("?title_", _parameters.Count), MySqlDbType.VarChar, 255, value));
+				return this.Set("`title`", $"?title_{_parameters.Count}", 
+					GetParameter($"?title_{{_parameters.Count}}", MySqlDbType.VarChar, 255, value));
 			}
 		}
 		#endregion
@@ -100,8 +98,5 @@ namespace pifa.DAL {
 			return item;
 		}
 
-		public FranchisingInfo GetItem(uint? Id) {
-			return this.Select.Where("a.`id` = {0}", Id).ToOne();
-		}
 	}
 }

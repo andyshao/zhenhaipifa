@@ -41,21 +41,19 @@ namespace pifa.DAL {
 			return GetItem(dr, ref index) as ExpressInfo;
 		}
 		public object GetItem(IDataReader dr, ref int index) {
-			return new ExpressInfo {
-				Id = dr.IsDBNull(++index) ? null : (uint?)dr.GetInt32(index), 
-				Area_id = dr.IsDBNull(++index) ? null : (uint?)dr.GetInt32(index), 
-				Address = dr.IsDBNull(++index) ? null : dr.GetString(index), 
-				Create_time = dr.IsDBNull(++index) ? null : (DateTime?)dr.GetDateTime(index), 
-				Service_features = dr.IsDBNull(++index) ? null : dr.GetString(index), 
-				Telphone = dr.IsDBNull(++index) ? null : dr.GetString(index), 
-				Title = dr.IsDBNull(++index) ? null : dr.GetString(index)};
-		}
-		public SelectBuild<ExpressInfo> Select {
-			get { return SelectBuild<ExpressInfo>.From(this, SqlHelper.Instance); }
+			ExpressInfo item = new ExpressInfo();
+				if (!dr.IsDBNull(++index)) item.Id = (uint?)dr.GetInt32(index);
+				if (!dr.IsDBNull(++index)) item.Area_id = (uint?)dr.GetInt32(index);
+				if (!dr.IsDBNull(++index)) item.Address = dr.GetString(index);
+				if (!dr.IsDBNull(++index)) item.Create_time = (DateTime?)dr.GetDateTime(index);
+				if (!dr.IsDBNull(++index)) item.Service_features = dr.GetString(index);
+				if (!dr.IsDBNull(++index)) item.Telphone = dr.GetString(index);
+				if (!dr.IsDBNull(++index)) item.Title = dr.GetString(index);
+			return item;
 		}
 		#endregion
 
-		public int Delete(uint? Id) {
+		public int Delete(uint Id) {
 			return SqlHelper.ExecuteNonQuery(string.Concat(TSQL.Delete, "`id` = ?id"), 
 				GetParameter("?id", MySqlDbType.UInt32, 10, Id));
 		}
@@ -65,7 +63,7 @@ namespace pifa.DAL {
 		}
 
 		public int Update(ExpressInfo item) {
-			return new SqlUpdateBuild(null, item.Id)
+			return new SqlUpdateBuild(null, item.Id.Value)
 				.SetArea_id(item.Area_id)
 				.SetAddress(item.Address)
 				.SetCreate_time(item.Create_time)
@@ -79,7 +77,7 @@ namespace pifa.DAL {
 			protected string _fields;
 			protected string _where;
 			protected List<MySqlParameter> _parameters = new List<MySqlParameter>();
-			public SqlUpdateBuild(ExpressInfo item, uint? Id) {
+			public SqlUpdateBuild(ExpressInfo item, uint Id) {
 				_item = item;
 				_where = SqlHelper.Addslashes("`id` = {0}", Id);
 			}
@@ -107,33 +105,33 @@ namespace pifa.DAL {
 			}
 			public SqlUpdateBuild SetArea_id(uint? value) {
 				if (_item != null) _item.Area_id = value;
-				return this.Set("`area_id`", string.Concat("?area_id_", _parameters.Count), 
-					GetParameter(string.Concat("?area_id_", _parameters.Count), MySqlDbType.UInt32, 10, value));
+				return this.Set("`area_id`", $"?area_id_{_parameters.Count}", 
+					GetParameter($"?area_id_{{_parameters.Count}}", MySqlDbType.UInt32, 10, value));
 			}
 			public SqlUpdateBuild SetAddress(string value) {
 				if (_item != null) _item.Address = value;
-				return this.Set("`address`", string.Concat("?address_", _parameters.Count), 
-					GetParameter(string.Concat("?address_", _parameters.Count), MySqlDbType.VarChar, 255, value));
+				return this.Set("`address`", $"?address_{_parameters.Count}", 
+					GetParameter($"?address_{{_parameters.Count}}", MySqlDbType.VarChar, 255, value));
 			}
 			public SqlUpdateBuild SetCreate_time(DateTime? value) {
 				if (_item != null) _item.Create_time = value;
-				return this.Set("`create_time`", string.Concat("?create_time_", _parameters.Count), 
-					GetParameter(string.Concat("?create_time_", _parameters.Count), MySqlDbType.DateTime, -1, value));
+				return this.Set("`create_time`", $"?create_time_{_parameters.Count}", 
+					GetParameter($"?create_time_{{_parameters.Count}}", MySqlDbType.DateTime, -1, value));
 			}
 			public SqlUpdateBuild SetService_features(string value) {
 				if (_item != null) _item.Service_features = value;
-				return this.Set("`service_features`", string.Concat("?service_features_", _parameters.Count), 
-					GetParameter(string.Concat("?service_features_", _parameters.Count), MySqlDbType.VarChar, 255, value));
+				return this.Set("`service_features`", $"?service_features_{_parameters.Count}", 
+					GetParameter($"?service_features_{{_parameters.Count}}", MySqlDbType.VarChar, 255, value));
 			}
 			public SqlUpdateBuild SetTelphone(string value) {
 				if (_item != null) _item.Telphone = value;
-				return this.Set("`telphone`", string.Concat("?telphone_", _parameters.Count), 
-					GetParameter(string.Concat("?telphone_", _parameters.Count), MySqlDbType.VarChar, 255, value));
+				return this.Set("`telphone`", $"?telphone_{_parameters.Count}", 
+					GetParameter($"?telphone_{{_parameters.Count}}", MySqlDbType.VarChar, 255, value));
 			}
 			public SqlUpdateBuild SetTitle(string value) {
 				if (_item != null) _item.Title = value;
-				return this.Set("`title`", string.Concat("?title_", _parameters.Count), 
-					GetParameter(string.Concat("?title_", _parameters.Count), MySqlDbType.VarChar, 255, value));
+				return this.Set("`title`", $"?title_{_parameters.Count}", 
+					GetParameter($"?title_{{_parameters.Count}}", MySqlDbType.VarChar, 255, value));
 			}
 		}
 		#endregion
@@ -144,8 +142,5 @@ namespace pifa.DAL {
 			return item;
 		}
 
-		public ExpressInfo GetItem(uint? Id) {
-			return this.Select.Where("a.`id` = {0}", Id).ToOne();
-		}
 	}
 }

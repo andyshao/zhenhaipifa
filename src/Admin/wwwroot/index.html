@@ -142,12 +142,14 @@
 		<div class="content-wrapper">
 			<!-- Main content-->
 			<section id="right_content" class="content">
-				<!-- Your Page Content Here-->
-				<h1>这是一个测试首页</h1>
-				<h2>swagger webapi：<a href='/swagger/' target='_blank'>/swagger/</a><h2>
+				<div style="display:none;">
+					<!-- Your Page Content Here-->
+					<h1>这是一个测试首页</h1>
+					<h2>swagger webapi：<a href='/swagger/' target='_blank'>/swagger/</a><h2>
 
-				<h2><a href='/api/sys/connection' target='_blank'>查看 MySql连接池</a><h2>
-				<h2><a href='/api/sys/connection/redis' target='_blank'>查看 Redis连接池</a><h2>
+					<h2><a href='/sys/connection' target='_blank'>查看 Mysql连接池</a><h2>
+					<h2><a href='/sys/connection/redis' target='_blank'>查看 Redis连接池</a><h2>
+				</div>
 			</section>
 			<!-- /.content-->
 		</div>
@@ -157,112 +159,115 @@
 	<script type="text/javascript" src="./htm/js/system.js"></script>
 	<script type="text/javascript" src="./htm/js/admin.js"></script>
 	<script type="text/javascript">
-			// 路由功能
-			//针对上面的html初始化路由列表
-			function hash_encode(str) { return url_encode(base64.encode(str)).replace(/%/g, '_'); }
-			function hash_decode(str) { return base64.decode(url_decode(str.replace(/_/g, '%'))); }
-			window.div_left_router = {};
-			$('li.treeview.active ul li a').each(function(index, ele) {
-				var href = $(ele).attr('href');
-				$(ele).attr('href', '#base64url' + hash_encode(href));
-				window.div_left_router[href] = $(ele).text();
-			});
-			(function () {
-				function Vipspa() {
-				}
-				Vipspa.prototype.start = function (config) {
-					Vipspa.mainView = $(config.view);
+		if (!location.hash) $('#right_content div:first').show();
+		// 路由功能
+		//针对上面的html初始化路由列表
+		function hash_encode(str) { return url_encode(base64.encode(str)).replace(/%/g, '_'); }
+		function hash_decode(str) { return base64.decode(url_decode(str.replace(/_/g, '%'))); }
+		window.div_left_router = {};
+		$('li.treeview.active ul li a').each(function(index, ele) {
+			var href = $(ele).attr('href');
+			$(ele).attr('href', '#base64url' + hash_encode(href));
+			window.div_left_router[href] = $(ele).text();
+		});
+		(function () {
+			function Vipspa() {
+			}
+			Vipspa.prototype.start = function (config) {
+				Vipspa.mainView = $(config.view);
+				startRouter();
+				window.onhashchange = function () {
+					if (location._is_changed) return location._is_changed = false;
 					startRouter();
-					window.onhashchange = function () {
-						if (location._is_changed) return location._is_changed = false;
-						startRouter();
+				};
+			};
+			function startRouter() {
+				var hash = location.hash;
+				if (hash === '') return //location.hash = $('li.treeview.active ul li a:first').attr('href');//'#base64url' + hash_encode('/resume_type/');
+				if (hash.indexOf('#base64url') !== 0) return;
+				var act = hash_decode(hash.substr(10, hash.length - 10));
+				//叶湘勤增加的代码，加载或者提交form后，显示内容
+				function ajax_success(refererUrl) {
+					if (refererUrl == location.pathname) { startRouter(); return function(){}; }
+					var hash = '#base64url' + hash_encode(refererUrl);
+					if (location.hash != hash) {
+						location._is_changed = true;
+						location.hash = hash;
+					}'\''
+					return function (data, status, xhr) {
+						var div;
+						Function.prototype.ajax = $.ajax;
+						top.mainViewNav = {
+							url: refererUrl,
+							trans: function (url) {
+								var act = url;
+								act = act.substr(0, 1) === '/' || act.indexOf('://') !== -1 || act.indexOf('data:') === 0 ? act : join_url(refererUrl, act);
+								return act;
+							},
+							goto: function (url_or_form, target) {
+								var form = url_or_form;
+								if (typeof form === 'string') {
+									var act = this.trans(form);
+									if (String(target).toLowerCase() === '_blank') return window.open(act);
+									location.hash = '#base64url' + hash_encode(act);
+								}
+								else {
+									if (!window.ajax_form_iframe_max) window.ajax_form_iframe_max = 1;
+									window.ajax_form_iframe_max++;
+									var iframe = $('<iframe name="ajax_form_iframe{0}"></iframe>'.format(window.ajax_form_iframe_max));
+									Vipspa.mainView.append(iframe);
+									var act = $(form).attr('action') || '';
+									act = act.substr(0, 1) === '/' || act.indexOf('://') !== -1 ? act : join_url(refererUrl, act);
+									if ($(form).find(':file[name]').length > 0) $(form).attr('enctype', 'multipart/form-data');
+									$(form).attr('action', act);
+									$(form).attr('target', iframe.attr('name'));
+									iframe.on('load', function () {
+										var doc = this.contentWindow ? this.contentWindow.document : this.document;
+										if (doc.body.innerHTML.length === 0) return;
+										if (doc.body.innerHTML.indexOf('Error:') === 0) return alert(doc.body.innerHTML.substr(6));
+										//以下 '<script ' + '是防止与本页面相匹配，不要删除
+										if (doc.body.innerHTML.indexOf('<script ' + 'type="text/javascript">location.href="') === -1) {
+											ajax_success(doc.location.pathname + doc.location.search)(doc.body.innerHTML, 200, null);
+										}
+									});
+								}
+							},
+							query: qs_parseByUrl(refererUrl)
+						};
+						top.mainViewInit = function () {
+							if (!div) return setTimeout(top.mainViewInit, 10);
+							admin_init(function (selector) {
+								if (/<[^>]+>/.test(selector)) return $(selector);
+								return div.find(selector);
+							}, top.mainViewNav);
+						};
+						if (/<body[^>]*>/i.test(data))
+							data = data.match(/<body[^>]*>(([^<]|<(?!\/body>))*)<\/body>/i)[1];
+						div = Vipspa.mainView.html(data);
 					};
 				};
-				function startRouter() {
-					var hash = location.hash;
-					if (hash === '') return //location.hash = $('li.treeview.active ul li a:first').attr('href');//'#base64url' + hash_encode('/resume_type/');
-					if (hash.indexOf('#base64url') !== 0) return;
-					var act = hash_decode(hash.substr(10, hash.length - 10));
-					//叶湘勤增加的代码，加载或者提交form后，显示内容
-					function ajax_success(refererUrl) {
-						if (refererUrl == location.pathname) { startRouter(); return function(){}; }
-						var hash = '#base64url' + hash_encode(refererUrl);
-						if (location.hash != hash) {
-							location._is_changed = true;
-							location.hash = hash;
-						}'\''
-						return function (data, status, xhr) {
-							var div;
-							Function.prototype.ajax = $.ajax;
-							top.mainViewNav = {
-								url: refererUrl,
-								trans: function (url) {
-									var act = url;
-									act = act.substr(0, 1) === '/' || act.indexOf('://') !== -1 || act.indexOf('data:') === 0 ? act : join_url(refererUrl, act);
-									return act;
-								},
-								goto: function (url_or_form, target) {
-									var form = url_or_form;
-									if (typeof form === 'string') {
-										var act = this.trans(form);
-										if (String(target).toLowerCase() === '_blank') return window.open(act);
-										location.hash = '#base64url' + hash_encode(act);
-									}
-									else {
-										if (!window.ajax_form_iframe_max) window.ajax_form_iframe_max = 1;
-										window.ajax_form_iframe_max++;
-										var iframe = $('<iframe name="ajax_form_iframe{0}"></iframe>'.format(window.ajax_form_iframe_max));
-										Vipspa.mainView.append(iframe);
-										var act = $(form).attr('action') || '';
-										act = act.substr(0, 1) === '/' || act.indexOf('://') !== -1 ? act : join_url(refererUrl, act);
-										$(form).attr('action', act);
-										$(form).attr('target', iframe.attr('name'));
-										iframe.on('load', function () {
-											var doc = this.contentWindow ? this.contentWindow.document : this.document;
-											if (doc.body.innerHTML.length === 0) return;
-											if (doc.body.innerHTML.indexOf('Error:') === 0) return alert(doc.body.innerHTML.substr(6));
-											//以下 '<script ' + '是防止与本页面相匹配，不要删除
-											if (doc.body.innerHTML.indexOf('<script ' + 'type="text/javascript">location.href="') === -1) {
-												ajax_success(doc.location.pathname + doc.location.search)(doc.body.innerHTML, 200, null);
-											}
-										});
-									}
-								},
-								query: qs_parseByUrl(refererUrl)
-							};
-							top.mainViewInit = function () {
-								admin_init(function (selector) {
-									if (/<[^>]+>/.test(selector)) return $(selector);
-									return div.find(selector);
-								}, top.mainViewNav);
-							};
-							if (/<body[^>]*>/i.test(data))
-								data = data.match(/<body[^>]*>(([^<]|<(?!\/body>))*)<\/body>/i)[1];
-							div = Vipspa.mainView.html(data);
-						};
-					};
-					$.ajax({
-						type: 'GET',
-						url: act,
-						dataType: 'html',
-						success: ajax_success(act),
-						error: function (jqXHR, textStatus, errorThrown) {
-							var data = jqXHR.responseText;
-							if (/<body[^>]*>/i.test(data))
-								data = data.match(/<body[^>]*>(([^<]|<(?!\/body>))*)<\/body>/i)[1];
-							Vipspa.mainView.html(data);
-						}
-					});
-				}
-				window.vipspa = new Vipspa();
-			})();
-			$(function () {
-				vipspa.start({
-					view: '#right_content',
+				$.ajax({
+					type: 'GET',
+					url: act,
+					dataType: 'html',
+					success: ajax_success(act),
+					error: function (jqXHR, textStatus, errorThrown) {
+						var data = jqXHR.responseText;
+						if (/<body[^>]*>/i.test(data))
+							data = data.match(/<body[^>]*>(([^<]|<(?!\/body>))*)<\/body>/i)[1];
+						Vipspa.mainView.html(data);
+					}
 				});
+			}
+			window.vipspa = new Vipspa();
+		})();
+		$(function () {
+			vipspa.start({
+				view: '#right_content',
 			});
-			// 页面加载进度条
-			$(document).ajaxStart(function() { Pace.restart(); });
+		});
+		// 页面加载进度条
+		$(document).ajaxStart(function() { Pace.restart(); });
 	</script>
 </body>
 </html>

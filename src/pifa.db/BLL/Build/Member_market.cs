@@ -18,7 +18,7 @@ namespace pifa.BLL {
 
 		#region delete, update, insert
 
-		public static int Delete(uint? Market_id, uint? Member_id) {
+		public static int Delete(uint Market_id, uint Member_id) {
 			if (itemCacheTimeout > 0) RemoveCache(GetItem(Market_id, Member_id));
 			return dal.Delete(Market_id, Member_id);
 		}
@@ -33,10 +33,10 @@ namespace pifa.BLL {
 			if (itemCacheTimeout > 0) RemoveCache(item);
 			return dal.Update(item);
 		}
-		public static pifa.DAL.Member_market.SqlUpdateBuild UpdateDiy(uint? Market_id, uint? Member_id) {
+		public static pifa.DAL.Member_market.SqlUpdateBuild UpdateDiy(uint Market_id, uint Member_id) {
 			return UpdateDiy(null, Market_id, Member_id);
 		}
-		public static pifa.DAL.Member_market.SqlUpdateBuild UpdateDiy(Member_marketInfo item, uint? Market_id, uint? Member_id) {
+		public static pifa.DAL.Member_market.SqlUpdateBuild UpdateDiy(Member_marketInfo item, uint Market_id, uint Member_id) {
 			if (itemCacheTimeout > 0) RemoveCache(item != null ? item : GetItem(Market_id, Member_id));
 			return new pifa.DAL.Member_market.SqlUpdateBuild(item, Market_id, Member_id);
 		}
@@ -64,14 +64,13 @@ namespace pifa.BLL {
 		}
 		#endregion
 
-		public static Member_marketInfo GetItem(uint? Market_id, uint? Member_id) {
-			if (Market_id == null || Member_id == null) return null;
-			if (itemCacheTimeout <= 0) return dal.GetItem(Market_id, Member_id);
+		public static Member_marketInfo GetItem(uint Market_id, uint Member_id) {
+			if (itemCacheTimeout <= 0) return Select.WhereMarket_id(Market_id).WhereMember_id(Member_id).ToOne();
 			string key = string.Concat("pifa_BLL_Member_market_", Market_id, "_,_", Member_id);
 			string value = RedisHelper.Get(key);
 			if (!string.IsNullOrEmpty(value))
-				try { return new Member_marketInfo(value); } catch { }
-			Member_marketInfo item = dal.GetItem(Market_id, Member_id);
+				try { return Member_marketInfo.Parse(value); } catch { }
+			Member_marketInfo item = Select.WhereMarket_id(Market_id).WhereMember_id(Member_id).ToOne();
 			if (item == null) return null;
 			RedisHelper.Set(key, item.Stringify(), itemCacheTimeout);
 			return item;
@@ -104,10 +103,10 @@ namespace pifa.BLL {
 	}
 	public partial class Member_marketSelectBuild : SelectBuild<Member_marketInfo, Member_marketSelectBuild> {
 		public Member_marketSelectBuild WhereMarket_id(params uint?[] Market_id) {
-			return this.Where1Or("a.`Market_id` = {0}", Market_id);
+			return this.Where1Or("a.`market_id` = {0}", Market_id);
 		}
 		public Member_marketSelectBuild WhereMember_id(params uint?[] Member_id) {
-			return this.Where1Or("a.`Member_id` = {0}", Member_id);
+			return this.Where1Or("a.`member_id` = {0}", Member_id);
 		}
 		public Member_marketSelectBuild WhereCreate_timeRange(DateTime? begin) {
 			return base.Where("a.`create_time` >= {0}", begin) as Member_marketSelectBuild;

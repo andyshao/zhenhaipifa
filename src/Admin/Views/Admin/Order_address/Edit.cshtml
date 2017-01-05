@@ -1,0 +1,76 @@
+﻿@{
+	Layout = "";
+	Order_addressInfo item = ViewBag.item;
+	var fk_Orders = Order.Select.ToList();
+}
+
+<div class="box">
+	<div class="box-header with-border">
+		<h3 class="box-title" id="box-title"></h3>
+	</div>
+	<div class="box-body">
+		<div class="table-responsive">
+			<form id="form_add" method="post">
+				@Html.AntiForgeryToken()
+				<input type="hidden" name="__callback" value="edit_callback" />
+				<div>
+					<table cellspacing="0" rules="all" class="table table-bordered table-hover" border="1" style="border-collapse:collapse;">
+						<tr>
+							<td>订单</td>
+							<td>
+								<select name="Order_id">
+									<option value="">------ 请选择 ------</option>
+									@foreach (var fk in fk_Orders) { <option value="@fk.Id">@fk.Express_name</option> }
+								</select>
+							</td>
+						</tr>
+						<tr>
+							<td>收货地址</td>
+							<td><input name="Address" type="text" class="datepicker" style="width:60%;" /></td>
+						</tr>
+						<tr>
+							<td>收件人</td>
+							<td><input name="Name" type="text" class="datepicker" style="width:60%;" /></td>
+						</tr>
+						<tr>
+							<td>电话</td>
+							<td><input name="Tel" type="text" class="datepicker" style="width:60%;" /></td>
+						</tr>
+						<tr>
+							<td>联系电话</td>
+							<td><input name="Telphone" type="text" class="datepicker" style="width:60%;" /></td>
+						</tr>
+						<tr>
+							<td>邮编</td>
+							<td><input name="Zip" type="text" class="datepicker" style="width:60%;" /></td>
+						</tr>
+						<tr>
+							<td width="8%">&nbsp</td>
+							<td><input type="submit" value="@(item == null ? "添加" : "更新")" />&nbsp;<input type="button" value="取消" /></td>
+						</tr>
+					</table>
+				</div>
+			</form>
+
+		</div>
+	</div>
+</div>
+
+<script type="text/javascript">
+	(function () {
+		top.edit_callback = function (rt) {
+			if (rt.success) return top.mainViewNav.goto('./');
+			alert(rt.message);
+		};
+
+		var form = $('#form_add')[0];
+		var item = null;
+		@if (item != null) {
+			<text>
+			item = @Html.Raw(item.ToJson());
+			fillForm(form, item);
+			</text>
+		}
+		top.mainViewInit();
+	})();
+</script>

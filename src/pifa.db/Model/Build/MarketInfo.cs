@@ -3,10 +3,12 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using Newtonsoft.Json;
 using pifa.BLL;
 
 namespace pifa.Model {
 
+	[JsonObject(MemberSerialization.OptIn)]
 	public partial class MarketInfo {
 		#region fields
 		private uint? _Id;
@@ -18,7 +20,7 @@ namespace pifa.Model {
 
 		public MarketInfo() { }
 
-		#region 独创的序列化，反序列化
+		#region 序列化，反序列化
 		protected static readonly string StringifySplit = "@<Market(Info]?#>";
 		public string Stringify() {
 			return string.Concat(
@@ -27,21 +29,29 @@ namespace pifa.Model {
 				_Create_time == null ? "null" : _Create_time.Value.Ticks.ToString(), "|",
 				_Title == null ? "null" : _Title.Replace("|", StringifySplit));
 		}
-		public MarketInfo(string stringify) {
+		public static MarketInfo Parse(string stringify) {
 			string[] ret = stringify.Split(new char[] { '|' }, 4, StringSplitOptions.None);
 			if (ret.Length != 4) throw new Exception("格式不正确，MarketInfo：" + stringify);
-			if (string.Compare("null", ret[0]) != 0) _Id = uint.Parse(ret[0]);
-			if (string.Compare("null", ret[1]) != 0) _Area_id = uint.Parse(ret[1]);
-			if (string.Compare("null", ret[2]) != 0) _Create_time = new DateTime(long.Parse(ret[2]));
-			if (string.Compare("null", ret[3]) != 0) _Title = ret[3].Replace(StringifySplit, "|");
+			MarketInfo item = new MarketInfo();
+			if (string.Compare("null", ret[0]) != 0) item.Id = uint.Parse(ret[0]);
+			if (string.Compare("null", ret[1]) != 0) item.Area_id = uint.Parse(ret[1]);
+			if (string.Compare("null", ret[2]) != 0) item.Create_time = new DateTime(long.Parse(ret[2]));
+			if (string.Compare("null", ret[3]) != 0) item.Title = ret[3].Replace(StringifySplit, "|");
+			return item;
 		}
 		#endregion
 
 		#region override
-		private static Dictionary<string, bool> __jsonIgnore;
-		private static object __jsonIgnore_lock = new object();
+		private static Lazy<Dictionary<string, bool>> __jsonIgnoreLazy = new Lazy<Dictionary<string, bool>>(() => {
+			FieldInfo field = typeof(MarketInfo).GetField("JsonIgnore");
+			Dictionary<string, bool> ret = new Dictionary<string, bool>();
+			if (field != null) string.Concat(field.GetValue(null)).Split(',').ToList().ForEach(f => {
+				if (!string.IsNullOrEmpty(f)) ret[f] = true;
+			});
+			return ret;
+		});
+		private static Dictionary<string, bool> __jsonIgnore => __jsonIgnoreLazy.Value;
 		public override string ToString() {
-			this.Init__jsonIgnore();
 			string json = string.Concat(
 				__jsonIgnore.ContainsKey("Id") ? string.Empty : string.Format(", Id : {0}", Id == null ? "null" : Id.ToString()), 
 				__jsonIgnore.ContainsKey("Area_id") ? string.Empty : string.Format(", Area_id : {0}", Area_id == null ? "null" : Area_id.ToString()), 
@@ -49,43 +59,13 @@ namespace pifa.Model {
 				__jsonIgnore.ContainsKey("Title") ? string.Empty : string.Format(", Title : {0}", Title == null ? "null" : string.Format("'{0}'", Title.Replace("\\", "\\\\").Replace("\r\n", "\\r\\n").Replace("'", "\\'"))), " }");
 			return string.Concat("{", json.Substring(1));
 		}
-		public IDictionary ToBson() {
-			this.Init__jsonIgnore();
+		public IDictionary ToBson(bool allField = false) {
 			IDictionary ht = new Hashtable();
-			if (!__jsonIgnore.ContainsKey("Id")) ht["Id"] = Id;
-			if (!__jsonIgnore.ContainsKey("Area_id")) ht["Area_id"] = Area_id;
-			if (!__jsonIgnore.ContainsKey("Create_time")) ht["Create_time"] = Create_time;
-			if (!__jsonIgnore.ContainsKey("Title")) ht["Title"] = Title;
+			if (allField || !__jsonIgnore.ContainsKey("Id")) ht["Id"] = Id;
+			if (allField || !__jsonIgnore.ContainsKey("Area_id")) ht["Area_id"] = Area_id;
+			if (allField || !__jsonIgnore.ContainsKey("Create_time")) ht["Create_time"] = Create_time;
+			if (allField || !__jsonIgnore.ContainsKey("Title")) ht["Title"] = Title;
 			return ht;
-		}
-		private void Init__jsonIgnore() {
-			if (__jsonIgnore == null) {
-				lock (__jsonIgnore_lock) {
-					if (__jsonIgnore == null) {
-						FieldInfo field = typeof(MarketInfo).GetField("JsonIgnore");
-						__jsonIgnore = new Dictionary<string, bool>();
-						if (field != null) {
-							string[] fs = string.Concat(field.GetValue(null)).Split(',');
-							foreach (string f in fs) if (!string.IsNullOrEmpty(f)) __jsonIgnore[f] = true;
-						}
-					}
-				}
-			}
-		}
-		public override bool Equals(object obj) {
-			MarketInfo item = obj as MarketInfo;
-			if (item == null) return false;
-			return this.ToString().Equals(item.ToString());
-		}
-		public override int GetHashCode() {
-			return this.ToString().GetHashCode();
-		}
-		public static bool operator ==(MarketInfo op1, MarketInfo op2) {
-			if (object.Equals(op1, null)) return object.Equals(op2, null);
-			return op1.Equals(op2);
-		}
-		public static bool operator !=(MarketInfo op1, MarketInfo op2) {
-			return !(op1 == op2);
 		}
 		public object this[string key] {
 			get { return this.GetType().GetProperty(key).GetValue(this); }
@@ -94,14 +74,14 @@ namespace pifa.Model {
 		#endregion
 
 		#region properties
-		public uint? Id {
+		[JsonProperty] public uint? Id {
 			get { return _Id; }
 			set { _Id = value; }
 		}
 		/// <summary>
 		/// 城市
 		/// </summary>
-		public uint? Area_id {
+		[JsonProperty] public uint? Area_id {
 			get { return _Area_id; }
 			set {
 				if (_Area_id != value) _obj_area = null;
@@ -110,7 +90,7 @@ namespace pifa.Model {
 		}
 		public AreaInfo Obj_area {
 			get {
-				if (_obj_area == null) _obj_area = Area.GetItem(_Area_id);
+				if (_obj_area == null) _obj_area = Area.GetItem(_Area_id.Value);
 				return _obj_area;
 			}
 			internal set { _obj_area = value; }
@@ -118,14 +98,14 @@ namespace pifa.Model {
 		/// <summary>
 		/// 创建时间
 		/// </summary>
-		public DateTime? Create_time {
+		[JsonProperty] public DateTime? Create_time {
 			get { return _Create_time; }
 			set { _Create_time = value; }
 		}
 		/// <summary>
 		/// 市场名称
 		/// </summary>
-		public string Title {
+		[JsonProperty] public string Title {
 			get { return _Title; }
 			set { _Title = value; }
 		}
@@ -164,33 +144,41 @@ namespace pifa.Model {
 		#endregion
 
 		public pifa.DAL.Market.SqlUpdateBuild UpdateDiy {
-			get { return Market.UpdateDiy(this, _Id); }
+			get { return Market.UpdateDiy(this, _Id.Value); }
 		}
-		public MarketdescInfo AddMarketdesc(string Content, string Url) {
-			return Marketdesc.Insert(new MarketdescInfo {
-				Market_id = this.Id, 
+		public MarketInfo Save() {
+			if (this.Id != null) {
+				Market.Update(this);
+				return this;
+			}
+			this.Create_time = DateTime.Now;
+			return Market.Insert(this);
+		}
+		public MarketdescInfo AddMarketdesc(string Content, string Url) => Marketdesc.Insert(new MarketdescInfo {
+			Market_id = this.Id, 
 				Content = Content, 
 				Url = Url});
+		public MarketdescInfo AddMarketdesc(MarketdescInfo item) {
+			item.Market_id = this.Id;
+			return item.Save();
 		}
 
-		public MarkettypeInfo AddMarkettype(MarkettypeInfo Markettype, byte? Sort, string Title) {
-			return AddMarkettype(Markettype.Id, Sort, Title);
-		}
-		public MarkettypeInfo AddMarkettype(uint? Parent_id, byte? Sort, string Title) {
-			return Markettype.Insert(new MarkettypeInfo {
-				Market_id = this.Id, 
+		public MarkettypeInfo AddMarkettype(MarkettypeInfo Markettype, byte? Sort, string Title) => AddMarkettype(Markettype.Id, Sort, Title);
+		public MarkettypeInfo AddMarkettype(uint? Parent_id, byte? Sort, string Title) => Markettype.Insert(new MarkettypeInfo {
+			Market_id = this.Id, 
 				Parent_id = Parent_id, 
 				Sort = Sort, 
 				Title = Title});
+		public MarkettypeInfo AddMarkettype(MarkettypeInfo item) {
+			item.Market_id = this.Id;
+			return item.Save();
 		}
 
-		public Member_marketInfo FlagMember(MemberInfo Member, DateTime? Create_time) {
-			return FlagMember(Member.Id, Create_time);
-		}
+		public Member_marketInfo FlagMember(MemberInfo Member, DateTime? Create_time) => FlagMember(Member.Id, Create_time);
 		public Member_marketInfo FlagMember(uint? Member_id, DateTime? Create_time) {
-			Member_marketInfo item = Member_market.GetItem(this.Id, Member_id);
+			Member_marketInfo item = Member_market.GetItem(this.Id.Value, Member_id.Value);
 			if (item == null) item = Member_market.Insert(new Member_marketInfo {
-				Market_id = this.Id, 
+			Market_id = this.Id, 
 				Member_id = Member_id, 
 				Create_time = Create_time});
 			else item.UpdateDiy
@@ -198,22 +186,18 @@ namespace pifa.Model {
 			return item;
 		}
 
-		public int UnflagMember(MemberInfo Member) {
-			return UnflagMember(Member.Id);
-		}
-		public int UnflagMember(uint? Member_id) {
-			return Member_market.Delete(this.Id, Member_id);
-		}
-		public int UnflagMemberALL() {
-			return Member_market.DeleteByMarket_id(this.Id);
-		}
+		public int UnflagMember(MemberInfo Member) => UnflagMember(Member.Id);
+		public int UnflagMember(uint? Member_id) => Member_market.Delete(this.Id.Value, Member_id.Value);
+		public int UnflagMemberALL() => Member_market.DeleteByMarket_id(this.Id);
 
-		public RentsubletInfo AddRentsublet(DateTime? Create_time, decimal? Price, RentsubletTYPE? Type) {
-			return Rentsublet.Insert(new RentsubletInfo {
-				Market_id = this.Id, 
+		public RentsubletInfo AddRentsublet(DateTime? Create_time, decimal? Price, RentsubletTYPE? Type) => Rentsublet.Insert(new RentsubletInfo {
+			Market_id = this.Id, 
 				Create_time = Create_time, 
 				Price = Price, 
 				Type = Type});
+		public RentsubletInfo AddRentsublet(RentsubletInfo item) {
+			item.Market_id = this.Id;
+			return item.Save();
 		}
 
 	}

@@ -36,16 +36,14 @@ namespace pifa.DAL {
 			return GetItem(dr, ref index) as Markettype_categoryInfo;
 		}
 		public object GetItem(IDataReader dr, ref int index) {
-			return new Markettype_categoryInfo {
-				Category_id = dr.IsDBNull(++index) ? null : (uint?)dr.GetInt32(index), 
-				Markettype_id = dr.IsDBNull(++index) ? null : (uint?)dr.GetInt32(index)};
-		}
-		public SelectBuild<Markettype_categoryInfo> Select {
-			get { return SelectBuild<Markettype_categoryInfo>.From(this, SqlHelper.Instance); }
+			Markettype_categoryInfo item = new Markettype_categoryInfo();
+				if (!dr.IsDBNull(++index)) item.Category_id = (uint?)dr.GetInt32(index);
+				if (!dr.IsDBNull(++index)) item.Markettype_id = (uint?)dr.GetInt32(index);
+			return item;
 		}
 		#endregion
 
-		public int Delete(uint? Category_id, uint? Markettype_id) {
+		public int Delete(uint Category_id, uint Markettype_id) {
 			return SqlHelper.ExecuteNonQuery(string.Concat(TSQL.Delete, "`category_id` = ?category_id AND `markettype_id` = ?markettype_id"), 
 				GetParameter("?category_id", MySqlDbType.UInt32, 10, Category_id), 
 				GetParameter("?markettype_id", MySqlDbType.UInt32, 10, Markettype_id));
@@ -60,7 +58,7 @@ namespace pifa.DAL {
 		}
 
 		public int Update(Markettype_categoryInfo item) {
-			return new SqlUpdateBuild(null, item.Category_id, item.Markettype_id).ExecuteNonQuery();
+			return new SqlUpdateBuild(null, item.Category_id.Value, item.Markettype_id.Value).ExecuteNonQuery();
 		}
 		#region class SqlUpdateBuild
 		public partial class SqlUpdateBuild {
@@ -68,7 +66,7 @@ namespace pifa.DAL {
 			protected string _fields;
 			protected string _where;
 			protected List<MySqlParameter> _parameters = new List<MySqlParameter>();
-			public SqlUpdateBuild(Markettype_categoryInfo item, uint? Category_id, uint? Markettype_id) {
+			public SqlUpdateBuild(Markettype_categoryInfo item, uint Category_id, uint Markettype_id) {
 				_item = item;
 				_where = SqlHelper.Addslashes("`category_id` = {0} AND `markettype_id` = {1}", Category_id, Markettype_id);
 			}
@@ -102,8 +100,5 @@ namespace pifa.DAL {
 			return item;
 		}
 
-		public Markettype_categoryInfo GetItem(uint? Category_id, uint? Markettype_id) {
-			return this.Select.Where("a.`category_id` = {0} AND a.`markettype_id` = {1}", Category_id, Markettype_id).ToOne();
-		}
 	}
 }

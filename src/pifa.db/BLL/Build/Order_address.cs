@@ -18,19 +18,22 @@ namespace pifa.BLL {
 
 		#region delete, update, insert
 
-		public static int Delete(uint? Order_id) {
+		public static int Delete(uint Order_id) {
 			if (itemCacheTimeout > 0) RemoveCache(GetItem(Order_id));
 			return dal.Delete(Order_id);
+		}
+		public static int DeleteByOrder_id(uint? Order_id) {
+			return dal.DeleteByOrder_id(Order_id);
 		}
 
 		public static int Update(Order_addressInfo item) {
 			if (itemCacheTimeout > 0) RemoveCache(item);
 			return dal.Update(item);
 		}
-		public static pifa.DAL.Order_address.SqlUpdateBuild UpdateDiy(uint? Order_id) {
+		public static pifa.DAL.Order_address.SqlUpdateBuild UpdateDiy(uint Order_id) {
 			return UpdateDiy(null, Order_id);
 		}
-		public static pifa.DAL.Order_address.SqlUpdateBuild UpdateDiy(Order_addressInfo item, uint? Order_id) {
+		public static pifa.DAL.Order_address.SqlUpdateBuild UpdateDiy(Order_addressInfo item, uint Order_id) {
 			if (itemCacheTimeout > 0) RemoveCache(item != null ? item : GetItem(Order_id));
 			return new pifa.DAL.Order_address.SqlUpdateBuild(item, Order_id);
 		}
@@ -65,14 +68,13 @@ namespace pifa.BLL {
 		}
 		#endregion
 
-		public static Order_addressInfo GetItem(uint? Order_id) {
-			if (Order_id == null) return null;
-			if (itemCacheTimeout <= 0) return dal.GetItem(Order_id);
+		public static Order_addressInfo GetItem(uint Order_id) {
+			if (itemCacheTimeout <= 0) return Select.WhereOrder_id(Order_id).ToOne();
 			string key = string.Concat("pifa_BLL_Order_address_", Order_id);
 			string value = RedisHelper.Get(key);
 			if (!string.IsNullOrEmpty(value))
-				try { return new Order_addressInfo(value); } catch { }
-			Order_addressInfo item = dal.GetItem(Order_id);
+				try { return Order_addressInfo.Parse(value); } catch { }
+			Order_addressInfo item = Select.WhereOrder_id(Order_id).ToOne();
 			if (item == null) return null;
 			RedisHelper.Set(key, item.Stringify(), itemCacheTimeout);
 			return item;
@@ -96,41 +98,41 @@ namespace pifa.BLL {
 	}
 	public partial class Order_addressSelectBuild : SelectBuild<Order_addressInfo, Order_addressSelectBuild> {
 		public Order_addressSelectBuild WhereOrder_id(params uint?[] Order_id) {
-			return this.Where1Or("a.`Order_id` = {0}", Order_id);
+			return this.Where1Or("a.`order_id` = {0}", Order_id);
 		}
 		public Order_addressSelectBuild WhereAddress(params string[] Address) {
 			return this.Where1Or("a.`address` = {0}", Address);
 		}
 		public Order_addressSelectBuild WhereAddressLike(params string[] Address) {
-			if (Address == null) return this;
+			if (Address == null || Address.Where(a => !string.IsNullOrEmpty(a)).Any() == false) return this;
 			return this.Where1Or(@"a.`address` LIKE {0}", Address.Select(a => "%" + a + "%").ToArray());
 		}
 		public Order_addressSelectBuild WhereName(params string[] Name) {
 			return this.Where1Or("a.`name` = {0}", Name);
 		}
 		public Order_addressSelectBuild WhereNameLike(params string[] Name) {
-			if (Name == null) return this;
+			if (Name == null || Name.Where(a => !string.IsNullOrEmpty(a)).Any() == false) return this;
 			return this.Where1Or(@"a.`name` LIKE {0}", Name.Select(a => "%" + a + "%").ToArray());
 		}
 		public Order_addressSelectBuild WhereTel(params string[] Tel) {
 			return this.Where1Or("a.`tel` = {0}", Tel);
 		}
 		public Order_addressSelectBuild WhereTelLike(params string[] Tel) {
-			if (Tel == null) return this;
+			if (Tel == null || Tel.Where(a => !string.IsNullOrEmpty(a)).Any() == false) return this;
 			return this.Where1Or(@"a.`tel` LIKE {0}", Tel.Select(a => "%" + a + "%").ToArray());
 		}
 		public Order_addressSelectBuild WhereTelphone(params string[] Telphone) {
 			return this.Where1Or("a.`telphone` = {0}", Telphone);
 		}
 		public Order_addressSelectBuild WhereTelphoneLike(params string[] Telphone) {
-			if (Telphone == null) return this;
+			if (Telphone == null || Telphone.Where(a => !string.IsNullOrEmpty(a)).Any() == false) return this;
 			return this.Where1Or(@"a.`telphone` LIKE {0}", Telphone.Select(a => "%" + a + "%").ToArray());
 		}
 		public Order_addressSelectBuild WhereZip(params string[] Zip) {
 			return this.Where1Or("a.`zip` = {0}", Zip);
 		}
 		public Order_addressSelectBuild WhereZipLike(params string[] Zip) {
-			if (Zip == null) return this;
+			if (Zip == null || Zip.Where(a => !string.IsNullOrEmpty(a)).Any() == false) return this;
 			return this.Where1Or(@"a.`zip` LIKE {0}", Zip.Select(a => "%" + a + "%").ToArray());
 		}
 		protected new Order_addressSelectBuild Where1Or(string filterFormat, Array values) {

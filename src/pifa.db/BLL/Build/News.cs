@@ -18,7 +18,7 @@ namespace pifa.BLL {
 
 		#region delete, update, insert
 
-		public static int Delete(uint? Id) {
+		public static int Delete(uint Id) {
 			if (itemCacheTimeout > 0) RemoveCache(GetItem(Id));
 			return dal.Delete(Id);
 		}
@@ -27,10 +27,10 @@ namespace pifa.BLL {
 			if (itemCacheTimeout > 0) RemoveCache(item);
 			return dal.Update(item);
 		}
-		public static pifa.DAL.News.SqlUpdateBuild UpdateDiy(uint? Id) {
+		public static pifa.DAL.News.SqlUpdateBuild UpdateDiy(uint Id) {
 			return UpdateDiy(null, Id);
 		}
-		public static pifa.DAL.News.SqlUpdateBuild UpdateDiy(NewsInfo item, uint? Id) {
+		public static pifa.DAL.News.SqlUpdateBuild UpdateDiy(NewsInfo item, uint Id) {
 			if (itemCacheTimeout > 0) RemoveCache(item != null ? item : GetItem(Id));
 			return new pifa.DAL.News.SqlUpdateBuild(item, Id);
 		}
@@ -66,14 +66,13 @@ namespace pifa.BLL {
 		}
 		#endregion
 
-		public static NewsInfo GetItem(uint? Id) {
-			if (Id == null) return null;
-			if (itemCacheTimeout <= 0) return dal.GetItem(Id);
+		public static NewsInfo GetItem(uint Id) {
+			if (itemCacheTimeout <= 0) return Select.WhereId(Id).ToOne();
 			string key = string.Concat("pifa_BLL_News_", Id);
 			string value = RedisHelper.Get(key);
 			if (!string.IsNullOrEmpty(value))
-				try { return new NewsInfo(value); } catch { }
-			NewsInfo item = dal.GetItem(Id);
+				try { return NewsInfo.Parse(value); } catch { }
+			NewsInfo item = Select.WhereId(Id).ToOne();
 			if (item == null) return null;
 			RedisHelper.Set(key, item.Stringify(), itemCacheTimeout);
 			return item;
@@ -112,7 +111,7 @@ namespace pifa.BLL {
 			return base.Where("a.`create_time` between {0} and {1}", begin, end) as NewsSelectBuild;
 		}
 		public NewsSelectBuild WhereIntroLike(params string[] Intro) {
-			if (Intro == null) return this;
+			if (Intro == null || Intro.Where(a => !string.IsNullOrEmpty(a)).Any() == false) return this;
 			return this.Where1Or(@"a.`intro` LIKE {0}", Intro.Select(a => "%" + a + "%").ToArray());
 		}
 		public NewsSelectBuild WherePv(params uint?[] Pv) {
@@ -122,26 +121,26 @@ namespace pifa.BLL {
 			return this.Where1Or("a.`source` = {0}", Source);
 		}
 		public NewsSelectBuild WhereSourceLike(params string[] Source) {
-			if (Source == null) return this;
+			if (Source == null || Source.Where(a => !string.IsNullOrEmpty(a)).Any() == false) return this;
 			return this.Where1Or(@"a.`source` LIKE {0}", Source.Select(a => "%" + a + "%").ToArray());
 		}
 		public NewsSelectBuild WhereState_IN(params NewsSTATE?[] States) {
 			return this.Where1Or("a.`state` = {0}", States);
 		}
-		public NewsSelectBuild WhereState(NewsSTATE? State1) {
+		public NewsSelectBuild WhereState(NewsSTATE State1) {
 			return this.WhereState_IN(State1);
 		}
 		#region WhereState
-		public NewsSelectBuild WhereState(NewsSTATE? State1, NewsSTATE? State2) {
+		public NewsSelectBuild WhereState(NewsSTATE State1, NewsSTATE State2) {
 			return this.WhereState_IN(State1, State2);
 		}
-		public NewsSelectBuild WhereState(NewsSTATE? State1, NewsSTATE? State2, NewsSTATE? State3) {
+		public NewsSelectBuild WhereState(NewsSTATE State1, NewsSTATE State2, NewsSTATE State3) {
 			return this.WhereState_IN(State1, State2, State3);
 		}
-		public NewsSelectBuild WhereState(NewsSTATE? State1, NewsSTATE? State2, NewsSTATE? State3, NewsSTATE? State4) {
+		public NewsSelectBuild WhereState(NewsSTATE State1, NewsSTATE State2, NewsSTATE State3, NewsSTATE State4) {
 			return this.WhereState_IN(State1, State2, State3, State4);
 		}
-		public NewsSelectBuild WhereState(NewsSTATE? State1, NewsSTATE? State2, NewsSTATE? State3, NewsSTATE? State4, NewsSTATE? State5) {
+		public NewsSelectBuild WhereState(NewsSTATE State1, NewsSTATE State2, NewsSTATE State3, NewsSTATE State4, NewsSTATE State5) {
 			return this.WhereState_IN(State1, State2, State3, State4, State5);
 		}
 		#endregion
@@ -149,7 +148,7 @@ namespace pifa.BLL {
 			return this.Where1Or("a.`title` = {0}", Title);
 		}
 		public NewsSelectBuild WhereTitleLike(params string[] Title) {
-			if (Title == null) return this;
+			if (Title == null || Title.Where(a => !string.IsNullOrEmpty(a)).Any() == false) return this;
 			return this.Where1Or(@"a.`title` LIKE {0}", Title.Select(a => "%" + a + "%").ToArray());
 		}
 		public NewsSelectBuild WhereUpdate_timeRange(DateTime? begin) {

@@ -41,27 +41,29 @@ namespace pifa.DAL {
 			return GetItem(dr, ref index) as ShopstatInfo;
 		}
 		public object GetItem(IDataReader dr, ref int index) {
-			return new ShopstatInfo {
-				Shop_id = dr.IsDBNull(++index) ? null : (uint?)dr.GetInt32(index), 
-				Today_fav = dr.IsDBNull(++index) ? null : (uint?)dr.GetInt32(index), 
-				Today_session = dr.IsDBNull(++index) ? null : (uint?)dr.GetInt32(index), 
-				Today_share = dr.IsDBNull(++index) ? null : (uint?)dr.GetInt32(index), 
-				Total_fav = dr.IsDBNull(++index) ? null : (uint?)dr.GetInt32(index), 
-				Total_session = dr.IsDBNull(++index) ? null : (uint?)dr.GetInt32(index), 
-				Total_share = dr.IsDBNull(++index) ? null : (uint?)dr.GetInt32(index)};
-		}
-		public SelectBuild<ShopstatInfo> Select {
-			get { return SelectBuild<ShopstatInfo>.From(this, SqlHelper.Instance); }
+			ShopstatInfo item = new ShopstatInfo();
+				if (!dr.IsDBNull(++index)) item.Shop_id = (uint?)dr.GetInt32(index);
+				if (!dr.IsDBNull(++index)) item.Today_fav = (uint?)dr.GetInt32(index);
+				if (!dr.IsDBNull(++index)) item.Today_session = (uint?)dr.GetInt32(index);
+				if (!dr.IsDBNull(++index)) item.Today_share = (uint?)dr.GetInt32(index);
+				if (!dr.IsDBNull(++index)) item.Total_fav = (uint?)dr.GetInt32(index);
+				if (!dr.IsDBNull(++index)) item.Total_session = (uint?)dr.GetInt32(index);
+				if (!dr.IsDBNull(++index)) item.Total_share = (uint?)dr.GetInt32(index);
+			return item;
 		}
 		#endregion
 
-		public int Delete(uint? Shop_id) {
+		public int Delete(uint Shop_id) {
+			return SqlHelper.ExecuteNonQuery(string.Concat(TSQL.Delete, "`shop_id` = ?shop_id"), 
+				GetParameter("?shop_id", MySqlDbType.UInt32, 10, Shop_id));
+		}
+		public int DeleteByShop_id(uint? Shop_id) {
 			return SqlHelper.ExecuteNonQuery(string.Concat(TSQL.Delete, "`shop_id` = ?shop_id"), 
 				GetParameter("?shop_id", MySqlDbType.UInt32, 10, Shop_id));
 		}
 
 		public int Update(ShopstatInfo item) {
-			return new SqlUpdateBuild(null, item.Shop_id)
+			return new SqlUpdateBuild(null, item.Shop_id.Value)
 				.SetToday_fav(item.Today_fav)
 				.SetToday_session(item.Today_session)
 				.SetToday_share(item.Today_share)
@@ -75,7 +77,7 @@ namespace pifa.DAL {
 			protected string _fields;
 			protected string _where;
 			protected List<MySqlParameter> _parameters = new List<MySqlParameter>();
-			public SqlUpdateBuild(ShopstatInfo item, uint? Shop_id) {
+			public SqlUpdateBuild(ShopstatInfo item, uint Shop_id) {
 				_item = item;
 				_where = SqlHelper.Addslashes("`shop_id` = {0}", Shop_id);
 			}
@@ -103,63 +105,63 @@ namespace pifa.DAL {
 			}
 			public SqlUpdateBuild SetToday_fav(uint? value) {
 				if (_item != null) _item.Today_fav = value;
-				return this.Set("`today_fav`", string.Concat("?today_fav_", _parameters.Count), 
-					GetParameter(string.Concat("?today_fav_", _parameters.Count), MySqlDbType.UInt32, 10, value));
+				return this.Set("`today_fav`", $"?today_fav_{_parameters.Count}", 
+					GetParameter($"?today_fav_{{_parameters.Count}}", MySqlDbType.UInt32, 10, value));
 			}
 			public SqlUpdateBuild SetToday_favIncrement(int value) {
 				if (_item != null) _item.Today_fav = (uint?)((int?)_item.Today_fav + value);
-				return this.Set("`today_fav`", string.Concat("`today_fav` + ?today_fav_", _parameters.Count), 
-					GetParameter(string.Concat("?today_fav_", _parameters.Count), MySqlDbType.Int32, 10, value));
+				return this.Set("`today_fav`", "`today_fav` + ?today_fav_{_parameters.Count}", 
+					GetParameter($"?today_fav_{{_parameters.Count}}", MySqlDbType.Int32, 10, value));
 			}
 			public SqlUpdateBuild SetToday_session(uint? value) {
 				if (_item != null) _item.Today_session = value;
-				return this.Set("`today_session`", string.Concat("?today_session_", _parameters.Count), 
-					GetParameter(string.Concat("?today_session_", _parameters.Count), MySqlDbType.UInt32, 10, value));
+				return this.Set("`today_session`", $"?today_session_{_parameters.Count}", 
+					GetParameter($"?today_session_{{_parameters.Count}}", MySqlDbType.UInt32, 10, value));
 			}
 			public SqlUpdateBuild SetToday_sessionIncrement(int value) {
 				if (_item != null) _item.Today_session = (uint?)((int?)_item.Today_session + value);
-				return this.Set("`today_session`", string.Concat("`today_session` + ?today_session_", _parameters.Count), 
-					GetParameter(string.Concat("?today_session_", _parameters.Count), MySqlDbType.Int32, 10, value));
+				return this.Set("`today_session`", "`today_session` + ?today_session_{_parameters.Count}", 
+					GetParameter($"?today_session_{{_parameters.Count}}", MySqlDbType.Int32, 10, value));
 			}
 			public SqlUpdateBuild SetToday_share(uint? value) {
 				if (_item != null) _item.Today_share = value;
-				return this.Set("`today_share`", string.Concat("?today_share_", _parameters.Count), 
-					GetParameter(string.Concat("?today_share_", _parameters.Count), MySqlDbType.UInt32, 10, value));
+				return this.Set("`today_share`", $"?today_share_{_parameters.Count}", 
+					GetParameter($"?today_share_{{_parameters.Count}}", MySqlDbType.UInt32, 10, value));
 			}
 			public SqlUpdateBuild SetToday_shareIncrement(int value) {
 				if (_item != null) _item.Today_share = (uint?)((int?)_item.Today_share + value);
-				return this.Set("`today_share`", string.Concat("`today_share` + ?today_share_", _parameters.Count), 
-					GetParameter(string.Concat("?today_share_", _parameters.Count), MySqlDbType.Int32, 10, value));
+				return this.Set("`today_share`", "`today_share` + ?today_share_{_parameters.Count}", 
+					GetParameter($"?today_share_{{_parameters.Count}}", MySqlDbType.Int32, 10, value));
 			}
 			public SqlUpdateBuild SetTotal_fav(uint? value) {
 				if (_item != null) _item.Total_fav = value;
-				return this.Set("`total_fav`", string.Concat("?total_fav_", _parameters.Count), 
-					GetParameter(string.Concat("?total_fav_", _parameters.Count), MySqlDbType.UInt32, 10, value));
+				return this.Set("`total_fav`", $"?total_fav_{_parameters.Count}", 
+					GetParameter($"?total_fav_{{_parameters.Count}}", MySqlDbType.UInt32, 10, value));
 			}
 			public SqlUpdateBuild SetTotal_favIncrement(int value) {
 				if (_item != null) _item.Total_fav = (uint?)((int?)_item.Total_fav + value);
-				return this.Set("`total_fav`", string.Concat("`total_fav` + ?total_fav_", _parameters.Count), 
-					GetParameter(string.Concat("?total_fav_", _parameters.Count), MySqlDbType.Int32, 10, value));
+				return this.Set("`total_fav`", "`total_fav` + ?total_fav_{_parameters.Count}", 
+					GetParameter($"?total_fav_{{_parameters.Count}}", MySqlDbType.Int32, 10, value));
 			}
 			public SqlUpdateBuild SetTotal_session(uint? value) {
 				if (_item != null) _item.Total_session = value;
-				return this.Set("`total_session`", string.Concat("?total_session_", _parameters.Count), 
-					GetParameter(string.Concat("?total_session_", _parameters.Count), MySqlDbType.UInt32, 10, value));
+				return this.Set("`total_session`", $"?total_session_{_parameters.Count}", 
+					GetParameter($"?total_session_{{_parameters.Count}}", MySqlDbType.UInt32, 10, value));
 			}
 			public SqlUpdateBuild SetTotal_sessionIncrement(int value) {
 				if (_item != null) _item.Total_session = (uint?)((int?)_item.Total_session + value);
-				return this.Set("`total_session`", string.Concat("`total_session` + ?total_session_", _parameters.Count), 
-					GetParameter(string.Concat("?total_session_", _parameters.Count), MySqlDbType.Int32, 10, value));
+				return this.Set("`total_session`", "`total_session` + ?total_session_{_parameters.Count}", 
+					GetParameter($"?total_session_{{_parameters.Count}}", MySqlDbType.Int32, 10, value));
 			}
 			public SqlUpdateBuild SetTotal_share(uint? value) {
 				if (_item != null) _item.Total_share = value;
-				return this.Set("`total_share`", string.Concat("?total_share_", _parameters.Count), 
-					GetParameter(string.Concat("?total_share_", _parameters.Count), MySqlDbType.UInt32, 10, value));
+				return this.Set("`total_share`", $"?total_share_{_parameters.Count}", 
+					GetParameter($"?total_share_{{_parameters.Count}}", MySqlDbType.UInt32, 10, value));
 			}
 			public SqlUpdateBuild SetTotal_shareIncrement(int value) {
 				if (_item != null) _item.Total_share = (uint?)((int?)_item.Total_share + value);
-				return this.Set("`total_share`", string.Concat("`total_share` + ?total_share_", _parameters.Count), 
-					GetParameter(string.Concat("?total_share_", _parameters.Count), MySqlDbType.Int32, 10, value));
+				return this.Set("`total_share`", "`total_share` + ?total_share_{_parameters.Count}", 
+					GetParameter($"?total_share_{{_parameters.Count}}", MySqlDbType.Int32, 10, value));
 			}
 		}
 		#endregion
@@ -169,8 +171,5 @@ namespace pifa.DAL {
 			return item;
 		}
 
-		public ShopstatInfo GetItem(uint? Shop_id) {
-			return this.Select.Where("a.`shop_id` = {0}", Shop_id).ToOne();
-		}
 	}
 }

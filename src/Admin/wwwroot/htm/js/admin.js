@@ -83,27 +83,26 @@ function cms2Pager(count, pageindex, pagesize, qs, pageQueryName) {
 function cms2Filter(schema, query_all) {
 	//query_all = qs;
 	//schema = [
-	//	{ name: '性别', field: 'sex', text: '男,女', value: '1,0' },
-	//	{ name: '学历', field: 'edu', text: '博士,硕士,本科,专科,其他', value: '1,2,3,4,5' },
-	//	{ name: '学校类别', field: 'school_type', text: '985,921' },
-	//	{ name: '届次', field: 'xzyear', text: '2012,2013,2014,2015,2016' },
-	//	{ name: '司龄', field: 'age', text: '低于1年,1年,2年,3年,4年,5-10年,10年以上' }
+	//	{ name: '性别', field: 'sex', text: ['男,女'], value: [1,0] },
+	//	{ name: '学历', field: 'edu', text: ['博士','硕士','本科','专科','其他'], value: [1,2,3,4,5] },
+	//	{ name: '学校类别', field: 'school_type', text: [985,921] },
+	//	{ name: '届次', field: 'xzyear', text: [2012,2013,2014,2015,2016] },
+	//	{ name: '司龄', field: 'age', text: ['低于1年','1年','2年','3年','4年','5-10年','10年以上'] }
 	//];
 	for (var a = 0; a < schema.length; a++) {
 		if (!schema[a].value) schema[a].value = schema[a].text;
-		schema[a].text = schema[a].text.split(',');
-		schema[a].value = schema[a].value.split(',');
-		var sb = '<div style="line-height:36px;float:left;margin-right:30px;word-wrap:break-word;word-break:break-all;">{0}： '.format(schema[a].name);
+		var sb = '<div style="line-height:36px;float:left;margin-right:30px;word-wrap:break-word;word-break:break-all;"><a field="{0}" href="#">{1}</a>： '.format(schema[a].field, schema[a].name);
 		for (var b = 0; b < schema[a].value.length; b++)
-			sb += '<a id="a_{0}_id_{1}" name="a_{0}_id" field="{0}" value="{2}" href="#" style="padding:3px 6px 3px 6px;background-color:#eee;">{3}</a>&nbsp;'.format(schema[a].field, b, schema[a].value[b], schema[a].text[b].htmlencode());
+			sb += '<a id="a_{0}_id_{1}" name="a_{0}_id" field="{0}" value="{2}" href="#" style="padding:3px 6px 3px 6px;background-color:#eee;">{3}</a>&nbsp;'.format(schema[a].field, b, schema[a].value[b], String(schema[a].text[b]).htmlencode());
 		sb += '</div>';
 		$('#form_search div#div_filter').append(sb);
 		var qs_field = query_all[schema[a].field];
 		if (qs_field) {
-			qs_field = '_' + qs_field + '_';
+			var sel = qs_field;
+			if (!isArray(sel)) sel = [sel];
 			$('#form_search #div_filter a[name="a_{0}_id"]'.format(schema[a].field)).each(function (idx, ele) {
-				if (qs_field.indexOf('_' + $(ele).attr('value') + '_') !== -1)
-					$(ele).css('color', 'white').css('backgroundColor', '#00a65e');
+				var value = $(ele).attr('value');
+				for (var a = 0; a < sel.length; a++) if (value === sel[a]) $(ele).css('color', 'white').css('backgroundColor', '#00a65e');
 			});
 		}
 	}
@@ -111,34 +110,21 @@ function cms2Filter(schema, query_all) {
 		var ele = $(this);
 		var field = ele.attr('field');
 		var value = ele.attr('value');
-		if (!query_all[field]) query_all[field] = value;
+		if (!value) delete query_all[field]; //清除条件
+		else if (!query_all[field]) query_all[field] = value;
 		else {
-			var dicids = {};
-			var newids = '';
-			var vs = query_all[field].split('_');
-			for (var a = 0; a < vs.length; a++) {
-				if (vs[a] === '' || dicids[vs[a]]) continue;
-				dicids[vs[a]] = vs[a];
-			}
-			if (dicids[value]) delete dicids[value];
-			else dicids[value] = value;
-			for (var b in dicids) newids += '_' + b;
-			if (newids.length > 0) query_all[field] = newids.substr(1);
-			else delete query_all[field];
+			var issel = true;
+			var farr = query_all[field];
+			if (!isArray(farr)) farr = query_all[field] = [farr];
+			for (var b = farr.length - 1; b >= 0; b--)
+				if (farr[b] === value) {
+					query_all[field].splice(b, 1);
+					issel = false;
+				}
+			if (issel) query_all[field].push(value);
 		}
 		top.mainViewNav.goto('?' + qs_stringify(query_all));
 		return false;
-	});
-}
-function cms2FilterFK(controller, textFiled, valueFiled, field, callback) {
-	$.getJSON('/api/' + controller + '/', { limit: 100 }, function (rt) {
-		var text = [];
-		var value = [];
-		for (var a = 0; a < rt.data.items.length; a++) {
-			text.push(rt.data.items[a][textFiled]);
-			value.push(rt.data.items[a][valueFiled]);
-		}
-		callback({ name: controller, field: field, text: text.join(','), value: value.join(',') });
 	});
 }
 function fillForm(form, obj) {
@@ -166,7 +152,6 @@ function admin_init($, nav) {
 				return false;
 			}
 	});
-	if (submit.val() == '更新') $('form#form_add tr[update-visible]').show();
 	$('form#form_add input[type="button"][value="取消"]').attr('onclick', '').unbind().click(function () {
 		nav.goto('./');
 	});
@@ -180,7 +165,7 @@ function admin_init($, nav) {
 		var title = div_left_router[a];
 		var ele_href = a;
 		if (!ele_href) continue;
-		tmp1 = tmp1.replace(/\/(del|edit|add)\.html$/i, function ($0, $1, $2) {
+		tmp1 = tmp1.replace(/\/(del|edit|add)/i, function ($0, $1, $2) {
 			if ($1 === 'edit' || $1 === 'add') title = title + ' - ' + submit.val();
 			return '/';
 		});
@@ -193,7 +178,6 @@ function admin_init($, nav) {
 	}
 	$('#btn_delete_sel').click(function () {
 		if (confirm('操作不可逆，确认要删除选择项吗？')) {
-			$('form#form_list').attr('action', './del.aspx');
 			$('form#form_list').submit();
 		}
 		return false;
@@ -247,18 +231,18 @@ function admin_init($, nav) {
 		nav.goto(href, $(this).attr('target'));
 		return false;
 	});
-	//$('form').submit(function () {
-	//	if (this.method.toLowerCase() == 'post') {
-	//		nav.goto(this);
-	//		return true;
-	//	}
-	//	var act = $(this).attr('action') || '';
-	//	var qs = qs_parseByUrl(act);
-	//	qs = qs_stringify(qs) + '&' + url_decode($(this).serialize());
-	//	qs = qs_parse(qs);
-	//	qs = qs_stringify(qs);
-	//	nav.goto(act.split('?', 2)[0] + '?' + qs);
-	//	return false;
-	//});
+	$('form').submit(function () {
+		if (this.method.toLowerCase() == 'post') {
+			nav.goto(this);
+			return true;
+		}
+		var act = $(this).attr('action') || '';
+		var qs = qs_parseByUrl(act);
+		qs = qs_stringify(qs) + '&' + url_decode($(this).serialize());
+		qs = qs_parse(qs);
+		qs = qs_stringify(qs);
+		nav.goto(act.split('?', 2)[0] + '?' + qs);
+		return false;
+	});
 	tr_mouseover();
 }

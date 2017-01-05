@@ -18,19 +18,22 @@ namespace pifa.BLL {
 
 		#region delete, update, insert
 
-		public static int Delete(uint? Faq_id) {
+		public static int Delete(uint Faq_id) {
 			if (itemCacheTimeout > 0) RemoveCache(GetItem(Faq_id));
 			return dal.Delete(Faq_id);
+		}
+		public static int DeleteByFaq_id(uint? Faq_id) {
+			return dal.DeleteByFaq_id(Faq_id);
 		}
 
 		public static int Update(FaqdescInfo item) {
 			if (itemCacheTimeout > 0) RemoveCache(item);
 			return dal.Update(item);
 		}
-		public static pifa.DAL.Faqdesc.SqlUpdateBuild UpdateDiy(uint? Faq_id) {
+		public static pifa.DAL.Faqdesc.SqlUpdateBuild UpdateDiy(uint Faq_id) {
 			return UpdateDiy(null, Faq_id);
 		}
-		public static pifa.DAL.Faqdesc.SqlUpdateBuild UpdateDiy(FaqdescInfo item, uint? Faq_id) {
+		public static pifa.DAL.Faqdesc.SqlUpdateBuild UpdateDiy(FaqdescInfo item, uint Faq_id) {
 			if (itemCacheTimeout > 0) RemoveCache(item != null ? item : GetItem(Faq_id));
 			return new pifa.DAL.Faqdesc.SqlUpdateBuild(item, Faq_id);
 		}
@@ -57,14 +60,13 @@ namespace pifa.BLL {
 		}
 		#endregion
 
-		public static FaqdescInfo GetItem(uint? Faq_id) {
-			if (Faq_id == null) return null;
-			if (itemCacheTimeout <= 0) return dal.GetItem(Faq_id);
+		public static FaqdescInfo GetItem(uint Faq_id) {
+			if (itemCacheTimeout <= 0) return Select.WhereFaq_id(Faq_id).ToOne();
 			string key = string.Concat("pifa_BLL_Faqdesc_", Faq_id);
 			string value = RedisHelper.Get(key);
 			if (!string.IsNullOrEmpty(value))
-				try { return new FaqdescInfo(value); } catch { }
-			FaqdescInfo item = dal.GetItem(Faq_id);
+				try { return FaqdescInfo.Parse(value); } catch { }
+			FaqdescInfo item = Select.WhereFaq_id(Faq_id).ToOne();
 			if (item == null) return null;
 			RedisHelper.Set(key, item.Stringify(), itemCacheTimeout);
 			return item;
@@ -88,10 +90,10 @@ namespace pifa.BLL {
 	}
 	public partial class FaqdescSelectBuild : SelectBuild<FaqdescInfo, FaqdescSelectBuild> {
 		public FaqdescSelectBuild WhereFaq_id(params uint?[] Faq_id) {
-			return this.Where1Or("a.`Faq_id` = {0}", Faq_id);
+			return this.Where1Or("a.`faq_id` = {0}", Faq_id);
 		}
 		public FaqdescSelectBuild WhereContentLike(params string[] Content) {
-			if (Content == null) return this;
+			if (Content == null || Content.Where(a => !string.IsNullOrEmpty(a)).Any() == false) return this;
 			return this.Where1Or(@"a.`content` LIKE {0}", Content.Select(a => "%" + a + "%").ToArray());
 		}
 		protected new FaqdescSelectBuild Where1Or(string filterFormat, Array values) {

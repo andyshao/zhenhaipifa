@@ -18,7 +18,7 @@ namespace pifa.BLL {
 
 		#region delete, update, insert
 
-		public static int Delete(uint? Area_id, uint? Category_id) {
+		public static int Delete(uint Area_id, uint Category_id) {
 			if (itemCacheTimeout > 0) RemoveCache(GetItem(Area_id, Category_id));
 			return dal.Delete(Area_id, Category_id);
 		}
@@ -33,10 +33,10 @@ namespace pifa.BLL {
 			if (itemCacheTimeout > 0) RemoveCache(item);
 			return dal.Update(item);
 		}
-		public static pifa.DAL.Area_category.SqlUpdateBuild UpdateDiy(uint? Area_id, uint? Category_id) {
+		public static pifa.DAL.Area_category.SqlUpdateBuild UpdateDiy(uint Area_id, uint Category_id) {
 			return UpdateDiy(null, Area_id, Category_id);
 		}
-		public static pifa.DAL.Area_category.SqlUpdateBuild UpdateDiy(Area_categoryInfo item, uint? Area_id, uint? Category_id) {
+		public static pifa.DAL.Area_category.SqlUpdateBuild UpdateDiy(Area_categoryInfo item, uint Area_id, uint Category_id) {
 			if (itemCacheTimeout > 0) RemoveCache(item != null ? item : GetItem(Area_id, Category_id));
 			return new pifa.DAL.Area_category.SqlUpdateBuild(item, Area_id, Category_id);
 		}
@@ -63,14 +63,13 @@ namespace pifa.BLL {
 		}
 		#endregion
 
-		public static Area_categoryInfo GetItem(uint? Area_id, uint? Category_id) {
-			if (Area_id == null || Category_id == null) return null;
-			if (itemCacheTimeout <= 0) return dal.GetItem(Area_id, Category_id);
+		public static Area_categoryInfo GetItem(uint Area_id, uint Category_id) {
+			if (itemCacheTimeout <= 0) return Select.WhereArea_id(Area_id).WhereCategory_id(Category_id).ToOne();
 			string key = string.Concat("pifa_BLL_Area_category_", Area_id, "_,_", Category_id);
 			string value = RedisHelper.Get(key);
 			if (!string.IsNullOrEmpty(value))
-				try { return new Area_categoryInfo(value); } catch { }
-			Area_categoryInfo item = dal.GetItem(Area_id, Category_id);
+				try { return Area_categoryInfo.Parse(value); } catch { }
+			Area_categoryInfo item = Select.WhereArea_id(Area_id).WhereCategory_id(Category_id).ToOne();
 			if (item == null) return null;
 			RedisHelper.Set(key, item.Stringify(), itemCacheTimeout);
 			return item;
@@ -103,10 +102,10 @@ namespace pifa.BLL {
 	}
 	public partial class Area_categorySelectBuild : SelectBuild<Area_categoryInfo, Area_categorySelectBuild> {
 		public Area_categorySelectBuild WhereArea_id(params uint?[] Area_id) {
-			return this.Where1Or("a.`Area_id` = {0}", Area_id);
+			return this.Where1Or("a.`area_id` = {0}", Area_id);
 		}
 		public Area_categorySelectBuild WhereCategory_id(params uint?[] Category_id) {
-			return this.Where1Or("a.`Category_id` = {0}", Category_id);
+			return this.Where1Or("a.`category_id` = {0}", Category_id);
 		}
 		protected new Area_categorySelectBuild Where1Or(string filterFormat, Array values) {
 			return base.Where1Or(filterFormat, values) as Area_categorySelectBuild;

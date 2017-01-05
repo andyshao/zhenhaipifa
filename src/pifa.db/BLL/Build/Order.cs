@@ -18,7 +18,7 @@ namespace pifa.BLL {
 
 		#region delete, update, insert
 
-		public static int Delete(uint? Id) {
+		public static int Delete(uint Id) {
 			if (itemCacheTimeout > 0) RemoveCache(GetItem(Id));
 			return dal.Delete(Id);
 		}
@@ -33,10 +33,10 @@ namespace pifa.BLL {
 			if (itemCacheTimeout > 0) RemoveCache(item);
 			return dal.Update(item);
 		}
-		public static pifa.DAL.Order.SqlUpdateBuild UpdateDiy(uint? Id) {
+		public static pifa.DAL.Order.SqlUpdateBuild UpdateDiy(uint Id) {
 			return UpdateDiy(null, Id);
 		}
-		public static pifa.DAL.Order.SqlUpdateBuild UpdateDiy(OrderInfo item, uint? Id) {
+		public static pifa.DAL.Order.SqlUpdateBuild UpdateDiy(OrderInfo item, uint Id) {
 			if (itemCacheTimeout > 0) RemoveCache(item != null ? item : GetItem(Id));
 			return new pifa.DAL.Order.SqlUpdateBuild(item, Id);
 		}
@@ -78,26 +78,24 @@ namespace pifa.BLL {
 		}
 		#endregion
 
-		public static OrderInfo GetItem(uint? Id) {
-			if (Id == null) return null;
-			if (itemCacheTimeout <= 0) return dal.GetItem(Id);
+		public static OrderInfo GetItem(uint Id) {
+			if (itemCacheTimeout <= 0) return Select.WhereId(Id).ToOne();
 			string key = string.Concat("pifa_BLL_Order_", Id);
 			string value = RedisHelper.Get(key);
 			if (!string.IsNullOrEmpty(value))
-				try { return new OrderInfo(value); } catch { }
-			OrderInfo item = dal.GetItem(Id);
+				try { return OrderInfo.Parse(value); } catch { }
+			OrderInfo item = Select.WhereId(Id).ToOne();
 			if (item == null) return null;
 			RedisHelper.Set(key, item.Stringify(), itemCacheTimeout);
 			return item;
 		}
 		public static OrderInfo GetItemByCode(string Code) {
-			if (Code == null) return null;
-			if (itemCacheTimeout <= 0) return dal.GetItemByCode(Code);
+			if (itemCacheTimeout <= 0) return Select.WhereCode(Code).ToOne();
 			string key = string.Concat("pifa_BLL_OrderByCode_", Code);
 			string value = RedisHelper.Get(key);
 			if (!string.IsNullOrEmpty(value))
-				try { return new OrderInfo(value); } catch { }
-			OrderInfo item = dal.GetItemByCode(Code);
+				try { return OrderInfo.Parse(value); } catch { }
+			OrderInfo item = Select.WhereCode(Code).ToOne();
 			if (item == null) return null;
 			RedisHelper.Set(key, item.Stringify(), itemCacheTimeout);
 			return item;
@@ -127,7 +125,7 @@ namespace pifa.BLL {
 	}
 	public partial class OrderSelectBuild : SelectBuild<OrderInfo, OrderSelectBuild> {
 		public OrderSelectBuild WhereMember_id(params uint?[] Member_id) {
-			return this.Where1Or("a.`Member_id` = {0}", Member_id);
+			return this.Where1Or("a.`member_id` = {0}", Member_id);
 		}
 		public OrderSelectBuild WhereProductitem(params ProductitemInfo[] items) {
 			if (items == null) return this;
@@ -144,7 +142,7 @@ namespace pifa.BLL {
 			return this.Where1Or("a.`code` = {0}", Code);
 		}
 		public OrderSelectBuild WhereCodeLike(params string[] Code) {
-			if (Code == null) return this;
+			if (Code == null || Code.Where(a => !string.IsNullOrEmpty(a)).Any() == false) return this;
 			return this.Where1Or(@"a.`code` LIKE {0}", Code.Select(a => "%" + a + "%").ToArray());
 		}
 		public OrderSelectBuild WhereCreate_timeRange(DateTime? begin) {
@@ -158,47 +156,47 @@ namespace pifa.BLL {
 			return this.Where1Or("a.`express_code` = {0}", Express_code);
 		}
 		public OrderSelectBuild WhereExpress_codeLike(params string[] Express_code) {
-			if (Express_code == null) return this;
+			if (Express_code == null || Express_code.Where(a => !string.IsNullOrEmpty(a)).Any() == false) return this;
 			return this.Where1Or(@"a.`express_code` LIKE {0}", Express_code.Select(a => "%" + a + "%").ToArray());
 		}
 		public OrderSelectBuild WhereExpress_name(params string[] Express_name) {
 			return this.Where1Or("a.`express_name` = {0}", Express_name);
 		}
 		public OrderSelectBuild WhereExpress_nameLike(params string[] Express_name) {
-			if (Express_name == null) return this;
+			if (Express_name == null || Express_name.Where(a => !string.IsNullOrEmpty(a)).Any() == false) return this;
 			return this.Where1Or(@"a.`express_name` LIKE {0}", Express_name.Select(a => "%" + a + "%").ToArray());
 		}
 		public OrderSelectBuild WherePaymethod(params string[] Paymethod) {
 			return this.Where1Or("a.`paymethod` = {0}", Paymethod);
 		}
 		public OrderSelectBuild WherePaymethodLike(params string[] Paymethod) {
-			if (Paymethod == null) return this;
+			if (Paymethod == null || Paymethod.Where(a => !string.IsNullOrEmpty(a)).Any() == false) return this;
 			return this.Where1Or(@"a.`paymethod` LIKE {0}", Paymethod.Select(a => "%" + a + "%").ToArray());
 		}
 		public OrderSelectBuild WhereRemark(params string[] Remark) {
 			return this.Where1Or("a.`remark` = {0}", Remark);
 		}
 		public OrderSelectBuild WhereRemarkLike(params string[] Remark) {
-			if (Remark == null) return this;
+			if (Remark == null || Remark.Where(a => !string.IsNullOrEmpty(a)).Any() == false) return this;
 			return this.Where1Or(@"a.`remark` LIKE {0}", Remark.Select(a => "%" + a + "%").ToArray());
 		}
 		public OrderSelectBuild WhereState_IN(params OrderSTATE?[] States) {
 			return this.Where1Or("a.`state` = {0}", States);
 		}
-		public OrderSelectBuild WhereState(OrderSTATE? State1) {
+		public OrderSelectBuild WhereState(OrderSTATE State1) {
 			return this.WhereState_IN(State1);
 		}
 		#region WhereState
-		public OrderSelectBuild WhereState(OrderSTATE? State1, OrderSTATE? State2) {
+		public OrderSelectBuild WhereState(OrderSTATE State1, OrderSTATE State2) {
 			return this.WhereState_IN(State1, State2);
 		}
-		public OrderSelectBuild WhereState(OrderSTATE? State1, OrderSTATE? State2, OrderSTATE? State3) {
+		public OrderSelectBuild WhereState(OrderSTATE State1, OrderSTATE State2, OrderSTATE State3) {
 			return this.WhereState_IN(State1, State2, State3);
 		}
-		public OrderSelectBuild WhereState(OrderSTATE? State1, OrderSTATE? State2, OrderSTATE? State3, OrderSTATE? State4) {
+		public OrderSelectBuild WhereState(OrderSTATE State1, OrderSTATE State2, OrderSTATE State3, OrderSTATE State4) {
 			return this.WhereState_IN(State1, State2, State3, State4);
 		}
-		public OrderSelectBuild WhereState(OrderSTATE? State1, OrderSTATE? State2, OrderSTATE? State3, OrderSTATE? State4, OrderSTATE? State5) {
+		public OrderSelectBuild WhereState(OrderSTATE State1, OrderSTATE State2, OrderSTATE State3, OrderSTATE State4, OrderSTATE State5) {
 			return this.WhereState_IN(State1, State2, State3, State4, State5);
 		}
 		#endregion

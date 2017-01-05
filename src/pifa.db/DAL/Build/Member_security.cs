@@ -36,22 +36,24 @@ namespace pifa.DAL {
 			return GetItem(dr, ref index) as Member_securityInfo;
 		}
 		public object GetItem(IDataReader dr, ref int index) {
-			return new Member_securityInfo {
-				Member_id = dr.IsDBNull(++index) ? null : (uint?)dr.GetInt32(index), 
-				Password = dr.IsDBNull(++index) ? null : dr.GetString(index)};
-		}
-		public SelectBuild<Member_securityInfo> Select {
-			get { return SelectBuild<Member_securityInfo>.From(this, SqlHelper.Instance); }
+			Member_securityInfo item = new Member_securityInfo();
+				if (!dr.IsDBNull(++index)) item.Member_id = (uint?)dr.GetInt32(index);
+				if (!dr.IsDBNull(++index)) item.Password = dr.GetString(index);
+			return item;
 		}
 		#endregion
 
-		public int Delete(uint? Member_id) {
+		public int Delete(uint Member_id) {
+			return SqlHelper.ExecuteNonQuery(string.Concat(TSQL.Delete, "`member_id` = ?member_id"), 
+				GetParameter("?member_id", MySqlDbType.UInt32, 10, Member_id));
+		}
+		public int DeleteByMember_id(uint? Member_id) {
 			return SqlHelper.ExecuteNonQuery(string.Concat(TSQL.Delete, "`member_id` = ?member_id"), 
 				GetParameter("?member_id", MySqlDbType.UInt32, 10, Member_id));
 		}
 
 		public int Update(Member_securityInfo item) {
-			return new SqlUpdateBuild(null, item.Member_id)
+			return new SqlUpdateBuild(null, item.Member_id.Value)
 				.SetPassword(item.Password).ExecuteNonQuery();
 		}
 		#region class SqlUpdateBuild
@@ -60,7 +62,7 @@ namespace pifa.DAL {
 			protected string _fields;
 			protected string _where;
 			protected List<MySqlParameter> _parameters = new List<MySqlParameter>();
-			public SqlUpdateBuild(Member_securityInfo item, uint? Member_id) {
+			public SqlUpdateBuild(Member_securityInfo item, uint Member_id) {
 				_item = item;
 				_where = SqlHelper.Addslashes("`member_id` = {0}", Member_id);
 			}
@@ -88,8 +90,8 @@ namespace pifa.DAL {
 			}
 			public SqlUpdateBuild SetPassword(string value) {
 				if (_item != null) _item.Password = value;
-				return this.Set("`password`", string.Concat("?password_", _parameters.Count), 
-					GetParameter(string.Concat("?password_", _parameters.Count), MySqlDbType.VarChar, 255, value));
+				return this.Set("`password`", $"?password_{_parameters.Count}", 
+					GetParameter($"?password_{{_parameters.Count}}", MySqlDbType.VarChar, 255, value));
 			}
 		}
 		#endregion
@@ -99,8 +101,5 @@ namespace pifa.DAL {
 			return item;
 		}
 
-		public Member_securityInfo GetItem(uint? Member_id) {
-			return this.Select.Where("a.`member_id` = {0}", Member_id).ToOne();
-		}
 	}
 }

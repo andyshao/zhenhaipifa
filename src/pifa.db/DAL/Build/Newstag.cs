@@ -38,24 +38,22 @@ namespace pifa.DAL {
 			return GetItem(dr, ref index) as NewstagInfo;
 		}
 		public object GetItem(IDataReader dr, ref int index) {
-			return new NewstagInfo {
-				Id = dr.IsDBNull(++index) ? null : (uint?)dr.GetInt32(index), 
-				Create_time = dr.IsDBNull(++index) ? null : (DateTime?)dr.GetDateTime(index), 
-				Name = dr.IsDBNull(++index) ? null : dr.GetString(index), 
-				Total_news = dr.IsDBNull(++index) ? null : (uint?)dr.GetInt32(index)};
-		}
-		public SelectBuild<NewstagInfo> Select {
-			get { return SelectBuild<NewstagInfo>.From(this, SqlHelper.Instance); }
+			NewstagInfo item = new NewstagInfo();
+				if (!dr.IsDBNull(++index)) item.Id = (uint?)dr.GetInt32(index);
+				if (!dr.IsDBNull(++index)) item.Create_time = (DateTime?)dr.GetDateTime(index);
+				if (!dr.IsDBNull(++index)) item.Name = dr.GetString(index);
+				if (!dr.IsDBNull(++index)) item.Total_news = (uint?)dr.GetInt32(index);
+			return item;
 		}
 		#endregion
 
-		public int Delete(uint? Id) {
+		public int Delete(uint Id) {
 			return SqlHelper.ExecuteNonQuery(string.Concat(TSQL.Delete, "`id` = ?id"), 
 				GetParameter("?id", MySqlDbType.UInt32, 10, Id));
 		}
 
 		public int Update(NewstagInfo item) {
-			return new SqlUpdateBuild(null, item.Id)
+			return new SqlUpdateBuild(null, item.Id.Value)
 				.SetCreate_time(item.Create_time)
 				.SetName(item.Name)
 				.SetTotal_news(item.Total_news).ExecuteNonQuery();
@@ -66,7 +64,7 @@ namespace pifa.DAL {
 			protected string _fields;
 			protected string _where;
 			protected List<MySqlParameter> _parameters = new List<MySqlParameter>();
-			public SqlUpdateBuild(NewstagInfo item, uint? Id) {
+			public SqlUpdateBuild(NewstagInfo item, uint Id) {
 				_item = item;
 				_where = SqlHelper.Addslashes("`id` = {0}", Id);
 			}
@@ -94,23 +92,23 @@ namespace pifa.DAL {
 			}
 			public SqlUpdateBuild SetCreate_time(DateTime? value) {
 				if (_item != null) _item.Create_time = value;
-				return this.Set("`create_time`", string.Concat("?create_time_", _parameters.Count), 
-					GetParameter(string.Concat("?create_time_", _parameters.Count), MySqlDbType.DateTime, -1, value));
+				return this.Set("`create_time`", $"?create_time_{_parameters.Count}", 
+					GetParameter($"?create_time_{{_parameters.Count}}", MySqlDbType.DateTime, -1, value));
 			}
 			public SqlUpdateBuild SetName(string value) {
 				if (_item != null) _item.Name = value;
-				return this.Set("`name`", string.Concat("?name_", _parameters.Count), 
-					GetParameter(string.Concat("?name_", _parameters.Count), MySqlDbType.VarChar, 64, value));
+				return this.Set("`name`", $"?name_{_parameters.Count}", 
+					GetParameter($"?name_{{_parameters.Count}}", MySqlDbType.VarChar, 64, value));
 			}
 			public SqlUpdateBuild SetTotal_news(uint? value) {
 				if (_item != null) _item.Total_news = value;
-				return this.Set("`total_news`", string.Concat("?total_news_", _parameters.Count), 
-					GetParameter(string.Concat("?total_news_", _parameters.Count), MySqlDbType.UInt32, 10, value));
+				return this.Set("`total_news`", $"?total_news_{_parameters.Count}", 
+					GetParameter($"?total_news_{{_parameters.Count}}", MySqlDbType.UInt32, 10, value));
 			}
 			public SqlUpdateBuild SetTotal_newsIncrement(int value) {
 				if (_item != null) _item.Total_news = (uint?)((int?)_item.Total_news + value);
-				return this.Set("`total_news`", string.Concat("`total_news` + ?total_news_", _parameters.Count), 
-					GetParameter(string.Concat("?total_news_", _parameters.Count), MySqlDbType.Int32, 10, value));
+				return this.Set("`total_news`", "`total_news` + ?total_news_{_parameters.Count}", 
+					GetParameter($"?total_news_{{_parameters.Count}}", MySqlDbType.Int32, 10, value));
 			}
 		}
 		#endregion
@@ -121,8 +119,5 @@ namespace pifa.DAL {
 			return item;
 		}
 
-		public NewstagInfo GetItem(uint? Id) {
-			return this.Select.Where("a.`id` = {0}", Id).ToOne();
-		}
 	}
 }

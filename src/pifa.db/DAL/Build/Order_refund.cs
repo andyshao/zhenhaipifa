@@ -45,25 +45,23 @@ namespace pifa.DAL {
 			return GetItem(dr, ref index) as Order_refundInfo;
 		}
 		public object GetItem(IDataReader dr, ref int index) {
-			return new Order_refundInfo {
-				Id = dr.IsDBNull(++index) ? null : (uint?)dr.GetInt32(index), 
-				Order_id = dr.IsDBNull(++index) ? null : (uint?)dr.GetInt32(index), 
-				Productitem_id = dr.IsDBNull(++index) ? null : (uint?)dr.GetInt32(index), 
-				Create_time = dr.IsDBNull(++index) ? null : (DateTime?)dr.GetDateTime(index), 
-				Descript = dr.IsDBNull(++index) ? null : dr.GetString(index), 
-				Email = dr.IsDBNull(++index) ? null : dr.GetString(index), 
-				Img_url = dr.IsDBNull(++index) ? null : dr.GetString(index), 
-				State = dr.IsDBNull(++index) ? null : (Order_refundSTATE?)dr.GetInt64(index), 
-				Tel = dr.IsDBNull(++index) ? null : dr.GetString(index), 
-				Telphone = dr.IsDBNull(++index) ? null : dr.GetString(index), 
-				Wealth = dr.IsDBNull(++index) ? null : (decimal?)dr.GetDecimal(index)};
-		}
-		public SelectBuild<Order_refundInfo> Select {
-			get { return SelectBuild<Order_refundInfo>.From(this, SqlHelper.Instance); }
+			Order_refundInfo item = new Order_refundInfo();
+				if (!dr.IsDBNull(++index)) item.Id = (uint?)dr.GetInt32(index);
+				if (!dr.IsDBNull(++index)) item.Order_id = (uint?)dr.GetInt32(index);
+				if (!dr.IsDBNull(++index)) item.Productitem_id = (uint?)dr.GetInt32(index);
+				if (!dr.IsDBNull(++index)) item.Create_time = (DateTime?)dr.GetDateTime(index);
+				if (!dr.IsDBNull(++index)) item.Descript = dr.GetString(index);
+				if (!dr.IsDBNull(++index)) item.Email = dr.GetString(index);
+				if (!dr.IsDBNull(++index)) item.Img_url = dr.GetString(index);
+				if (!dr.IsDBNull(++index)) item.State = (Order_refundSTATE?)dr.GetInt64(index);
+				if (!dr.IsDBNull(++index)) item.Tel = dr.GetString(index);
+				if (!dr.IsDBNull(++index)) item.Telphone = dr.GetString(index);
+				if (!dr.IsDBNull(++index)) item.Wealth = (decimal?)dr.GetDecimal(index);
+			return item;
 		}
 		#endregion
 
-		public int Delete(uint? Id) {
+		public int Delete(uint Id) {
 			return SqlHelper.ExecuteNonQuery(string.Concat(TSQL.Delete, "`id` = ?id"), 
 				GetParameter("?id", MySqlDbType.UInt32, 10, Id));
 		}
@@ -77,7 +75,7 @@ namespace pifa.DAL {
 		}
 
 		public int Update(Order_refundInfo item) {
-			return new SqlUpdateBuild(null, item.Id)
+			return new SqlUpdateBuild(null, item.Id.Value)
 				.SetOrder_id(item.Order_id)
 				.SetProductitem_id(item.Productitem_id)
 				.SetCreate_time(item.Create_time)
@@ -95,7 +93,7 @@ namespace pifa.DAL {
 			protected string _fields;
 			protected string _where;
 			protected List<MySqlParameter> _parameters = new List<MySqlParameter>();
-			public SqlUpdateBuild(Order_refundInfo item, uint? Id) {
+			public SqlUpdateBuild(Order_refundInfo item, uint Id) {
 				_item = item;
 				_where = SqlHelper.Addslashes("`id` = {0}", Id);
 			}
@@ -123,58 +121,58 @@ namespace pifa.DAL {
 			}
 			public SqlUpdateBuild SetOrder_id(uint? value) {
 				if (_item != null) _item.Order_id = value;
-				return this.Set("`order_id`", string.Concat("?order_id_", _parameters.Count), 
-					GetParameter(string.Concat("?order_id_", _parameters.Count), MySqlDbType.UInt32, 10, value));
+				return this.Set("`order_id`", $"?order_id_{_parameters.Count}", 
+					GetParameter($"?order_id_{{_parameters.Count}}", MySqlDbType.UInt32, 10, value));
 			}
 			public SqlUpdateBuild SetProductitem_id(uint? value) {
 				if (_item != null) _item.Productitem_id = value;
-				return this.Set("`productitem_id`", string.Concat("?productitem_id_", _parameters.Count), 
-					GetParameter(string.Concat("?productitem_id_", _parameters.Count), MySqlDbType.UInt32, 10, value));
+				return this.Set("`productitem_id`", $"?productitem_id_{_parameters.Count}", 
+					GetParameter($"?productitem_id_{{_parameters.Count}}", MySqlDbType.UInt32, 10, value));
 			}
 			public SqlUpdateBuild SetCreate_time(DateTime? value) {
 				if (_item != null) _item.Create_time = value;
-				return this.Set("`create_time`", string.Concat("?create_time_", _parameters.Count), 
-					GetParameter(string.Concat("?create_time_", _parameters.Count), MySqlDbType.DateTime, -1, value));
+				return this.Set("`create_time`", $"?create_time_{_parameters.Count}", 
+					GetParameter($"?create_time_{{_parameters.Count}}", MySqlDbType.DateTime, -1, value));
 			}
 			public SqlUpdateBuild SetDescript(string value) {
 				if (_item != null) _item.Descript = value;
-				return this.Set("`descript`", string.Concat("?descript_", _parameters.Count), 
-					GetParameter(string.Concat("?descript_", _parameters.Count), MySqlDbType.Text, -1, value));
+				return this.Set("`descript`", $"?descript_{_parameters.Count}", 
+					GetParameter($"?descript_{{_parameters.Count}}", MySqlDbType.Text, -1, value));
 			}
 			public SqlUpdateBuild SetEmail(string value) {
 				if (_item != null) _item.Email = value;
-				return this.Set("`email`", string.Concat("?email_", _parameters.Count), 
-					GetParameter(string.Concat("?email_", _parameters.Count), MySqlDbType.VarChar, 64, value));
+				return this.Set("`email`", $"?email_{_parameters.Count}", 
+					GetParameter($"?email_{{_parameters.Count}}", MySqlDbType.VarChar, 64, value));
 			}
 			public SqlUpdateBuild SetImg_url(string value) {
 				if (_item != null) _item.Img_url = value;
-				return this.Set("`img_url`", string.Concat("?img_url_", _parameters.Count), 
-					GetParameter(string.Concat("?img_url_", _parameters.Count), MySqlDbType.VarChar, 255, value));
+				return this.Set("`img_url`", $"?img_url_{_parameters.Count}", 
+					GetParameter($"?img_url_{{_parameters.Count}}", MySqlDbType.VarChar, 255, value));
 			}
 			public SqlUpdateBuild SetState(Order_refundSTATE? value) {
 				if (_item != null) _item.State = value;
-				return this.Set("`state`", string.Concat("?state_", _parameters.Count), 
-					GetParameter(string.Concat("?state_", _parameters.Count), MySqlDbType.Enum, -1, value?.ToInt64()));
+				return this.Set("`state`", $"?state_{_parameters.Count}", 
+					GetParameter($"?state_{{_parameters.Count}}", MySqlDbType.Enum, -1, value?.ToInt64()));
 			}
 			public SqlUpdateBuild SetTel(string value) {
 				if (_item != null) _item.Tel = value;
-				return this.Set("`tel`", string.Concat("?tel_", _parameters.Count), 
-					GetParameter(string.Concat("?tel_", _parameters.Count), MySqlDbType.VarChar, 32, value));
+				return this.Set("`tel`", $"?tel_{_parameters.Count}", 
+					GetParameter($"?tel_{{_parameters.Count}}", MySqlDbType.VarChar, 32, value));
 			}
 			public SqlUpdateBuild SetTelphone(string value) {
 				if (_item != null) _item.Telphone = value;
-				return this.Set("`telphone`", string.Concat("?telphone_", _parameters.Count), 
-					GetParameter(string.Concat("?telphone_", _parameters.Count), MySqlDbType.VarChar, 32, value));
+				return this.Set("`telphone`", $"?telphone_{_parameters.Count}", 
+					GetParameter($"?telphone_{{_parameters.Count}}", MySqlDbType.VarChar, 32, value));
 			}
 			public SqlUpdateBuild SetWealth(decimal? value) {
 				if (_item != null) _item.Wealth = value;
-				return this.Set("`wealth`", string.Concat("?wealth_", _parameters.Count), 
-					GetParameter(string.Concat("?wealth_", _parameters.Count), MySqlDbType.Decimal, 10, value));
+				return this.Set("`wealth`", $"?wealth_{_parameters.Count}", 
+					GetParameter($"?wealth_{{_parameters.Count}}", MySqlDbType.Decimal, 10, value));
 			}
 			public SqlUpdateBuild SetWealthIncrement(decimal value) {
 				if (_item != null) _item.Wealth += value;
-				return this.Set("`wealth`", string.Concat("`wealth` + ?wealth_", _parameters.Count), 
-					GetParameter(string.Concat("?wealth_", _parameters.Count), MySqlDbType.Decimal, 10, value));
+				return this.Set("`wealth`", "`wealth` + ?wealth_{_parameters.Count}", 
+					GetParameter($"?wealth_{{_parameters.Count}}", MySqlDbType.Decimal, 10, value));
 			}
 		}
 		#endregion
@@ -185,8 +183,5 @@ namespace pifa.DAL {
 			return item;
 		}
 
-		public Order_refundInfo GetItem(uint? Id) {
-			return this.Select.Where("a.`id` = {0}", Id).ToOne();
-		}
 	}
 }

@@ -18,7 +18,7 @@ namespace pifa.BLL {
 
 		#region delete, update, insert
 
-		public static int Delete(uint? Id) {
+		public static int Delete(uint Id) {
 			if (itemCacheTimeout > 0) RemoveCache(GetItem(Id));
 			return dal.Delete(Id);
 		}
@@ -30,10 +30,10 @@ namespace pifa.BLL {
 			if (itemCacheTimeout > 0) RemoveCache(item);
 			return dal.Update(item);
 		}
-		public static pifa.DAL.Rentsublet.SqlUpdateBuild UpdateDiy(uint? Id) {
+		public static pifa.DAL.Rentsublet.SqlUpdateBuild UpdateDiy(uint Id) {
 			return UpdateDiy(null, Id);
 		}
-		public static pifa.DAL.Rentsublet.SqlUpdateBuild UpdateDiy(RentsubletInfo item, uint? Id) {
+		public static pifa.DAL.Rentsublet.SqlUpdateBuild UpdateDiy(RentsubletInfo item, uint Id) {
 			if (itemCacheTimeout > 0) RemoveCache(item != null ? item : GetItem(Id));
 			return new pifa.DAL.Rentsublet.SqlUpdateBuild(item, Id);
 		}
@@ -62,14 +62,13 @@ namespace pifa.BLL {
 		}
 		#endregion
 
-		public static RentsubletInfo GetItem(uint? Id) {
-			if (Id == null) return null;
-			if (itemCacheTimeout <= 0) return dal.GetItem(Id);
+		public static RentsubletInfo GetItem(uint Id) {
+			if (itemCacheTimeout <= 0) return Select.WhereId(Id).ToOne();
 			string key = string.Concat("pifa_BLL_Rentsublet_", Id);
 			string value = RedisHelper.Get(key);
 			if (!string.IsNullOrEmpty(value))
-				try { return new RentsubletInfo(value); } catch { }
-			RentsubletInfo item = dal.GetItem(Id);
+				try { return RentsubletInfo.Parse(value); } catch { }
+			RentsubletInfo item = Select.WhereId(Id).ToOne();
 			if (item == null) return null;
 			RedisHelper.Set(key, item.Stringify(), itemCacheTimeout);
 			return item;
@@ -99,7 +98,7 @@ namespace pifa.BLL {
 	}
 	public partial class RentsubletSelectBuild : SelectBuild<RentsubletInfo, RentsubletSelectBuild> {
 		public RentsubletSelectBuild WhereMarket_id(params uint?[] Market_id) {
-			return this.Where1Or("a.`Market_id` = {0}", Market_id);
+			return this.Where1Or("a.`market_id` = {0}", Market_id);
 		}
 		public RentsubletSelectBuild WhereFranchising(params FranchisingInfo[] items) {
 			if (items == null) return this;
@@ -132,20 +131,20 @@ namespace pifa.BLL {
 		public RentsubletSelectBuild WhereType_IN(params RentsubletTYPE?[] Types) {
 			return this.Where1Or("a.`type` = {0}", Types);
 		}
-		public RentsubletSelectBuild WhereType(RentsubletTYPE? Type1) {
+		public RentsubletSelectBuild WhereType(RentsubletTYPE Type1) {
 			return this.WhereType_IN(Type1);
 		}
 		#region WhereType
-		public RentsubletSelectBuild WhereType(RentsubletTYPE? Type1, RentsubletTYPE? Type2) {
+		public RentsubletSelectBuild WhereType(RentsubletTYPE Type1, RentsubletTYPE Type2) {
 			return this.WhereType_IN(Type1, Type2);
 		}
-		public RentsubletSelectBuild WhereType(RentsubletTYPE? Type1, RentsubletTYPE? Type2, RentsubletTYPE? Type3) {
+		public RentsubletSelectBuild WhereType(RentsubletTYPE Type1, RentsubletTYPE Type2, RentsubletTYPE Type3) {
 			return this.WhereType_IN(Type1, Type2, Type3);
 		}
-		public RentsubletSelectBuild WhereType(RentsubletTYPE? Type1, RentsubletTYPE? Type2, RentsubletTYPE? Type3, RentsubletTYPE? Type4) {
+		public RentsubletSelectBuild WhereType(RentsubletTYPE Type1, RentsubletTYPE Type2, RentsubletTYPE Type3, RentsubletTYPE Type4) {
 			return this.WhereType_IN(Type1, Type2, Type3, Type4);
 		}
-		public RentsubletSelectBuild WhereType(RentsubletTYPE? Type1, RentsubletTYPE? Type2, RentsubletTYPE? Type3, RentsubletTYPE? Type4, RentsubletTYPE? Type5) {
+		public RentsubletSelectBuild WhereType(RentsubletTYPE Type1, RentsubletTYPE Type2, RentsubletTYPE Type3, RentsubletTYPE Type4, RentsubletTYPE Type5) {
 			return this.WhereType_IN(Type1, Type2, Type3, Type4, Type5);
 		}
 		#endregion

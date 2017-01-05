@@ -1,0 +1,89 @@
+﻿@{
+	Layout = "";
+	FranchisingInfo item = ViewBag.item;
+	var fk_factorys = Factory.Select.ToList();
+	var fk_rentsublets = Rentsublet.Select.ToList();
+	var fk_shops = Shop.Select.ToList();
+}
+
+<div class="box">
+	<div class="box-header with-border">
+		<h3 class="box-title" id="box-title"></h3>
+	</div>
+	<div class="box-body">
+		<div class="table-responsive">
+			<form id="form_add" method="post">
+				@Html.AntiForgeryToken()
+				<input type="hidden" name="__callback" value="edit_callback" />
+				<div>
+					<table cellspacing="0" rules="all" class="table table-bordered table-hover" border="1" style="border-collapse:collapse;">
+						@if (item != null) {
+							<tr>
+								<td>id</td>
+								<td><input name="Id" type="text" readonly class="datepicker" style="width:20%;background-color:#ddd;" /></td>
+							</tr>
+						}
+						<tr>
+							<td>经营</td>
+							<td><input name="Title" type="text" class="datepicker" style="width:60%;" /></td>
+						</tr>
+						<tr>
+							<td>factory</td>
+							<td>
+								<select name="mn_Factory" data-placeholder="Select a factory" class="form-control select2" multiple>
+									@foreach (FactoryInfo fk in fk_factorys) { <option value="@fk.Id">@fk.Title</option> }
+								</select>
+							</td>
+						</tr>
+						<tr>
+							<td>rentsublet</td>
+							<td>
+								<select name="mn_Rentsublet" data-placeholder="Select a rentsublet" class="form-control select2" multiple>
+									@foreach (RentsubletInfo fk in fk_rentsublets) { <option value="@fk.Id">@fk.Id</option> }
+								</select>
+							</td>
+						</tr>
+						<tr>
+							<td>shop</td>
+							<td>
+								<select name="mn_Shop" data-placeholder="Select a shop" class="form-control select2" multiple>
+									@foreach (ShopInfo fk in fk_shops) { <option value="@fk.Id">@fk.Nickname</option> }
+								</select>
+							</td>
+						</tr>
+						<tr>
+							<td width="8%">&nbsp</td>
+							<td><input type="submit" value="@(item == null ? "添加" : "更新")" />&nbsp;<input type="button" value="取消" /></td>
+						</tr>
+					</table>
+				</div>
+			</form>
+
+		</div>
+	</div>
+</div>
+
+<script type="text/javascript">
+	(function () {
+		top.edit_callback = function (rt) {
+			if (rt.success) return top.mainViewNav.goto('./');
+			alert(rt.message);
+		};
+
+		var form = $('#form_add')[0];
+		var item = null;
+		@if (item != null) {
+			<text>
+			item = @Html.Raw(item.ToJson());
+			fillForm(form, item);
+			item.mn_Factory = @Html.Raw(item.Obj_factorys.ToJson());
+			for (var a = 0; a < item.mn_Factory.length; a++) $(form.mn_Factory).find('option[value="{0}"]'.format(item.mn_Factory[a].Id)).attr('selected', 'selected');
+			item.mn_Rentsublet = @Html.Raw(item.Obj_rentsublets.ToJson());
+			for (var a = 0; a < item.mn_Rentsublet.length; a++) $(form.mn_Rentsublet).find('option[value="{0}"]'.format(item.mn_Rentsublet[a].Id)).attr('selected', 'selected');
+			item.mn_Shop = @Html.Raw(item.Obj_shops.ToJson());
+			for (var a = 0; a < item.mn_Shop.length; a++) $(form.mn_Shop).find('option[value="{0}"]'.format(item.mn_Shop[a].Id)).attr('selected', 'selected');
+			</text>
+		}
+		top.mainViewInit();
+	})();
+</script>

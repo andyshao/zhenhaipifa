@@ -43,23 +43,21 @@ namespace pifa.DAL {
 			return GetItem(dr, ref index) as ProductInfo;
 		}
 		public object GetItem(IDataReader dr, ref int index) {
-			return new ProductInfo {
-				Id = dr.IsDBNull(++index) ? null : (uint?)dr.GetInt32(index), 
-				Category_id = dr.IsDBNull(++index) ? null : (uint?)dr.GetInt32(index), 
-				Shop_id = dr.IsDBNull(++index) ? null : (uint?)dr.GetInt32(index), 
-				Create_time = dr.IsDBNull(++index) ? null : (DateTime?)dr.GetDateTime(index), 
-				Icon = dr.IsDBNull(++index) ? null : (ProductICON?)dr.GetInt64(index), 
-				Price = dr.IsDBNull(++index) ? null : (decimal?)dr.GetDecimal(index), 
-				Stock = dr.IsDBNull(++index) ? null : (uint?)dr.GetInt32(index), 
-				Title = dr.IsDBNull(++index) ? null : dr.GetString(index), 
-				Unit = dr.IsDBNull(++index) ? null : dr.GetString(index)};
-		}
-		public SelectBuild<ProductInfo> Select {
-			get { return SelectBuild<ProductInfo>.From(this, SqlHelper.Instance); }
+			ProductInfo item = new ProductInfo();
+				if (!dr.IsDBNull(++index)) item.Id = (uint?)dr.GetInt32(index);
+				if (!dr.IsDBNull(++index)) item.Category_id = (uint?)dr.GetInt32(index);
+				if (!dr.IsDBNull(++index)) item.Shop_id = (uint?)dr.GetInt32(index);
+				if (!dr.IsDBNull(++index)) item.Create_time = (DateTime?)dr.GetDateTime(index);
+				if (!dr.IsDBNull(++index)) item.Icon = (ProductICON?)dr.GetInt64(index);
+				if (!dr.IsDBNull(++index)) item.Price = (decimal?)dr.GetDecimal(index);
+				if (!dr.IsDBNull(++index)) item.Stock = (uint?)dr.GetInt32(index);
+				if (!dr.IsDBNull(++index)) item.Title = dr.GetString(index);
+				if (!dr.IsDBNull(++index)) item.Unit = dr.GetString(index);
+			return item;
 		}
 		#endregion
 
-		public int Delete(uint? Id) {
+		public int Delete(uint Id) {
 			return SqlHelper.ExecuteNonQuery(string.Concat(TSQL.Delete, "`id` = ?id"), 
 				GetParameter("?id", MySqlDbType.UInt32, 10, Id));
 		}
@@ -73,7 +71,7 @@ namespace pifa.DAL {
 		}
 
 		public int Update(ProductInfo item) {
-			return new SqlUpdateBuild(null, item.Id)
+			return new SqlUpdateBuild(null, item.Id.Value)
 				.SetCategory_id(item.Category_id)
 				.SetShop_id(item.Shop_id)
 				.SetCreate_time(item.Create_time)
@@ -89,7 +87,7 @@ namespace pifa.DAL {
 			protected string _fields;
 			protected string _where;
 			protected List<MySqlParameter> _parameters = new List<MySqlParameter>();
-			public SqlUpdateBuild(ProductInfo item, uint? Id) {
+			public SqlUpdateBuild(ProductInfo item, uint Id) {
 				_item = item;
 				_where = SqlHelper.Addslashes("`id` = {0}", Id);
 			}
@@ -117,27 +115,27 @@ namespace pifa.DAL {
 			}
 			public SqlUpdateBuild SetCategory_id(uint? value) {
 				if (_item != null) _item.Category_id = value;
-				return this.Set("`category_id`", string.Concat("?category_id_", _parameters.Count), 
-					GetParameter(string.Concat("?category_id_", _parameters.Count), MySqlDbType.UInt32, 10, value));
+				return this.Set("`category_id`", $"?category_id_{_parameters.Count}", 
+					GetParameter($"?category_id_{{_parameters.Count}}", MySqlDbType.UInt32, 10, value));
 			}
 			public SqlUpdateBuild SetShop_id(uint? value) {
 				if (_item != null) _item.Shop_id = value;
-				return this.Set("`shop_id`", string.Concat("?shop_id_", _parameters.Count), 
-					GetParameter(string.Concat("?shop_id_", _parameters.Count), MySqlDbType.UInt32, 10, value));
+				return this.Set("`shop_id`", $"?shop_id_{_parameters.Count}", 
+					GetParameter($"?shop_id_{{_parameters.Count}}", MySqlDbType.UInt32, 10, value));
 			}
 			public SqlUpdateBuild SetCreate_time(DateTime? value) {
 				if (_item != null) _item.Create_time = value;
-				return this.Set("`create_time`", string.Concat("?create_time_", _parameters.Count), 
-					GetParameter(string.Concat("?create_time_", _parameters.Count), MySqlDbType.DateTime, -1, value));
+				return this.Set("`create_time`", $"?create_time_{_parameters.Count}", 
+					GetParameter($"?create_time_{{_parameters.Count}}", MySqlDbType.DateTime, -1, value));
 			}
 			public SqlUpdateBuild SetIcon(ProductICON? value) {
 				if (_item != null) _item.Icon = value;
-				return this.Set("`icon`", string.Concat("?icon_", _parameters.Count), 
-					GetParameter(string.Concat("?icon_", _parameters.Count), MySqlDbType.Set, -1, value?.ToInt64()));
+				return this.Set("`icon`", $"?icon_{_parameters.Count}", 
+					GetParameter($"?icon_{{_parameters.Count}}", MySqlDbType.Set, -1, value?.ToInt64()));
 			}
 			public SqlUpdateBuild SetIconFlag(ProductICON value, bool isUnFlag = false) {
 				if (_item != null) _item.Icon = isUnFlag ? ((_item.Icon ?? 0) ^ value) : ((_item.Icon ?? 0) | value);
-				return this.Set("`icon`", string.Format("ifnull(`icon`+0,0) {1} ?icon_{0}", _parameters.Count, isUnFlag ? '^' : '|'), 
+				return this.Set("`icon`", "ifnull(`icon`+0,0) {(isUnFlag ? '^' : '|')} ?icon_{_parameters.Count}", 
 					GetParameter(string.Concat("?icon_", _parameters.Count), MySqlDbType.Set, -1, value.ToInt64()));
 			}
 			public SqlUpdateBuild SetIconUnFlag(ProductICON value) {
@@ -145,33 +143,33 @@ namespace pifa.DAL {
 			}
 			public SqlUpdateBuild SetPrice(decimal? value) {
 				if (_item != null) _item.Price = value;
-				return this.Set("`price`", string.Concat("?price_", _parameters.Count), 
-					GetParameter(string.Concat("?price_", _parameters.Count), MySqlDbType.Decimal, 10, value));
+				return this.Set("`price`", $"?price_{_parameters.Count}", 
+					GetParameter($"?price_{{_parameters.Count}}", MySqlDbType.Decimal, 10, value));
 			}
 			public SqlUpdateBuild SetPriceIncrement(decimal value) {
 				if (_item != null) _item.Price += value;
-				return this.Set("`price`", string.Concat("`price` + ?price_", _parameters.Count), 
-					GetParameter(string.Concat("?price_", _parameters.Count), MySqlDbType.Decimal, 10, value));
+				return this.Set("`price`", "`price` + ?price_{_parameters.Count}", 
+					GetParameter($"?price_{{_parameters.Count}}", MySqlDbType.Decimal, 10, value));
 			}
 			public SqlUpdateBuild SetStock(uint? value) {
 				if (_item != null) _item.Stock = value;
-				return this.Set("`stock`", string.Concat("?stock_", _parameters.Count), 
-					GetParameter(string.Concat("?stock_", _parameters.Count), MySqlDbType.UInt32, 10, value));
+				return this.Set("`stock`", $"?stock_{_parameters.Count}", 
+					GetParameter($"?stock_{{_parameters.Count}}", MySqlDbType.UInt32, 10, value));
 			}
 			public SqlUpdateBuild SetStockIncrement(int value) {
 				if (_item != null) _item.Stock = (uint?)((int?)_item.Stock + value);
-				return this.Set("`stock`", string.Concat("`stock` + ?stock_", _parameters.Count), 
-					GetParameter(string.Concat("?stock_", _parameters.Count), MySqlDbType.Int32, 10, value));
+				return this.Set("`stock`", "`stock` + ?stock_{_parameters.Count}", 
+					GetParameter($"?stock_{{_parameters.Count}}", MySqlDbType.Int32, 10, value));
 			}
 			public SqlUpdateBuild SetTitle(string value) {
 				if (_item != null) _item.Title = value;
-				return this.Set("`title`", string.Concat("?title_", _parameters.Count), 
-					GetParameter(string.Concat("?title_", _parameters.Count), MySqlDbType.VarChar, 255, value));
+				return this.Set("`title`", $"?title_{_parameters.Count}", 
+					GetParameter($"?title_{{_parameters.Count}}", MySqlDbType.VarChar, 255, value));
 			}
 			public SqlUpdateBuild SetUnit(string value) {
 				if (_item != null) _item.Unit = value;
-				return this.Set("`unit`", string.Concat("?unit_", _parameters.Count), 
-					GetParameter(string.Concat("?unit_", _parameters.Count), MySqlDbType.VarChar, 8, value));
+				return this.Set("`unit`", $"?unit_{_parameters.Count}", 
+					GetParameter($"?unit_{{_parameters.Count}}", MySqlDbType.VarChar, 8, value));
 			}
 		}
 		#endregion
@@ -182,8 +180,5 @@ namespace pifa.DAL {
 			return item;
 		}
 
-		public ProductInfo GetItem(uint? Id) {
-			return this.Select.Where("a.`id` = {0}", Id).ToOne();
-		}
 	}
 }

@@ -1,0 +1,97 @@
+﻿@{
+	Layout = "";
+	ProductitemInfo item = ViewBag.item;
+	var fk_Products = Product.Select.ToList();
+}
+
+<div class="box">
+	<div class="box-header with-border">
+		<h3 class="box-title" id="box-title"></h3>
+	</div>
+	<div class="box-body">
+		<div class="table-responsive">
+			<form id="form_add" method="post">
+				@Html.AntiForgeryToken()
+				<input type="hidden" name="__callback" value="edit_callback" />
+				<div>
+					<table cellspacing="0" rules="all" class="table table-bordered table-hover" border="1" style="border-collapse:collapse;">
+						@if (item != null) {
+							<tr>
+								<td>id</td>
+								<td><input name="Id" type="text" readonly class="datepicker" style="width:20%;background-color:#ddd;" /></td>
+							</tr>
+						}
+						<tr>
+							<td>产品</td>
+							<td>
+								<select name="Product_id">
+									<option value="">------ 请选择 ------</option>
+									@foreach (var fk in fk_Products) { <option value="@fk.Id">@fk.Title</option> }
+								</select>
+							</td>
+						</tr>
+						<tr>
+							<td>图片</td>
+							<td>
+								<input name="Img_url" type="text" class="datepicker" style="width:60%;" />
+								<input name="Img_url_file" type="file">
+							</td>
+						</tr>
+						<tr>
+							<td>产品项</td>
+							<td><input name="Name" type="text" class="datepicker" style="width:60%;" /></td>
+						</tr>
+						<tr>
+							<td>原价</td>
+							<td>
+								<div class="input-group" style="width:200px;">
+									<span class="input-group-addon">￥</span>
+									<input name="Original_price" type="text" class="form-control" data-inputmask="'mask': '9', 'repeat': 10, 'greedy': false" data-mask />
+									<span class="input-group-addon">.00</span>
+								</div>
+							</td>
+						</tr>
+						<tr>
+							<td>价格</td>
+							<td>
+								<div class="input-group" style="width:200px;">
+									<span class="input-group-addon">￥</span>
+									<input name="Price" type="text" class="form-control" data-inputmask="'mask': '9', 'repeat': 10, 'greedy': false" data-mask />
+									<span class="input-group-addon">.00</span>
+								</div>
+							</td>
+						</tr>
+						<tr>
+							<td>库存</td>
+							<td><input name="Stock" type="text" class="form-control" data-inputmask="'mask': '9', 'repeat': 6, 'greedy': false" data-mask style="width:200px;" /></td>
+						</tr>
+						<tr>
+							<td width="8%">&nbsp</td>
+							<td><input type="submit" value="@(item == null ? "添加" : "更新")" />&nbsp;<input type="button" value="取消" /></td>
+						</tr>
+					</table>
+				</div>
+			</form>
+
+		</div>
+	</div>
+</div>
+
+<script type="text/javascript">
+	(function () {
+		top.edit_callback = function (rt) {
+			if (rt.success) return top.mainViewNav.goto('./');
+			alert(rt.message);
+		};
+
+		var form = $('#form_add')[0];
+		var item = null;
+		@if (item != null) {
+			<text>
+			item = @Html.Raw(item.ToJson());
+			fillForm(form, item);
+			</text>
+		}
+		top.mainViewInit();
+	})();
+</script>

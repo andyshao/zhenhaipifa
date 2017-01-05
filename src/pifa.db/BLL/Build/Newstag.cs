@@ -18,7 +18,7 @@ namespace pifa.BLL {
 
 		#region delete, update, insert
 
-		public static int Delete(uint? Id) {
+		public static int Delete(uint Id) {
 			if (itemCacheTimeout > 0) RemoveCache(GetItem(Id));
 			return dal.Delete(Id);
 		}
@@ -27,10 +27,10 @@ namespace pifa.BLL {
 			if (itemCacheTimeout > 0) RemoveCache(item);
 			return dal.Update(item);
 		}
-		public static pifa.DAL.Newstag.SqlUpdateBuild UpdateDiy(uint? Id) {
+		public static pifa.DAL.Newstag.SqlUpdateBuild UpdateDiy(uint Id) {
 			return UpdateDiy(null, Id);
 		}
-		public static pifa.DAL.Newstag.SqlUpdateBuild UpdateDiy(NewstagInfo item, uint? Id) {
+		public static pifa.DAL.Newstag.SqlUpdateBuild UpdateDiy(NewstagInfo item, uint Id) {
 			if (itemCacheTimeout > 0) RemoveCache(item != null ? item : GetItem(Id));
 			return new pifa.DAL.Newstag.SqlUpdateBuild(item, Id);
 		}
@@ -58,14 +58,13 @@ namespace pifa.BLL {
 		}
 		#endregion
 
-		public static NewstagInfo GetItem(uint? Id) {
-			if (Id == null) return null;
-			if (itemCacheTimeout <= 0) return dal.GetItem(Id);
+		public static NewstagInfo GetItem(uint Id) {
+			if (itemCacheTimeout <= 0) return Select.WhereId(Id).ToOne();
 			string key = string.Concat("pifa_BLL_Newstag_", Id);
 			string value = RedisHelper.Get(key);
 			if (!string.IsNullOrEmpty(value))
-				try { return new NewstagInfo(value); } catch { }
-			NewstagInfo item = dal.GetItem(Id);
+				try { return NewstagInfo.Parse(value); } catch { }
+			NewstagInfo item = Select.WhereId(Id).ToOne();
 			if (item == null) return null;
 			RedisHelper.Set(key, item.Stringify(), itemCacheTimeout);
 			return item;
@@ -107,7 +106,7 @@ namespace pifa.BLL {
 			return this.Where1Or("a.`name` = {0}", Name);
 		}
 		public NewstagSelectBuild WhereNameLike(params string[] Name) {
-			if (Name == null) return this;
+			if (Name == null || Name.Where(a => !string.IsNullOrEmpty(a)).Any() == false) return this;
 			return this.Where1Or(@"a.`name` LIKE {0}", Name.Select(a => "%" + a + "%").ToArray());
 		}
 		public NewstagSelectBuild WhereTotal_news(params uint?[] Total_news) {

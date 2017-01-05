@@ -18,7 +18,7 @@ namespace pifa.BLL {
 
 		#region delete, update, insert
 
-		public static int Delete(uint? Id) {
+		public static int Delete(uint Id) {
 			if (itemCacheTimeout > 0) RemoveCache(GetItem(Id));
 			return dal.Delete(Id);
 		}
@@ -30,10 +30,10 @@ namespace pifa.BLL {
 			if (itemCacheTimeout > 0) RemoveCache(item);
 			return dal.Update(item);
 		}
-		public static pifa.DAL.Faq.SqlUpdateBuild UpdateDiy(uint? Id) {
+		public static pifa.DAL.Faq.SqlUpdateBuild UpdateDiy(uint Id) {
 			return UpdateDiy(null, Id);
 		}
-		public static pifa.DAL.Faq.SqlUpdateBuild UpdateDiy(FaqInfo item, uint? Id) {
+		public static pifa.DAL.Faq.SqlUpdateBuild UpdateDiy(FaqInfo item, uint Id) {
 			if (itemCacheTimeout > 0) RemoveCache(item != null ? item : GetItem(Id));
 			return new pifa.DAL.Faq.SqlUpdateBuild(item, Id);
 		}
@@ -61,14 +61,13 @@ namespace pifa.BLL {
 		}
 		#endregion
 
-		public static FaqInfo GetItem(uint? Id) {
-			if (Id == null) return null;
-			if (itemCacheTimeout <= 0) return dal.GetItem(Id);
+		public static FaqInfo GetItem(uint Id) {
+			if (itemCacheTimeout <= 0) return Select.WhereId(Id).ToOne();
 			string key = string.Concat("pifa_BLL_Faq_", Id);
 			string value = RedisHelper.Get(key);
 			if (!string.IsNullOrEmpty(value))
-				try { return new FaqInfo(value); } catch { }
-			FaqInfo item = dal.GetItem(Id);
+				try { return FaqInfo.Parse(value); } catch { }
+			FaqInfo item = Select.WhereId(Id).ToOne();
 			if (item == null) return null;
 			RedisHelper.Set(key, item.Stringify(), itemCacheTimeout);
 			return item;
@@ -92,7 +91,7 @@ namespace pifa.BLL {
 	}
 	public partial class FaqSelectBuild : SelectBuild<FaqInfo, FaqSelectBuild> {
 		public FaqSelectBuild WhereFaqtype_id(params uint?[] Faqtype_id) {
-			return this.Where1Or("a.`Faqtype_id` = {0}", Faqtype_id);
+			return this.Where1Or("a.`faqtype_id` = {0}", Faqtype_id);
 		}
 		public FaqSelectBuild WhereId(params uint?[] Id) {
 			return this.Where1Or("a.`id` = {0}", Id);
@@ -108,7 +107,7 @@ namespace pifa.BLL {
 			return this.Where1Or("a.`title` = {0}", Title);
 		}
 		public FaqSelectBuild WhereTitleLike(params string[] Title) {
-			if (Title == null) return this;
+			if (Title == null || Title.Where(a => !string.IsNullOrEmpty(a)).Any() == false) return this;
 			return this.Where1Or(@"a.`title` LIKE {0}", Title.Select(a => "%" + a + "%").ToArray());
 		}
 		protected new FaqSelectBuild Where1Or(string filterFormat, Array values) {

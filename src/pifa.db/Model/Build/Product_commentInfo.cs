@@ -4,10 +4,12 @@ using System.Collections.Generic;
 using System.Linq;
 using System.ComponentModel;
 using System.Reflection;
+using Newtonsoft.Json;
 using pifa.BLL;
 
 namespace pifa.Model {
 
+	[JsonObject(MemberSerialization.OptIn)]
 	public partial class Product_commentInfo {
 		#region fields
 		private uint? _Id;
@@ -32,7 +34,7 @@ namespace pifa.Model {
 
 		public Product_commentInfo() { }
 
-		#region 独创的序列化，反序列化
+		#region 序列化，反序列化
 		protected static readonly string StringifySplit = "@<Product_comment(Info]?#>";
 		public string Stringify() {
 			return string.Concat(
@@ -51,31 +53,39 @@ namespace pifa.Model {
 				_Title == null ? "null" : _Title.Replace("|", StringifySplit), "|",
 				_Upload_image_url == null ? "null" : _Upload_image_url.Replace("|", StringifySplit));
 		}
-		public Product_commentInfo(string stringify) {
+		public static Product_commentInfo Parse(string stringify) {
 			string[] ret = stringify.Split(new char[] { '|' }, 14, StringSplitOptions.None);
 			if (ret.Length != 14) throw new Exception("格式不正确，Product_commentInfo：" + stringify);
-			if (string.Compare("null", ret[0]) != 0) _Id = uint.Parse(ret[0]);
-			if (string.Compare("null", ret[1]) != 0) _Member_id = uint.Parse(ret[1]);
-			if (string.Compare("null", ret[2]) != 0) _Order_id = uint.Parse(ret[2]);
-			if (string.Compare("null", ret[3]) != 0) _Product_id = uint.Parse(ret[3]);
-			if (string.Compare("null", ret[4]) != 0) _Productitem_id = uint.Parse(ret[4]);
-			if (string.Compare("null", ret[5]) != 0) _Content = ret[5].Replace(StringifySplit, "|");
-			if (string.Compare("null", ret[6]) != 0) _Create_time = new DateTime(long.Parse(ret[6]));
-			if (string.Compare("null", ret[7]) != 0) _Nickname = ret[7].Replace(StringifySplit, "|");
-			if (string.Compare("null", ret[8]) != 0) _Star_price = byte.Parse(ret[8]);
-			if (string.Compare("null", ret[9]) != 0) _Star_quality = byte.Parse(ret[9]);
-			if (string.Compare("null", ret[10]) != 0) _Star_value = byte.Parse(ret[10]);
-			if (string.Compare("null", ret[11]) != 0) _State = (Product_commentSTATE)long.Parse(ret[11]);
-			if (string.Compare("null", ret[12]) != 0) _Title = ret[12].Replace(StringifySplit, "|");
-			if (string.Compare("null", ret[13]) != 0) _Upload_image_url = ret[13].Replace(StringifySplit, "|");
+			Product_commentInfo item = new Product_commentInfo();
+			if (string.Compare("null", ret[0]) != 0) item.Id = uint.Parse(ret[0]);
+			if (string.Compare("null", ret[1]) != 0) item.Member_id = uint.Parse(ret[1]);
+			if (string.Compare("null", ret[2]) != 0) item.Order_id = uint.Parse(ret[2]);
+			if (string.Compare("null", ret[3]) != 0) item.Product_id = uint.Parse(ret[3]);
+			if (string.Compare("null", ret[4]) != 0) item.Productitem_id = uint.Parse(ret[4]);
+			if (string.Compare("null", ret[5]) != 0) item.Content = ret[5].Replace(StringifySplit, "|");
+			if (string.Compare("null", ret[6]) != 0) item.Create_time = new DateTime(long.Parse(ret[6]));
+			if (string.Compare("null", ret[7]) != 0) item.Nickname = ret[7].Replace(StringifySplit, "|");
+			if (string.Compare("null", ret[8]) != 0) item.Star_price = byte.Parse(ret[8]);
+			if (string.Compare("null", ret[9]) != 0) item.Star_quality = byte.Parse(ret[9]);
+			if (string.Compare("null", ret[10]) != 0) item.Star_value = byte.Parse(ret[10]);
+			if (string.Compare("null", ret[11]) != 0) item.State = (Product_commentSTATE)long.Parse(ret[11]);
+			if (string.Compare("null", ret[12]) != 0) item.Title = ret[12].Replace(StringifySplit, "|");
+			if (string.Compare("null", ret[13]) != 0) item.Upload_image_url = ret[13].Replace(StringifySplit, "|");
+			return item;
 		}
 		#endregion
 
 		#region override
-		private static Dictionary<string, bool> __jsonIgnore;
-		private static object __jsonIgnore_lock = new object();
+		private static Lazy<Dictionary<string, bool>> __jsonIgnoreLazy = new Lazy<Dictionary<string, bool>>(() => {
+			FieldInfo field = typeof(Product_commentInfo).GetField("JsonIgnore");
+			Dictionary<string, bool> ret = new Dictionary<string, bool>();
+			if (field != null) string.Concat(field.GetValue(null)).Split(',').ToList().ForEach(f => {
+				if (!string.IsNullOrEmpty(f)) ret[f] = true;
+			});
+			return ret;
+		});
+		private static Dictionary<string, bool> __jsonIgnore => __jsonIgnoreLazy.Value;
 		public override string ToString() {
-			this.Init__jsonIgnore();
 			string json = string.Concat(
 				__jsonIgnore.ContainsKey("Id") ? string.Empty : string.Format(", Id : {0}", Id == null ? "null" : Id.ToString()), 
 				__jsonIgnore.ContainsKey("Member_id") ? string.Empty : string.Format(", Member_id : {0}", Member_id == null ? "null" : Member_id.ToString()), 
@@ -93,53 +103,23 @@ namespace pifa.Model {
 				__jsonIgnore.ContainsKey("Upload_image_url") ? string.Empty : string.Format(", Upload_image_url : {0}", Upload_image_url == null ? "null" : string.Format("'{0}'", Upload_image_url.Replace("\\", "\\\\").Replace("\r\n", "\\r\\n").Replace("'", "\\'"))), " }");
 			return string.Concat("{", json.Substring(1));
 		}
-		public IDictionary ToBson() {
-			this.Init__jsonIgnore();
+		public IDictionary ToBson(bool allField = false) {
 			IDictionary ht = new Hashtable();
-			if (!__jsonIgnore.ContainsKey("Id")) ht["Id"] = Id;
-			if (!__jsonIgnore.ContainsKey("Member_id")) ht["Member_id"] = Member_id;
-			if (!__jsonIgnore.ContainsKey("Order_id")) ht["Order_id"] = Order_id;
-			if (!__jsonIgnore.ContainsKey("Product_id")) ht["Product_id"] = Product_id;
-			if (!__jsonIgnore.ContainsKey("Productitem_id")) ht["Productitem_id"] = Productitem_id;
-			if (!__jsonIgnore.ContainsKey("Content")) ht["Content"] = Content;
-			if (!__jsonIgnore.ContainsKey("Create_time")) ht["Create_time"] = Create_time;
-			if (!__jsonIgnore.ContainsKey("Nickname")) ht["Nickname"] = Nickname;
-			if (!__jsonIgnore.ContainsKey("Star_price")) ht["Star_price"] = Star_price;
-			if (!__jsonIgnore.ContainsKey("Star_quality")) ht["Star_quality"] = Star_quality;
-			if (!__jsonIgnore.ContainsKey("Star_value")) ht["Star_value"] = Star_value;
-			if (!__jsonIgnore.ContainsKey("State")) ht["State"] = State?.ToDescriptionOrString();
-			if (!__jsonIgnore.ContainsKey("Title")) ht["Title"] = Title;
-			if (!__jsonIgnore.ContainsKey("Upload_image_url")) ht["Upload_image_url"] = Upload_image_url;
+			if (allField || !__jsonIgnore.ContainsKey("Id")) ht["Id"] = Id;
+			if (allField || !__jsonIgnore.ContainsKey("Member_id")) ht["Member_id"] = Member_id;
+			if (allField || !__jsonIgnore.ContainsKey("Order_id")) ht["Order_id"] = Order_id;
+			if (allField || !__jsonIgnore.ContainsKey("Product_id")) ht["Product_id"] = Product_id;
+			if (allField || !__jsonIgnore.ContainsKey("Productitem_id")) ht["Productitem_id"] = Productitem_id;
+			if (allField || !__jsonIgnore.ContainsKey("Content")) ht["Content"] = Content;
+			if (allField || !__jsonIgnore.ContainsKey("Create_time")) ht["Create_time"] = Create_time;
+			if (allField || !__jsonIgnore.ContainsKey("Nickname")) ht["Nickname"] = Nickname;
+			if (allField || !__jsonIgnore.ContainsKey("Star_price")) ht["Star_price"] = Star_price;
+			if (allField || !__jsonIgnore.ContainsKey("Star_quality")) ht["Star_quality"] = Star_quality;
+			if (allField || !__jsonIgnore.ContainsKey("Star_value")) ht["Star_value"] = Star_value;
+			if (allField || !__jsonIgnore.ContainsKey("State")) ht["State"] = State?.ToDescriptionOrString();
+			if (allField || !__jsonIgnore.ContainsKey("Title")) ht["Title"] = Title;
+			if (allField || !__jsonIgnore.ContainsKey("Upload_image_url")) ht["Upload_image_url"] = Upload_image_url;
 			return ht;
-		}
-		private void Init__jsonIgnore() {
-			if (__jsonIgnore == null) {
-				lock (__jsonIgnore_lock) {
-					if (__jsonIgnore == null) {
-						FieldInfo field = typeof(Product_commentInfo).GetField("JsonIgnore");
-						__jsonIgnore = new Dictionary<string, bool>();
-						if (field != null) {
-							string[] fs = string.Concat(field.GetValue(null)).Split(',');
-							foreach (string f in fs) if (!string.IsNullOrEmpty(f)) __jsonIgnore[f] = true;
-						}
-					}
-				}
-			}
-		}
-		public override bool Equals(object obj) {
-			Product_commentInfo item = obj as Product_commentInfo;
-			if (item == null) return false;
-			return this.ToString().Equals(item.ToString());
-		}
-		public override int GetHashCode() {
-			return this.ToString().GetHashCode();
-		}
-		public static bool operator ==(Product_commentInfo op1, Product_commentInfo op2) {
-			if (object.Equals(op1, null)) return object.Equals(op2, null);
-			return op1.Equals(op2);
-		}
-		public static bool operator !=(Product_commentInfo op1, Product_commentInfo op2) {
-			return !(op1 == op2);
 		}
 		public object this[string key] {
 			get { return this.GetType().GetProperty(key).GetValue(this); }
@@ -148,14 +128,14 @@ namespace pifa.Model {
 		#endregion
 
 		#region properties
-		public uint? Id {
+		[JsonProperty] public uint? Id {
 			get { return _Id; }
 			set { _Id = value; }
 		}
 		/// <summary>
 		/// 会员
 		/// </summary>
-		public uint? Member_id {
+		[JsonProperty] public uint? Member_id {
 			get { return _Member_id; }
 			set {
 				if (_Member_id != value) _obj_member = null;
@@ -164,7 +144,7 @@ namespace pifa.Model {
 		}
 		public MemberInfo Obj_member {
 			get {
-				if (_obj_member == null) _obj_member = Member.GetItem(_Member_id);
+				if (_obj_member == null) _obj_member = Member.GetItem(_Member_id.Value);
 				return _obj_member;
 			}
 			internal set { _obj_member = value; }
@@ -172,7 +152,7 @@ namespace pifa.Model {
 		/// <summary>
 		/// 订单
 		/// </summary>
-		public uint? Order_id {
+		[JsonProperty] public uint? Order_id {
 			get { return _Order_id; }
 			set {
 				if (_Order_id != value) _obj_order = null;
@@ -181,7 +161,7 @@ namespace pifa.Model {
 		}
 		public OrderInfo Obj_order {
 			get {
-				if (_obj_order == null) _obj_order = Order.GetItem(_Order_id);
+				if (_obj_order == null) _obj_order = Order.GetItem(_Order_id.Value);
 				return _obj_order;
 			}
 			internal set { _obj_order = value; }
@@ -189,7 +169,7 @@ namespace pifa.Model {
 		/// <summary>
 		/// 产品
 		/// </summary>
-		public uint? Product_id {
+		[JsonProperty] public uint? Product_id {
 			get { return _Product_id; }
 			set {
 				if (_Product_id != value) _obj_product = null;
@@ -198,7 +178,7 @@ namespace pifa.Model {
 		}
 		public ProductInfo Obj_product {
 			get {
-				if (_obj_product == null) _obj_product = Product.GetItem(_Product_id);
+				if (_obj_product == null) _obj_product = Product.GetItem(_Product_id.Value);
 				return _obj_product;
 			}
 			internal set { _obj_product = value; }
@@ -206,7 +186,7 @@ namespace pifa.Model {
 		/// <summary>
 		/// 产品项目
 		/// </summary>
-		public uint? Productitem_id {
+		[JsonProperty] public uint? Productitem_id {
 			get { return _Productitem_id; }
 			set {
 				if (_Productitem_id != value) _obj_productitem = null;
@@ -215,7 +195,7 @@ namespace pifa.Model {
 		}
 		public ProductitemInfo Obj_productitem {
 			get {
-				if (_obj_productitem == null) _obj_productitem = Productitem.GetItem(_Productitem_id);
+				if (_obj_productitem == null) _obj_productitem = Productitem.GetItem(_Productitem_id.Value);
 				return _obj_productitem;
 			}
 			internal set { _obj_productitem = value; }
@@ -223,70 +203,78 @@ namespace pifa.Model {
 		/// <summary>
 		/// 评价内容
 		/// </summary>
-		public string Content {
+		[JsonProperty] public string Content {
 			get { return _Content; }
 			set { _Content = value; }
 		}
 		/// <summary>
 		/// 创建时间
 		/// </summary>
-		public DateTime? Create_time {
+		[JsonProperty] public DateTime? Create_time {
 			get { return _Create_time; }
 			set { _Create_time = value; }
 		}
 		/// <summary>
 		/// 昵称
 		/// </summary>
-		public string Nickname {
+		[JsonProperty] public string Nickname {
 			get { return _Nickname; }
 			set { _Nickname = value; }
 		}
 		/// <summary>
 		/// 价格评价
 		/// </summary>
-		public byte? Star_price {
+		[JsonProperty] public byte? Star_price {
 			get { return _Star_price; }
 			set { _Star_price = value; }
 		}
 		/// <summary>
 		/// 质量评价
 		/// </summary>
-		public byte? Star_quality {
+		[JsonProperty] public byte? Star_quality {
 			get { return _Star_quality; }
 			set { _Star_quality = value; }
 		}
 		/// <summary>
 		/// 满意评价
 		/// </summary>
-		public byte? Star_value {
+		[JsonProperty] public byte? Star_value {
 			get { return _Star_value; }
 			set { _Star_value = value; }
 		}
 		/// <summary>
 		/// 状态
 		/// </summary>
-		public Product_commentSTATE? State {
+		[JsonProperty] public Product_commentSTATE? State {
 			get { return _State; }
 			set { _State = value; }
 		}
 		/// <summary>
 		/// 标题
 		/// </summary>
-		public string Title {
+		[JsonProperty] public string Title {
 			get { return _Title; }
 			set { _Title = value; }
 		}
 		/// <summary>
 		/// 图片
 		/// </summary>
-		public string Upload_image_url {
+		[JsonProperty] public string Upload_image_url {
 			get { return _Upload_image_url; }
 			set { _Upload_image_url = value; }
 		}
 		#endregion
 
 		public pifa.DAL.Product_comment.SqlUpdateBuild UpdateDiy {
-			get { return Product_comment.UpdateDiy(this, _Id); }
+			get { return Product_comment.UpdateDiy(this, _Id.Value); }
+		}
+		public Product_commentInfo Save() {
+			if (this.Id != null) {
+				Product_comment.Update(this);
+				return this;
+			}
+			this.Create_time = DateTime.Now;
+			return Product_comment.Insert(this);
 		}
 	}
 	public enum Product_commentSTATE {

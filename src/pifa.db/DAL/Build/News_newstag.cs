@@ -36,16 +36,14 @@ namespace pifa.DAL {
 			return GetItem(dr, ref index) as News_newstagInfo;
 		}
 		public object GetItem(IDataReader dr, ref int index) {
-			return new News_newstagInfo {
-				News_id = dr.IsDBNull(++index) ? null : (uint?)dr.GetInt32(index), 
-				Newstag_id = dr.IsDBNull(++index) ? null : (uint?)dr.GetInt32(index)};
-		}
-		public SelectBuild<News_newstagInfo> Select {
-			get { return SelectBuild<News_newstagInfo>.From(this, SqlHelper.Instance); }
+			News_newstagInfo item = new News_newstagInfo();
+				if (!dr.IsDBNull(++index)) item.News_id = (uint?)dr.GetInt32(index);
+				if (!dr.IsDBNull(++index)) item.Newstag_id = (uint?)dr.GetInt32(index);
+			return item;
 		}
 		#endregion
 
-		public int Delete(uint? News_id, uint? Newstag_id) {
+		public int Delete(uint News_id, uint Newstag_id) {
 			return SqlHelper.ExecuteNonQuery(string.Concat(TSQL.Delete, "`news_id` = ?news_id AND `newstag_id` = ?newstag_id"), 
 				GetParameter("?news_id", MySqlDbType.UInt32, 10, News_id), 
 				GetParameter("?newstag_id", MySqlDbType.UInt32, 10, Newstag_id));
@@ -60,7 +58,7 @@ namespace pifa.DAL {
 		}
 
 		public int Update(News_newstagInfo item) {
-			return new SqlUpdateBuild(null, item.News_id, item.Newstag_id).ExecuteNonQuery();
+			return new SqlUpdateBuild(null, item.News_id.Value, item.Newstag_id.Value).ExecuteNonQuery();
 		}
 		#region class SqlUpdateBuild
 		public partial class SqlUpdateBuild {
@@ -68,7 +66,7 @@ namespace pifa.DAL {
 			protected string _fields;
 			protected string _where;
 			protected List<MySqlParameter> _parameters = new List<MySqlParameter>();
-			public SqlUpdateBuild(News_newstagInfo item, uint? News_id, uint? Newstag_id) {
+			public SqlUpdateBuild(News_newstagInfo item, uint News_id, uint Newstag_id) {
 				_item = item;
 				_where = SqlHelper.Addslashes("`news_id` = {0} AND `newstag_id` = {1}", News_id, Newstag_id);
 			}
@@ -102,8 +100,5 @@ namespace pifa.DAL {
 			return item;
 		}
 
-		public News_newstagInfo GetItem(uint? News_id, uint? Newstag_id) {
-			return this.Select.Where("a.`news_id` = {0} AND a.`newstag_id` = {1}", News_id, Newstag_id).ToOne();
-		}
 	}
 }

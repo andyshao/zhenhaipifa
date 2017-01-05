@@ -36,16 +36,14 @@ namespace pifa.DAL {
 			return GetItem(dr, ref index) as Factory_franchisingInfo;
 		}
 		public object GetItem(IDataReader dr, ref int index) {
-			return new Factory_franchisingInfo {
-				Factory_id = dr.IsDBNull(++index) ? null : (uint?)dr.GetInt32(index), 
-				Franchising_id = dr.IsDBNull(++index) ? null : (uint?)dr.GetInt32(index)};
-		}
-		public SelectBuild<Factory_franchisingInfo> Select {
-			get { return SelectBuild<Factory_franchisingInfo>.From(this, SqlHelper.Instance); }
+			Factory_franchisingInfo item = new Factory_franchisingInfo();
+				if (!dr.IsDBNull(++index)) item.Factory_id = (uint?)dr.GetInt32(index);
+				if (!dr.IsDBNull(++index)) item.Franchising_id = (uint?)dr.GetInt32(index);
+			return item;
 		}
 		#endregion
 
-		public int Delete(uint? Factory_id, uint? Franchising_id) {
+		public int Delete(uint Factory_id, uint Franchising_id) {
 			return SqlHelper.ExecuteNonQuery(string.Concat(TSQL.Delete, "`factory_id` = ?factory_id AND `franchising_id` = ?franchising_id"), 
 				GetParameter("?factory_id", MySqlDbType.UInt32, 10, Factory_id), 
 				GetParameter("?franchising_id", MySqlDbType.UInt32, 10, Franchising_id));
@@ -60,7 +58,7 @@ namespace pifa.DAL {
 		}
 
 		public int Update(Factory_franchisingInfo item) {
-			return new SqlUpdateBuild(null, item.Factory_id, item.Franchising_id).ExecuteNonQuery();
+			return new SqlUpdateBuild(null, item.Factory_id.Value, item.Franchising_id.Value).ExecuteNonQuery();
 		}
 		#region class SqlUpdateBuild
 		public partial class SqlUpdateBuild {
@@ -68,7 +66,7 @@ namespace pifa.DAL {
 			protected string _fields;
 			protected string _where;
 			protected List<MySqlParameter> _parameters = new List<MySqlParameter>();
-			public SqlUpdateBuild(Factory_franchisingInfo item, uint? Factory_id, uint? Franchising_id) {
+			public SqlUpdateBuild(Factory_franchisingInfo item, uint Factory_id, uint Franchising_id) {
 				_item = item;
 				_where = SqlHelper.Addslashes("`factory_id` = {0} AND `franchising_id` = {1}", Factory_id, Franchising_id);
 			}
@@ -102,8 +100,5 @@ namespace pifa.DAL {
 			return item;
 		}
 
-		public Factory_franchisingInfo GetItem(uint? Factory_id, uint? Franchising_id) {
-			return this.Select.Where("a.`factory_id` = {0} AND a.`franchising_id` = {1}", Factory_id, Franchising_id).ToOne();
-		}
 	}
 }

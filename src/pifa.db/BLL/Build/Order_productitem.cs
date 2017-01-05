@@ -18,7 +18,7 @@ namespace pifa.BLL {
 
 		#region delete, update, insert
 
-		public static int Delete(uint? Order_id, uint? Productitem_id) {
+		public static int Delete(uint Order_id, uint Productitem_id) {
 			if (itemCacheTimeout > 0) RemoveCache(GetItem(Order_id, Productitem_id));
 			return dal.Delete(Order_id, Productitem_id);
 		}
@@ -33,10 +33,10 @@ namespace pifa.BLL {
 			if (itemCacheTimeout > 0) RemoveCache(item);
 			return dal.Update(item);
 		}
-		public static pifa.DAL.Order_productitem.SqlUpdateBuild UpdateDiy(uint? Order_id, uint? Productitem_id) {
+		public static pifa.DAL.Order_productitem.SqlUpdateBuild UpdateDiy(uint Order_id, uint Productitem_id) {
 			return UpdateDiy(null, Order_id, Productitem_id);
 		}
-		public static pifa.DAL.Order_productitem.SqlUpdateBuild UpdateDiy(Order_productitemInfo item, uint? Order_id, uint? Productitem_id) {
+		public static pifa.DAL.Order_productitem.SqlUpdateBuild UpdateDiy(Order_productitemInfo item, uint Order_id, uint Productitem_id) {
 			if (itemCacheTimeout > 0) RemoveCache(item != null ? item : GetItem(Order_id, Productitem_id));
 			return new pifa.DAL.Order_productitem.SqlUpdateBuild(item, Order_id, Productitem_id);
 		}
@@ -71,14 +71,13 @@ namespace pifa.BLL {
 		}
 		#endregion
 
-		public static Order_productitemInfo GetItem(uint? Order_id, uint? Productitem_id) {
-			if (Order_id == null || Productitem_id == null) return null;
-			if (itemCacheTimeout <= 0) return dal.GetItem(Order_id, Productitem_id);
+		public static Order_productitemInfo GetItem(uint Order_id, uint Productitem_id) {
+			if (itemCacheTimeout <= 0) return Select.WhereOrder_id(Order_id).WhereProductitem_id(Productitem_id).ToOne();
 			string key = string.Concat("pifa_BLL_Order_productitem_", Order_id, "_,_", Productitem_id);
 			string value = RedisHelper.Get(key);
 			if (!string.IsNullOrEmpty(value))
-				try { return new Order_productitemInfo(value); } catch { }
-			Order_productitemInfo item = dal.GetItem(Order_id, Productitem_id);
+				try { return Order_productitemInfo.Parse(value); } catch { }
+			Order_productitemInfo item = Select.WhereOrder_id(Order_id).WhereProductitem_id(Productitem_id).ToOne();
 			if (item == null) return null;
 			RedisHelper.Set(key, item.Stringify(), itemCacheTimeout);
 			return item;
@@ -111,10 +110,10 @@ namespace pifa.BLL {
 	}
 	public partial class Order_productitemSelectBuild : SelectBuild<Order_productitemInfo, Order_productitemSelectBuild> {
 		public Order_productitemSelectBuild WhereOrder_id(params uint?[] Order_id) {
-			return this.Where1Or("a.`Order_id` = {0}", Order_id);
+			return this.Where1Or("a.`order_id` = {0}", Order_id);
 		}
 		public Order_productitemSelectBuild WhereProductitem_id(params uint?[] Productitem_id) {
-			return this.Where1Or("a.`Productitem_id` = {0}", Productitem_id);
+			return this.Where1Or("a.`productitem_id` = {0}", Productitem_id);
 		}
 		public Order_productitemSelectBuild WhereNumber(params uint?[] Number) {
 			return this.Where1Or("a.`number` = {0}", Number);
@@ -132,20 +131,20 @@ namespace pifa.BLL {
 		public Order_productitemSelectBuild WhereState_IN(params Order_productitemSTATE?[] States) {
 			return this.Where1Or("a.`state` = {0}", States);
 		}
-		public Order_productitemSelectBuild WhereState(Order_productitemSTATE? State1) {
+		public Order_productitemSelectBuild WhereState(Order_productitemSTATE State1) {
 			return this.WhereState_IN(State1);
 		}
 		#region WhereState
-		public Order_productitemSelectBuild WhereState(Order_productitemSTATE? State1, Order_productitemSTATE? State2) {
+		public Order_productitemSelectBuild WhereState(Order_productitemSTATE State1, Order_productitemSTATE State2) {
 			return this.WhereState_IN(State1, State2);
 		}
-		public Order_productitemSelectBuild WhereState(Order_productitemSTATE? State1, Order_productitemSTATE? State2, Order_productitemSTATE? State3) {
+		public Order_productitemSelectBuild WhereState(Order_productitemSTATE State1, Order_productitemSTATE State2, Order_productitemSTATE State3) {
 			return this.WhereState_IN(State1, State2, State3);
 		}
-		public Order_productitemSelectBuild WhereState(Order_productitemSTATE? State1, Order_productitemSTATE? State2, Order_productitemSTATE? State3, Order_productitemSTATE? State4) {
+		public Order_productitemSelectBuild WhereState(Order_productitemSTATE State1, Order_productitemSTATE State2, Order_productitemSTATE State3, Order_productitemSTATE State4) {
 			return this.WhereState_IN(State1, State2, State3, State4);
 		}
-		public Order_productitemSelectBuild WhereState(Order_productitemSTATE? State1, Order_productitemSTATE? State2, Order_productitemSTATE? State3, Order_productitemSTATE? State4, Order_productitemSTATE? State5) {
+		public Order_productitemSelectBuild WhereState(Order_productitemSTATE State1, Order_productitemSTATE State2, Order_productitemSTATE State3, Order_productitemSTATE State4, Order_productitemSTATE State5) {
 			return this.WhereState_IN(State1, State2, State3, State4, State5);
 		}
 		#endregion
@@ -153,7 +152,7 @@ namespace pifa.BLL {
 			return this.Where1Or("a.`title` = {0}", Title);
 		}
 		public Order_productitemSelectBuild WhereTitleLike(params string[] Title) {
-			if (Title == null) return this;
+			if (Title == null || Title.Where(a => !string.IsNullOrEmpty(a)).Any() == false) return this;
 			return this.Where1Or(@"a.`title` LIKE {0}", Title.Select(a => "%" + a + "%").ToArray());
 		}
 		protected new Order_productitemSelectBuild Where1Or(string filterFormat, Array values) {

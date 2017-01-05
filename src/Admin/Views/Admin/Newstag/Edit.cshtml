@@ -1,0 +1,77 @@
+﻿@{
+	Layout = "";
+	NewstagInfo item = ViewBag.item;
+	var fk_newss = News.Select.ToList();
+}
+
+<div class="box">
+	<div class="box-header with-border">
+		<h3 class="box-title" id="box-title"></h3>
+	</div>
+	<div class="box-body">
+		<div class="table-responsive">
+			<form id="form_add" method="post">
+				@Html.AntiForgeryToken()
+				<input type="hidden" name="__callback" value="edit_callback" />
+				<div>
+					<table cellspacing="0" rules="all" class="table table-bordered table-hover" border="1" style="border-collapse:collapse;">
+						@if (item != null) {
+							<tr>
+								<td>id</td>
+								<td><input name="Id" type="text" readonly class="datepicker" style="width:20%;background-color:#ddd;" /></td>
+							</tr>
+						}
+						<tr>
+							<td>标签名</td>
+							<td><input name="Name" type="text" class="datepicker" style="width:60%;" /></td>
+						</tr>
+						<tr>
+							<td>文章数量</td>
+							<td><input name="Total_news" type="text" class="form-control" data-inputmask="'mask': '9', 'repeat': 6, 'greedy': false" data-mask style="width:200px;" /></td>
+						</tr>
+						<tr>
+							<td>news</td>
+							<td>
+								<select name="mn_News" data-placeholder="Select a news" class="form-control select2" multiple>
+									@foreach (NewsInfo fk in fk_newss) { <option value="@fk.Id">@fk.Title</option> }
+								</select>
+							</td>
+						</tr>
+						@if (item != null) {
+							<tr>
+								<td>创建时间</td>
+								<td><input name="Create_time" type="text" readonly class="datepicker" style="width:20%;background-color:#ddd;" /></td>
+							</tr>
+						}
+						<tr>
+							<td width="8%">&nbsp</td>
+							<td><input type="submit" value="@(item == null ? "添加" : "更新")" />&nbsp;<input type="button" value="取消" /></td>
+						</tr>
+					</table>
+				</div>
+			</form>
+
+		</div>
+	</div>
+</div>
+
+<script type="text/javascript">
+	(function () {
+		top.edit_callback = function (rt) {
+			if (rt.success) return top.mainViewNav.goto('./');
+			alert(rt.message);
+		};
+
+		var form = $('#form_add')[0];
+		var item = null;
+		@if (item != null) {
+			<text>
+			item = @Html.Raw(item.ToJson());
+			fillForm(form, item);
+			item.mn_News = @Html.Raw(item.Obj_newss.ToJson());
+			for (var a = 0; a < item.mn_News.length; a++) $(form.mn_News).find('option[value="{0}"]'.format(item.mn_News[a].Id)).attr('selected', 'selected');
+			</text>
+		}
+		top.mainViewInit();
+	})();
+</script>

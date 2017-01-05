@@ -4,10 +4,12 @@ using System.Collections.Generic;
 using System.Linq;
 using System.ComponentModel;
 using System.Reflection;
+using Newtonsoft.Json;
 using pifa.BLL;
 
 namespace pifa.Model {
 
+	[JsonObject(MemberSerialization.OptIn)]
 	public partial class NewsInfo {
 		#region fields
 		private uint? _Id;
@@ -22,7 +24,7 @@ namespace pifa.Model {
 
 		public NewsInfo() { }
 
-		#region 独创的序列化，反序列化
+		#region 序列化，反序列化
 		protected static readonly string StringifySplit = "@<News(Info]?#>";
 		public string Stringify() {
 			return string.Concat(
@@ -35,25 +37,33 @@ namespace pifa.Model {
 				_Title == null ? "null" : _Title.Replace("|", StringifySplit), "|",
 				_Update_time == null ? "null" : _Update_time.Value.Ticks.ToString());
 		}
-		public NewsInfo(string stringify) {
+		public static NewsInfo Parse(string stringify) {
 			string[] ret = stringify.Split(new char[] { '|' }, 8, StringSplitOptions.None);
 			if (ret.Length != 8) throw new Exception("格式不正确，NewsInfo：" + stringify);
-			if (string.Compare("null", ret[0]) != 0) _Id = uint.Parse(ret[0]);
-			if (string.Compare("null", ret[1]) != 0) _Create_time = new DateTime(long.Parse(ret[1]));
-			if (string.Compare("null", ret[2]) != 0) _Intro = ret[2].Replace(StringifySplit, "|");
-			if (string.Compare("null", ret[3]) != 0) _Pv = uint.Parse(ret[3]);
-			if (string.Compare("null", ret[4]) != 0) _Source = ret[4].Replace(StringifySplit, "|");
-			if (string.Compare("null", ret[5]) != 0) _State = (NewsSTATE)long.Parse(ret[5]);
-			if (string.Compare("null", ret[6]) != 0) _Title = ret[6].Replace(StringifySplit, "|");
-			if (string.Compare("null", ret[7]) != 0) _Update_time = new DateTime(long.Parse(ret[7]));
+			NewsInfo item = new NewsInfo();
+			if (string.Compare("null", ret[0]) != 0) item.Id = uint.Parse(ret[0]);
+			if (string.Compare("null", ret[1]) != 0) item.Create_time = new DateTime(long.Parse(ret[1]));
+			if (string.Compare("null", ret[2]) != 0) item.Intro = ret[2].Replace(StringifySplit, "|");
+			if (string.Compare("null", ret[3]) != 0) item.Pv = uint.Parse(ret[3]);
+			if (string.Compare("null", ret[4]) != 0) item.Source = ret[4].Replace(StringifySplit, "|");
+			if (string.Compare("null", ret[5]) != 0) item.State = (NewsSTATE)long.Parse(ret[5]);
+			if (string.Compare("null", ret[6]) != 0) item.Title = ret[6].Replace(StringifySplit, "|");
+			if (string.Compare("null", ret[7]) != 0) item.Update_time = new DateTime(long.Parse(ret[7]));
+			return item;
 		}
 		#endregion
 
 		#region override
-		private static Dictionary<string, bool> __jsonIgnore;
-		private static object __jsonIgnore_lock = new object();
+		private static Lazy<Dictionary<string, bool>> __jsonIgnoreLazy = new Lazy<Dictionary<string, bool>>(() => {
+			FieldInfo field = typeof(NewsInfo).GetField("JsonIgnore");
+			Dictionary<string, bool> ret = new Dictionary<string, bool>();
+			if (field != null) string.Concat(field.GetValue(null)).Split(',').ToList().ForEach(f => {
+				if (!string.IsNullOrEmpty(f)) ret[f] = true;
+			});
+			return ret;
+		});
+		private static Dictionary<string, bool> __jsonIgnore => __jsonIgnoreLazy.Value;
 		public override string ToString() {
-			this.Init__jsonIgnore();
 			string json = string.Concat(
 				__jsonIgnore.ContainsKey("Id") ? string.Empty : string.Format(", Id : {0}", Id == null ? "null" : Id.ToString()), 
 				__jsonIgnore.ContainsKey("Create_time") ? string.Empty : string.Format(", Create_time : {0}", Create_time == null ? "null" : Create_time.Value.Subtract(new DateTime(1970, 1, 1)).TotalMilliseconds.ToString()), 
@@ -65,47 +75,17 @@ namespace pifa.Model {
 				__jsonIgnore.ContainsKey("Update_time") ? string.Empty : string.Format(", Update_time : {0}", Update_time == null ? "null" : Update_time.Value.Subtract(new DateTime(1970, 1, 1)).TotalMilliseconds.ToString()), " }");
 			return string.Concat("{", json.Substring(1));
 		}
-		public IDictionary ToBson() {
-			this.Init__jsonIgnore();
+		public IDictionary ToBson(bool allField = false) {
 			IDictionary ht = new Hashtable();
-			if (!__jsonIgnore.ContainsKey("Id")) ht["Id"] = Id;
-			if (!__jsonIgnore.ContainsKey("Create_time")) ht["Create_time"] = Create_time;
-			if (!__jsonIgnore.ContainsKey("Intro")) ht["Intro"] = Intro;
-			if (!__jsonIgnore.ContainsKey("Pv")) ht["Pv"] = Pv;
-			if (!__jsonIgnore.ContainsKey("Source")) ht["Source"] = Source;
-			if (!__jsonIgnore.ContainsKey("State")) ht["State"] = State?.ToDescriptionOrString();
-			if (!__jsonIgnore.ContainsKey("Title")) ht["Title"] = Title;
-			if (!__jsonIgnore.ContainsKey("Update_time")) ht["Update_time"] = Update_time;
+			if (allField || !__jsonIgnore.ContainsKey("Id")) ht["Id"] = Id;
+			if (allField || !__jsonIgnore.ContainsKey("Create_time")) ht["Create_time"] = Create_time;
+			if (allField || !__jsonIgnore.ContainsKey("Intro")) ht["Intro"] = Intro;
+			if (allField || !__jsonIgnore.ContainsKey("Pv")) ht["Pv"] = Pv;
+			if (allField || !__jsonIgnore.ContainsKey("Source")) ht["Source"] = Source;
+			if (allField || !__jsonIgnore.ContainsKey("State")) ht["State"] = State?.ToDescriptionOrString();
+			if (allField || !__jsonIgnore.ContainsKey("Title")) ht["Title"] = Title;
+			if (allField || !__jsonIgnore.ContainsKey("Update_time")) ht["Update_time"] = Update_time;
 			return ht;
-		}
-		private void Init__jsonIgnore() {
-			if (__jsonIgnore == null) {
-				lock (__jsonIgnore_lock) {
-					if (__jsonIgnore == null) {
-						FieldInfo field = typeof(NewsInfo).GetField("JsonIgnore");
-						__jsonIgnore = new Dictionary<string, bool>();
-						if (field != null) {
-							string[] fs = string.Concat(field.GetValue(null)).Split(',');
-							foreach (string f in fs) if (!string.IsNullOrEmpty(f)) __jsonIgnore[f] = true;
-						}
-					}
-				}
-			}
-		}
-		public override bool Equals(object obj) {
-			NewsInfo item = obj as NewsInfo;
-			if (item == null) return false;
-			return this.ToString().Equals(item.ToString());
-		}
-		public override int GetHashCode() {
-			return this.ToString().GetHashCode();
-		}
-		public static bool operator ==(NewsInfo op1, NewsInfo op2) {
-			if (object.Equals(op1, null)) return object.Equals(op2, null);
-			return op1.Equals(op2);
-		}
-		public static bool operator !=(NewsInfo op1, NewsInfo op2) {
-			return !(op1 == op2);
 		}
 		public object this[string key] {
 			get { return this.GetType().GetProperty(key).GetValue(this); }
@@ -114,56 +94,56 @@ namespace pifa.Model {
 		#endregion
 
 		#region properties
-		public uint? Id {
+		[JsonProperty] public uint? Id {
 			get { return _Id; }
 			set { _Id = value; }
 		}
 		/// <summary>
 		/// 创建时间
 		/// </summary>
-		public DateTime? Create_time {
+		[JsonProperty] public DateTime? Create_time {
 			get { return _Create_time; }
 			set { _Create_time = value; }
 		}
 		/// <summary>
 		/// 导读
 		/// </summary>
-		public string Intro {
+		[JsonProperty] public string Intro {
 			get { return _Intro; }
 			set { _Intro = value; }
 		}
 		/// <summary>
 		/// 阅读次数
 		/// </summary>
-		public uint? Pv {
+		[JsonProperty] public uint? Pv {
 			get { return _Pv; }
 			set { _Pv = value; }
 		}
 		/// <summary>
 		/// 来源
 		/// </summary>
-		public string Source {
+		[JsonProperty] public string Source {
 			get { return _Source; }
 			set { _Source = value; }
 		}
 		/// <summary>
 		/// 状态
 		/// </summary>
-		public NewsSTATE? State {
+		[JsonProperty] public NewsSTATE? State {
 			get { return _State; }
 			set { _State = value; }
 		}
 		/// <summary>
 		/// 标题
 		/// </summary>
-		public string Title {
+		[JsonProperty] public string Title {
 			get { return _Title; }
 			set { _Title = value; }
 		}
 		/// <summary>
 		/// 修改时间
 		/// </summary>
-		public DateTime? Update_time {
+		[JsonProperty] public DateTime? Update_time {
 			get { return _Update_time; }
 			set { _Update_time = value; }
 		}
@@ -184,33 +164,36 @@ namespace pifa.Model {
 		#endregion
 
 		public pifa.DAL.News.SqlUpdateBuild UpdateDiy {
-			get { return News.UpdateDiy(this, _Id); }
+			get { return News.UpdateDiy(this, _Id.Value); }
 		}
-		public News_newstagInfo FlagNewstag(NewstagInfo Newstag) {
-			return FlagNewstag(Newstag.Id);
+		public NewsInfo Save() {
+			this.Update_time = DateTime.Now;
+			if (this.Id != null) {
+				News.Update(this);
+				return this;
+			}
+			this.Create_time = DateTime.Now;
+			return News.Insert(this);
 		}
+		public News_newstagInfo FlagNewstag(NewstagInfo Newstag) => FlagNewstag(Newstag.Id);
 		public News_newstagInfo FlagNewstag(uint? Newstag_id) {
-			News_newstagInfo item = News_newstag.GetItem(this.Id, Newstag_id);
+			News_newstagInfo item = News_newstag.GetItem(this.Id.Value, Newstag_id.Value);
 			if (item == null) item = News_newstag.Insert(new News_newstagInfo {
-				News_id = this.Id, 
+			News_id = this.Id, 
 				Newstag_id = Newstag_id});
 			return item;
 		}
 
-		public int UnflagNewstag(NewstagInfo Newstag) {
-			return UnflagNewstag(Newstag.Id);
-		}
-		public int UnflagNewstag(uint? Newstag_id) {
-			return News_newstag.Delete(this.Id, Newstag_id);
-		}
-		public int UnflagNewstagALL() {
-			return News_newstag.DeleteByNews_id(this.Id);
-		}
+		public int UnflagNewstag(NewstagInfo Newstag) => UnflagNewstag(Newstag.Id);
+		public int UnflagNewstag(uint? Newstag_id) => News_newstag.Delete(this.Id.Value, Newstag_id.Value);
+		public int UnflagNewstagALL() => News_newstag.DeleteByNews_id(this.Id);
 
-		public NewsdescInfo AddNewsdesc(string Content) {
-			return Newsdesc.Insert(new NewsdescInfo {
-				News_id = this.Id, 
+		public NewsdescInfo AddNewsdesc(string Content) => Newsdesc.Insert(new NewsdescInfo {
+			News_id = this.Id, 
 				Content = Content});
+		public NewsdescInfo AddNewsdesc(NewsdescInfo item) {
+			item.News_id = this.Id;
+			return item.Save();
 		}
 
 	}

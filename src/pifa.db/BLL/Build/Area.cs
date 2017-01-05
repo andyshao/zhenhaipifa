@@ -18,7 +18,7 @@ namespace pifa.BLL {
 
 		#region delete, update, insert
 
-		public static int Delete(uint? Id) {
+		public static int Delete(uint Id) {
 			if (itemCacheTimeout > 0) RemoveCache(GetItem(Id));
 			return dal.Delete(Id);
 		}
@@ -30,10 +30,10 @@ namespace pifa.BLL {
 			if (itemCacheTimeout > 0) RemoveCache(item);
 			return dal.Update(item);
 		}
-		public static pifa.DAL.Area.SqlUpdateBuild UpdateDiy(uint? Id) {
+		public static pifa.DAL.Area.SqlUpdateBuild UpdateDiy(uint Id) {
 			return UpdateDiy(null, Id);
 		}
-		public static pifa.DAL.Area.SqlUpdateBuild UpdateDiy(AreaInfo item, uint? Id) {
+		public static pifa.DAL.Area.SqlUpdateBuild UpdateDiy(AreaInfo item, uint Id) {
 			if (itemCacheTimeout > 0) RemoveCache(item != null ? item : GetItem(Id));
 			return new pifa.DAL.Area.SqlUpdateBuild(item, Id);
 		}
@@ -60,14 +60,13 @@ namespace pifa.BLL {
 		}
 		#endregion
 
-		public static AreaInfo GetItem(uint? Id) {
-			if (Id == null) return null;
-			if (itemCacheTimeout <= 0) return dal.GetItem(Id);
+		public static AreaInfo GetItem(uint Id) {
+			if (itemCacheTimeout <= 0) return Select.WhereId(Id).ToOne();
 			string key = string.Concat("pifa_BLL_Area_", Id);
 			string value = RedisHelper.Get(key);
 			if (!string.IsNullOrEmpty(value))
-				try { return new AreaInfo(value); } catch { }
-			AreaInfo item = dal.GetItem(Id);
+				try { return AreaInfo.Parse(value); } catch { }
+			AreaInfo item = Select.WhereId(Id).ToOne();
 			if (item == null) return null;
 			RedisHelper.Set(key, item.Stringify(), itemCacheTimeout);
 			return item;
@@ -97,7 +96,7 @@ namespace pifa.BLL {
 	}
 	public partial class AreaSelectBuild : SelectBuild<AreaInfo, AreaSelectBuild> {
 		public AreaSelectBuild WhereParent_id(params uint?[] Parent_id) {
-			return this.Where1Or("a.`Parent_id` = {0}", Parent_id);
+			return this.Where1Or("a.`parent_id` = {0}", Parent_id);
 		}
 		public AreaSelectBuild WhereCategory(params CategoryInfo[] items) {
 			if (items == null) return this;
@@ -114,7 +113,7 @@ namespace pifa.BLL {
 			return this.Where1Or("a.`name` = {0}", Name);
 		}
 		public AreaSelectBuild WhereNameLike(params string[] Name) {
-			if (Name == null) return this;
+			if (Name == null || Name.Where(a => !string.IsNullOrEmpty(a)).Any() == false) return this;
 			return this.Where1Or(@"a.`name` LIKE {0}", Name.Select(a => "%" + a + "%").ToArray());
 		}
 		protected new AreaSelectBuild Where1Or(string filterFormat, Array values) {

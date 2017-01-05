@@ -18,7 +18,7 @@ namespace pifa.BLL {
 
 		#region delete, update, insert
 
-		public static int Delete(uint? Id) {
+		public static int Delete(uint Id) {
 			if (itemCacheTimeout > 0) RemoveCache(GetItem(Id));
 			return dal.Delete(Id);
 		}
@@ -30,10 +30,10 @@ namespace pifa.BLL {
 			if (itemCacheTimeout > 0) RemoveCache(item);
 			return dal.Update(item);
 		}
-		public static pifa.DAL.Productitem.SqlUpdateBuild UpdateDiy(uint? Id) {
+		public static pifa.DAL.Productitem.SqlUpdateBuild UpdateDiy(uint Id) {
 			return UpdateDiy(null, Id);
 		}
-		public static pifa.DAL.Productitem.SqlUpdateBuild UpdateDiy(ProductitemInfo item, uint? Id) {
+		public static pifa.DAL.Productitem.SqlUpdateBuild UpdateDiy(ProductitemInfo item, uint Id) {
 			if (itemCacheTimeout > 0) RemoveCache(item != null ? item : GetItem(Id));
 			return new pifa.DAL.Productitem.SqlUpdateBuild(item, Id);
 		}
@@ -68,14 +68,13 @@ namespace pifa.BLL {
 		}
 		#endregion
 
-		public static ProductitemInfo GetItem(uint? Id) {
-			if (Id == null) return null;
-			if (itemCacheTimeout <= 0) return dal.GetItem(Id);
+		public static ProductitemInfo GetItem(uint Id) {
+			if (itemCacheTimeout <= 0) return Select.WhereId(Id).ToOne();
 			string key = string.Concat("pifa_BLL_Productitem_", Id);
 			string value = RedisHelper.Get(key);
 			if (!string.IsNullOrEmpty(value))
-				try { return new ProductitemInfo(value); } catch { }
-			ProductitemInfo item = dal.GetItem(Id);
+				try { return ProductitemInfo.Parse(value); } catch { }
+			ProductitemInfo item = Select.WhereId(Id).ToOne();
 			if (item == null) return null;
 			RedisHelper.Set(key, item.Stringify(), itemCacheTimeout);
 			return item;
@@ -105,7 +104,7 @@ namespace pifa.BLL {
 	}
 	public partial class ProductitemSelectBuild : SelectBuild<ProductitemInfo, ProductitemSelectBuild> {
 		public ProductitemSelectBuild WhereProduct_id(params uint?[] Product_id) {
-			return this.Where1Or("a.`Product_id` = {0}", Product_id);
+			return this.Where1Or("a.`product_id` = {0}", Product_id);
 		}
 		public ProductitemSelectBuild WhereOrder(params OrderInfo[] items) {
 			if (items == null) return this;
@@ -122,14 +121,14 @@ namespace pifa.BLL {
 			return this.Where1Or("a.`img_url` = {0}", Img_url);
 		}
 		public ProductitemSelectBuild WhereImg_urlLike(params string[] Img_url) {
-			if (Img_url == null) return this;
+			if (Img_url == null || Img_url.Where(a => !string.IsNullOrEmpty(a)).Any() == false) return this;
 			return this.Where1Or(@"a.`img_url` LIKE {0}", Img_url.Select(a => "%" + a + "%").ToArray());
 		}
 		public ProductitemSelectBuild WhereName(params string[] Name) {
 			return this.Where1Or("a.`name` = {0}", Name);
 		}
 		public ProductitemSelectBuild WhereNameLike(params string[] Name) {
-			if (Name == null) return this;
+			if (Name == null || Name.Where(a => !string.IsNullOrEmpty(a)).Any() == false) return this;
 			return this.Where1Or(@"a.`name` LIKE {0}", Name.Select(a => "%" + a + "%").ToArray());
 		}
 		public ProductitemSelectBuild WhereOriginal_price(params decimal?[] Original_price) {

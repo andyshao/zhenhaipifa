@@ -18,7 +18,7 @@ namespace pifa.BLL {
 
 		#region delete, update, insert
 
-		public static int Delete(uint? Id) {
+		public static int Delete(uint Id) {
 			if (itemCacheTimeout > 0) RemoveCache(GetItem(Id));
 			return dal.Delete(Id);
 		}
@@ -33,10 +33,10 @@ namespace pifa.BLL {
 			if (itemCacheTimeout > 0) RemoveCache(item);
 			return dal.Update(item);
 		}
-		public static pifa.DAL.Pattr.SqlUpdateBuild UpdateDiy(uint? Id) {
+		public static pifa.DAL.Pattr.SqlUpdateBuild UpdateDiy(uint Id) {
 			return UpdateDiy(null, Id);
 		}
-		public static pifa.DAL.Pattr.SqlUpdateBuild UpdateDiy(PattrInfo item, uint? Id) {
+		public static pifa.DAL.Pattr.SqlUpdateBuild UpdateDiy(PattrInfo item, uint Id) {
 			if (itemCacheTimeout > 0) RemoveCache(item != null ? item : GetItem(Id));
 			return new pifa.DAL.Pattr.SqlUpdateBuild(item, Id);
 		}
@@ -65,14 +65,13 @@ namespace pifa.BLL {
 		}
 		#endregion
 
-		public static PattrInfo GetItem(uint? Id) {
-			if (Id == null) return null;
-			if (itemCacheTimeout <= 0) return dal.GetItem(Id);
+		public static PattrInfo GetItem(uint Id) {
+			if (itemCacheTimeout <= 0) return Select.WhereId(Id).ToOne();
 			string key = string.Concat("pifa_BLL_Pattr_", Id);
 			string value = RedisHelper.Get(key);
 			if (!string.IsNullOrEmpty(value))
-				try { return new PattrInfo(value); } catch { }
-			PattrInfo item = dal.GetItem(Id);
+				try { return PattrInfo.Parse(value); } catch { }
+			PattrInfo item = Select.WhereId(Id).ToOne();
 			if (item == null) return null;
 			RedisHelper.Set(key, item.Stringify(), itemCacheTimeout);
 			return item;
@@ -111,10 +110,10 @@ namespace pifa.BLL {
 	}
 	public partial class PattrSelectBuild : SelectBuild<PattrInfo, PattrSelectBuild> {
 		public PattrSelectBuild WhereCategory_id(params uint?[] Category_id) {
-			return this.Where1Or("a.`Category_id` = {0}", Category_id);
+			return this.Where1Or("a.`category_id` = {0}", Category_id);
 		}
 		public PattrSelectBuild WhereParent_id(params uint?[] Parent_id) {
-			return this.Where1Or("a.`Parent_id` = {0}", Parent_id);
+			return this.Where1Or("a.`parent_id` = {0}", Parent_id);
 		}
 		public PattrSelectBuild WhereProduct_attr(params ProductInfo[] items) {
 			if (items == null) return this;
@@ -134,7 +133,7 @@ namespace pifa.BLL {
 			return this.Where1Or("a.`name` = {0}", Name);
 		}
 		public PattrSelectBuild WhereNameLike(params string[] Name) {
-			if (Name == null) return this;
+			if (Name == null || Name.Where(a => !string.IsNullOrEmpty(a)).Any() == false) return this;
 			return this.Where1Or(@"a.`name` LIKE {0}", Name.Select(a => "%" + a + "%").ToArray());
 		}
 		protected new PattrSelectBuild Where1Or(string filterFormat, Array values) {

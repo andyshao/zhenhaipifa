@@ -3,10 +3,12 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using Newtonsoft.Json;
 using pifa.BLL;
 
 namespace pifa.Model {
 
+	[JsonObject(MemberSerialization.OptIn)]
 	public partial class MemberInfo {
 		#region fields
 		private uint? _Id;
@@ -19,7 +21,7 @@ namespace pifa.Model {
 
 		public MemberInfo() { }
 
-		#region 独创的序列化，反序列化
+		#region 序列化，反序列化
 		protected static readonly string StringifySplit = "@<Member(Info]?#>";
 		public string Stringify() {
 			return string.Concat(
@@ -30,23 +32,31 @@ namespace pifa.Model {
 				_Telphone == null ? "null" : _Telphone.Replace("|", StringifySplit), "|",
 				_Username == null ? "null" : _Username.Replace("|", StringifySplit));
 		}
-		public MemberInfo(string stringify) {
+		public static MemberInfo Parse(string stringify) {
 			string[] ret = stringify.Split(new char[] { '|' }, 6, StringSplitOptions.None);
 			if (ret.Length != 6) throw new Exception("格式不正确，MemberInfo：" + stringify);
-			if (string.Compare("null", ret[0]) != 0) _Id = uint.Parse(ret[0]);
-			if (string.Compare("null", ret[1]) != 0) _Create_time = new DateTime(long.Parse(ret[1]));
-			if (string.Compare("null", ret[2]) != 0) _Email = ret[2].Replace(StringifySplit, "|");
-			if (string.Compare("null", ret[3]) != 0) _Lastlogin_time = new DateTime(long.Parse(ret[3]));
-			if (string.Compare("null", ret[4]) != 0) _Telphone = ret[4].Replace(StringifySplit, "|");
-			if (string.Compare("null", ret[5]) != 0) _Username = ret[5].Replace(StringifySplit, "|");
+			MemberInfo item = new MemberInfo();
+			if (string.Compare("null", ret[0]) != 0) item.Id = uint.Parse(ret[0]);
+			if (string.Compare("null", ret[1]) != 0) item.Create_time = new DateTime(long.Parse(ret[1]));
+			if (string.Compare("null", ret[2]) != 0) item.Email = ret[2].Replace(StringifySplit, "|");
+			if (string.Compare("null", ret[3]) != 0) item.Lastlogin_time = new DateTime(long.Parse(ret[3]));
+			if (string.Compare("null", ret[4]) != 0) item.Telphone = ret[4].Replace(StringifySplit, "|");
+			if (string.Compare("null", ret[5]) != 0) item.Username = ret[5].Replace(StringifySplit, "|");
+			return item;
 		}
 		#endregion
 
 		#region override
-		private static Dictionary<string, bool> __jsonIgnore;
-		private static object __jsonIgnore_lock = new object();
+		private static Lazy<Dictionary<string, bool>> __jsonIgnoreLazy = new Lazy<Dictionary<string, bool>>(() => {
+			FieldInfo field = typeof(MemberInfo).GetField("JsonIgnore");
+			Dictionary<string, bool> ret = new Dictionary<string, bool>();
+			if (field != null) string.Concat(field.GetValue(null)).Split(',').ToList().ForEach(f => {
+				if (!string.IsNullOrEmpty(f)) ret[f] = true;
+			});
+			return ret;
+		});
+		private static Dictionary<string, bool> __jsonIgnore => __jsonIgnoreLazy.Value;
 		public override string ToString() {
-			this.Init__jsonIgnore();
 			string json = string.Concat(
 				__jsonIgnore.ContainsKey("Id") ? string.Empty : string.Format(", Id : {0}", Id == null ? "null" : Id.ToString()), 
 				__jsonIgnore.ContainsKey("Create_time") ? string.Empty : string.Format(", Create_time : {0}", Create_time == null ? "null" : Create_time.Value.Subtract(new DateTime(1970, 1, 1)).TotalMilliseconds.ToString()), 
@@ -56,45 +66,15 @@ namespace pifa.Model {
 				__jsonIgnore.ContainsKey("Username") ? string.Empty : string.Format(", Username : {0}", Username == null ? "null" : string.Format("'{0}'", Username.Replace("\\", "\\\\").Replace("\r\n", "\\r\\n").Replace("'", "\\'"))), " }");
 			return string.Concat("{", json.Substring(1));
 		}
-		public IDictionary ToBson() {
-			this.Init__jsonIgnore();
+		public IDictionary ToBson(bool allField = false) {
 			IDictionary ht = new Hashtable();
-			if (!__jsonIgnore.ContainsKey("Id")) ht["Id"] = Id;
-			if (!__jsonIgnore.ContainsKey("Create_time")) ht["Create_time"] = Create_time;
-			if (!__jsonIgnore.ContainsKey("Email")) ht["Email"] = Email;
-			if (!__jsonIgnore.ContainsKey("Lastlogin_time")) ht["Lastlogin_time"] = Lastlogin_time;
-			if (!__jsonIgnore.ContainsKey("Telphone")) ht["Telphone"] = Telphone;
-			if (!__jsonIgnore.ContainsKey("Username")) ht["Username"] = Username;
+			if (allField || !__jsonIgnore.ContainsKey("Id")) ht["Id"] = Id;
+			if (allField || !__jsonIgnore.ContainsKey("Create_time")) ht["Create_time"] = Create_time;
+			if (allField || !__jsonIgnore.ContainsKey("Email")) ht["Email"] = Email;
+			if (allField || !__jsonIgnore.ContainsKey("Lastlogin_time")) ht["Lastlogin_time"] = Lastlogin_time;
+			if (allField || !__jsonIgnore.ContainsKey("Telphone")) ht["Telphone"] = Telphone;
+			if (allField || !__jsonIgnore.ContainsKey("Username")) ht["Username"] = Username;
 			return ht;
-		}
-		private void Init__jsonIgnore() {
-			if (__jsonIgnore == null) {
-				lock (__jsonIgnore_lock) {
-					if (__jsonIgnore == null) {
-						FieldInfo field = typeof(MemberInfo).GetField("JsonIgnore");
-						__jsonIgnore = new Dictionary<string, bool>();
-						if (field != null) {
-							string[] fs = string.Concat(field.GetValue(null)).Split(',');
-							foreach (string f in fs) if (!string.IsNullOrEmpty(f)) __jsonIgnore[f] = true;
-						}
-					}
-				}
-			}
-		}
-		public override bool Equals(object obj) {
-			MemberInfo item = obj as MemberInfo;
-			if (item == null) return false;
-			return this.ToString().Equals(item.ToString());
-		}
-		public override int GetHashCode() {
-			return this.ToString().GetHashCode();
-		}
-		public static bool operator ==(MemberInfo op1, MemberInfo op2) {
-			if (object.Equals(op1, null)) return object.Equals(op2, null);
-			return op1.Equals(op2);
-		}
-		public static bool operator !=(MemberInfo op1, MemberInfo op2) {
-			return !(op1 == op2);
 		}
 		public object this[string key] {
 			get { return this.GetType().GetProperty(key).GetValue(this); }
@@ -103,42 +83,42 @@ namespace pifa.Model {
 		#endregion
 
 		#region properties
-		public uint? Id {
+		[JsonProperty] public uint? Id {
 			get { return _Id; }
 			set { _Id = value; }
 		}
 		/// <summary>
 		/// 创建时间
 		/// </summary>
-		public DateTime? Create_time {
+		[JsonProperty] public DateTime? Create_time {
 			get { return _Create_time; }
 			set { _Create_time = value; }
 		}
 		/// <summary>
 		/// 邮箱
 		/// </summary>
-		public string Email {
+		[JsonProperty] public string Email {
 			get { return _Email; }
 			set { _Email = value; }
 		}
 		/// <summary>
 		/// 最后登陆时间
 		/// </summary>
-		public DateTime? Lastlogin_time {
+		[JsonProperty] public DateTime? Lastlogin_time {
 			get { return _Lastlogin_time; }
 			set { _Lastlogin_time = value; }
 		}
 		/// <summary>
 		/// 手机
 		/// </summary>
-		public string Telphone {
+		[JsonProperty] public string Telphone {
 			get { return _Telphone; }
 			set { _Telphone = value; }
 		}
 		/// <summary>
 		/// 用户名
 		/// </summary>
-		public string Username {
+		[JsonProperty] public string Username {
 			get { return _Username; }
 			set { _Username = value; }
 		}
@@ -213,11 +193,18 @@ namespace pifa.Model {
 		#endregion
 
 		public pifa.DAL.Member.SqlUpdateBuild UpdateDiy {
-			get { return Member.UpdateDiy(this, _Id); }
+			get { return Member.UpdateDiy(this, _Id.Value); }
 		}
-		public Member_addressbookInfo AddAddressbook(string Address, DateTime? Create_time, bool? Is_default, string Name, string Tel, string Telphone, string Zip) {
-			return Member_addressbook.Insert(new Member_addressbookInfo {
-				Member_id = this.Id, 
+		public MemberInfo Save() {
+			if (this.Id != null) {
+				Member.Update(this);
+				return this;
+			}
+			this.Create_time = DateTime.Now;
+			return Member.Insert(this);
+		}
+		public Member_addressbookInfo AddAddressbook(string Address, DateTime? Create_time, bool? Is_default, string Name, string Tel, string Telphone, string Zip) => Member_addressbook.Insert(new Member_addressbookInfo {
+			Member_id = this.Id, 
 				Address = Address, 
 				Create_time = Create_time, 
 				Is_default = Is_default, 
@@ -225,39 +212,32 @@ namespace pifa.Model {
 				Tel = Tel, 
 				Telphone = Telphone, 
 				Zip = Zip});
+		public Member_addressbookInfo AddAddressbook(Member_addressbookInfo item) {
+			item.Member_id = this.Id;
+			return item.Save();
 		}
 
-		public Member_marketInfo FlagMarket(MarketInfo Market, DateTime? Create_time) {
-			return FlagMarket(Market.Id, Create_time);
-		}
+		public Member_marketInfo FlagMarket(MarketInfo Market, DateTime? Create_time) => FlagMarket(Market.Id, Create_time);
 		public Member_marketInfo FlagMarket(uint? Market_id, DateTime? Create_time) {
-			Member_marketInfo item = Member_market.GetItem(Market_id, this.Id);
+			Member_marketInfo item = Member_market.GetItem(Market_id.Value, this.Id.Value);
 			if (item == null) item = Member_market.Insert(new Member_marketInfo {
 				Market_id = Market_id, 
-				Member_id = this.Id, 
+			Member_id = this.Id, 
 				Create_time = Create_time});
 			else item.UpdateDiy
 					.SetCreate_time(Create_time).ExecuteNonQuery();
 			return item;
 		}
 
-		public int UnflagMarket(MarketInfo Market) {
-			return UnflagMarket(Market.Id);
-		}
-		public int UnflagMarket(uint? Market_id) {
-			return Member_market.Delete(Market_id, this.Id);
-		}
-		public int UnflagMarketALL() {
-			return Member_market.DeleteByMember_id(this.Id);
-		}
+		public int UnflagMarket(MarketInfo Market) => UnflagMarket(Market.Id);
+		public int UnflagMarket(uint? Market_id) => Member_market.Delete(Market_id.Value, this.Id.Value);
+		public int UnflagMarketALL() => Member_market.DeleteByMember_id(this.Id);
 
-		public Member_productInfo FlagProduct(ProductInfo Product, DateTime? Create_time) {
-			return FlagProduct(Product.Id, Create_time);
-		}
+		public Member_productInfo FlagProduct(ProductInfo Product, DateTime? Create_time) => FlagProduct(Product.Id, Create_time);
 		public Member_productInfo FlagProduct(uint? Product_id, DateTime? Create_time) {
-			Member_productInfo item = Member_product.GetItem(this.Id, Product_id);
+			Member_productInfo item = Member_product.GetItem(this.Id.Value, Product_id.Value);
 			if (item == null) item = Member_product.Insert(new Member_productInfo {
-				Member_id = this.Id, 
+			Member_id = this.Id, 
 				Product_id = Product_id, 
 				Create_time = Create_time});
 			else item.UpdateDiy
@@ -265,29 +245,23 @@ namespace pifa.Model {
 			return item;
 		}
 
-		public int UnflagProduct(ProductInfo Product) {
-			return UnflagProduct(Product.Id);
-		}
-		public int UnflagProduct(uint? Product_id) {
-			return Member_product.Delete(this.Id, Product_id);
-		}
-		public int UnflagProductALL() {
-			return Member_product.DeleteByMember_id(this.Id);
-		}
+		public int UnflagProduct(ProductInfo Product) => UnflagProduct(Product.Id);
+		public int UnflagProduct(uint? Product_id) => Member_product.Delete(this.Id.Value, Product_id.Value);
+		public int UnflagProductALL() => Member_product.DeleteByMember_id(this.Id);
 
-		public Member_securityInfo AddSecurity(string Password) {
-			return Member_security.Insert(new Member_securityInfo {
-				Member_id = this.Id, 
+		public Member_securityInfo AddSecurity(string Password) => Member_security.Insert(new Member_securityInfo {
+			Member_id = this.Id, 
 				Password = Password});
+		public Member_securityInfo AddSecurity(Member_securityInfo item) {
+			item.Member_id = this.Id;
+			return item.Save();
 		}
 
-		public Member_shopInfo FlagShop(ShopInfo Shop, DateTime? Create_time) {
-			return FlagShop(Shop.Id, Create_time);
-		}
+		public Member_shopInfo FlagShop(ShopInfo Shop, DateTime? Create_time) => FlagShop(Shop.Id, Create_time);
 		public Member_shopInfo FlagShop(uint? Shop_id, DateTime? Create_time) {
-			Member_shopInfo item = Member_shop.GetItem(this.Id, Shop_id);
+			Member_shopInfo item = Member_shop.GetItem(this.Id.Value, Shop_id.Value);
 			if (item == null) item = Member_shop.Insert(new Member_shopInfo {
-				Member_id = this.Id, 
+			Member_id = this.Id, 
 				Shop_id = Shop_id, 
 				Create_time = Create_time});
 			else item.UpdateDiy
@@ -295,19 +269,12 @@ namespace pifa.Model {
 			return item;
 		}
 
-		public int UnflagShop(ShopInfo Shop) {
-			return UnflagShop(Shop.Id);
-		}
-		public int UnflagShop(uint? Shop_id) {
-			return Member_shop.Delete(this.Id, Shop_id);
-		}
-		public int UnflagShopALL() {
-			return Member_shop.DeleteByMember_id(this.Id);
-		}
+		public int UnflagShop(ShopInfo Shop) => UnflagShop(Shop.Id);
+		public int UnflagShop(uint? Shop_id) => Member_shop.Delete(this.Id.Value, Shop_id.Value);
+		public int UnflagShopALL() => Member_shop.DeleteByMember_id(this.Id);
 
-		public OrderInfo AddOrder(string Code, DateTime? Create_time, string Express_code, string Express_name, string Paymethod, string Remark, OrderSTATE? State, decimal? Total_express_price, decimal? Total_original_price, decimal? Total_price, DateTime? Update_time) {
-			return Order.Insert(new OrderInfo {
-				Member_id = this.Id, 
+		public OrderInfo AddOrder(string Code, DateTime? Create_time, string Express_code, string Express_name, string Paymethod, string Remark, OrderSTATE? State, decimal? Total_express_price, decimal? Total_original_price, decimal? Total_price, DateTime? Update_time) => Order.Insert(new OrderInfo {
+			Member_id = this.Id, 
 				Code = Code, 
 				Create_time = Create_time, 
 				Express_code = Express_code, 
@@ -319,14 +286,14 @@ namespace pifa.Model {
 				Total_original_price = Total_original_price, 
 				Total_price = Total_price, 
 				Update_time = Update_time});
+		public OrderInfo AddOrder(OrderInfo item) {
+			item.Member_id = this.Id;
+			return item.Save();
 		}
 
-		public Product_commentInfo AddProduct_comment(OrderInfo Order, ProductInfo Product, ProductitemInfo Productitem, string Content, DateTime? Create_time, string Nickname, byte? Star_price, byte? Star_quality, byte? Star_value, Product_commentSTATE? State, string Title, string Upload_image_url) {
-			return AddProduct_comment(Order.Id, Product.Id, Productitem.Id, Content, Create_time, Nickname, Star_price, Star_quality, Star_value, State, Title, Upload_image_url);
-		}
-		public Product_commentInfo AddProduct_comment(uint? Order_id, uint? Product_id, uint? Productitem_id, string Content, DateTime? Create_time, string Nickname, byte? Star_price, byte? Star_quality, byte? Star_value, Product_commentSTATE? State, string Title, string Upload_image_url) {
-			return Product_comment.Insert(new Product_commentInfo {
-				Member_id = this.Id, 
+		public Product_commentInfo AddProduct_comment(OrderInfo Order, ProductInfo Product, ProductitemInfo Productitem, string Content, DateTime? Create_time, string Nickname, byte? Star_price, byte? Star_quality, byte? Star_value, Product_commentSTATE? State, string Title, string Upload_image_url) => AddProduct_comment(Order.Id, Product.Id, Productitem.Id, Content, Create_time, Nickname, Star_price, Star_quality, Star_value, State, Title, Upload_image_url);
+		public Product_commentInfo AddProduct_comment(uint? Order_id, uint? Product_id, uint? Productitem_id, string Content, DateTime? Create_time, string Nickname, byte? Star_price, byte? Star_quality, byte? Star_value, Product_commentSTATE? State, string Title, string Upload_image_url) => Product_comment.Insert(new Product_commentInfo {
+			Member_id = this.Id, 
 				Order_id = Order_id, 
 				Product_id = Product_id, 
 				Productitem_id = Productitem_id, 
@@ -339,14 +306,14 @@ namespace pifa.Model {
 				State = State, 
 				Title = Title, 
 				Upload_image_url = Upload_image_url});
+		public Product_commentInfo AddProduct_comment(Product_commentInfo item) {
+			item.Member_id = this.Id;
+			return item.Save();
 		}
 
-		public Product_questionInfo AddProduct_question(Product_questionInfo Product_question, ProductInfo Product, string Content, DateTime? Create_time, string Email, string Name, Product_questionSTATE? State) {
-			return AddProduct_question(Product_question.Id, Product.Id, Content, Create_time, Email, Name, State);
-		}
-		public Product_questionInfo AddProduct_question(uint? Parent_id, uint? Product_id, string Content, DateTime? Create_time, string Email, string Name, Product_questionSTATE? State) {
-			return Product_question.Insert(new Product_questionInfo {
-				Member_id = this.Id, 
+		public Product_questionInfo AddProduct_question(Product_questionInfo Product_question, ProductInfo Product, string Content, DateTime? Create_time, string Email, string Name, Product_questionSTATE? State) => AddProduct_question(Product_question.Id, Product.Id, Content, Create_time, Email, Name, State);
+		public Product_questionInfo AddProduct_question(uint? Parent_id, uint? Product_id, string Content, DateTime? Create_time, string Email, string Name, Product_questionSTATE? State) => Product_question.Insert(new Product_questionInfo {
+			Member_id = this.Id, 
 				Parent_id = Parent_id, 
 				Product_id = Product_id, 
 				Content = Content, 
@@ -354,15 +321,15 @@ namespace pifa.Model {
 				Email = Email, 
 				Name = Name, 
 				State = State});
+		public Product_questionInfo AddProduct_question(Product_questionInfo item) {
+			item.Member_id = this.Id;
+			return item.Save();
 		}
 
-		public ShopInfo AddShop(MarkettypeInfo Markettype, string Address, decimal? Area, string Code, DateTime? Create_time, string Fax, ShopFUNC_SWITCH? Func_switch, ShopICON? Icon, string Kefu, string Main_business, string Nickname, ShopSTATE? State, string Title) {
-			return AddShop(Markettype.Id, Address, Area, Code, Create_time, Fax, Func_switch, Icon, Kefu, Main_business, Nickname, State, Title);
-		}
-		public ShopInfo AddShop(uint? Markettype_id, string Address, decimal? Area, string Code, DateTime? Create_time, string Fax, ShopFUNC_SWITCH? Func_switch, ShopICON? Icon, string Kefu, string Main_business, string Nickname, ShopSTATE? State, string Title) {
-			return Shop.Insert(new ShopInfo {
+		public ShopInfo AddShop(MarkettypeInfo Markettype, string Address, decimal? Area, string Code, DateTime? Create_time, string Fax, ShopFUNC_SWITCH? Func_switch, ShopICON? Icon, string Kefu, string Main_business, string Nickname, ShopSTATE? State, string Title) => AddShop(Markettype.Id, Address, Area, Code, Create_time, Fax, Func_switch, Icon, Kefu, Main_business, Nickname, State, Title);
+		public ShopInfo AddShop(uint? Markettype_id, string Address, decimal? Area, string Code, DateTime? Create_time, string Fax, ShopFUNC_SWITCH? Func_switch, ShopICON? Icon, string Kefu, string Main_business, string Nickname, ShopSTATE? State, string Title) => Shop.Insert(new ShopInfo {
 				Markettype_id = Markettype_id, 
-				Member_id = this.Id, 
+			Member_id = this.Id, 
 				Address = Address, 
 				Area = Area, 
 				Code = Code, 
@@ -375,6 +342,9 @@ namespace pifa.Model {
 				Nickname = Nickname, 
 				State = State, 
 				Title = Title});
+		public ShopInfo AddShop(ShopInfo item) {
+			item.Member_id = this.Id;
+			return item.Save();
 		}
 
 	}

@@ -18,7 +18,7 @@ namespace pifa.BLL {
 
 		#region delete, update, insert
 
-		public static int Delete(uint? Id) {
+		public static int Delete(uint Id) {
 			if (itemCacheTimeout > 0) RemoveCache(GetItem(Id));
 			return dal.Delete(Id);
 		}
@@ -30,10 +30,10 @@ namespace pifa.BLL {
 			if (itemCacheTimeout > 0) RemoveCache(item);
 			return dal.Update(item);
 		}
-		public static pifa.DAL.Factory.SqlUpdateBuild UpdateDiy(uint? Id) {
+		public static pifa.DAL.Factory.SqlUpdateBuild UpdateDiy(uint Id) {
 			return UpdateDiy(null, Id);
 		}
-		public static pifa.DAL.Factory.SqlUpdateBuild UpdateDiy(FactoryInfo item, uint? Id) {
+		public static pifa.DAL.Factory.SqlUpdateBuild UpdateDiy(FactoryInfo item, uint Id) {
 			if (itemCacheTimeout > 0) RemoveCache(item != null ? item : GetItem(Id));
 			return new pifa.DAL.Factory.SqlUpdateBuild(item, Id);
 		}
@@ -73,14 +73,13 @@ namespace pifa.BLL {
 		}
 		#endregion
 
-		public static FactoryInfo GetItem(uint? Id) {
-			if (Id == null) return null;
-			if (itemCacheTimeout <= 0) return dal.GetItem(Id);
+		public static FactoryInfo GetItem(uint Id) {
+			if (itemCacheTimeout <= 0) return Select.WhereId(Id).ToOne();
 			string key = string.Concat("pifa_BLL_Factory_", Id);
 			string value = RedisHelper.Get(key);
 			if (!string.IsNullOrEmpty(value))
-				try { return new FactoryInfo(value); } catch { }
-			FactoryInfo item = dal.GetItem(Id);
+				try { return FactoryInfo.Parse(value); } catch { }
+			FactoryInfo item = Select.WhereId(Id).ToOne();
 			if (item == null) return null;
 			RedisHelper.Set(key, item.Stringify(), itemCacheTimeout);
 			return item;
@@ -110,7 +109,7 @@ namespace pifa.BLL {
 	}
 	public partial class FactorySelectBuild : SelectBuild<FactoryInfo, FactorySelectBuild> {
 		public FactorySelectBuild WhereArea_id(params uint?[] Area_id) {
-			return this.Where1Or("a.`Area_id` = {0}", Area_id);
+			return this.Where1Or("a.`area_id` = {0}", Area_id);
 		}
 		public FactorySelectBuild WhereFranchising(params FranchisingInfo[] items) {
 			if (items == null) return this;
@@ -127,7 +126,7 @@ namespace pifa.BLL {
 			return this.Where1Or("a.`capacity` = {0}", Capacity);
 		}
 		public FactorySelectBuild WhereCapacityLike(params string[] Capacity) {
-			if (Capacity == null) return this;
+			if (Capacity == null || Capacity.Where(a => !string.IsNullOrEmpty(a)).Any() == false) return this;
 			return this.Where1Or(@"a.`capacity` LIKE {0}", Capacity.Select(a => "%" + a + "%").ToArray());
 		}
 		public FactorySelectBuild WhereCreate_timeRange(DateTime? begin) {
@@ -141,56 +140,56 @@ namespace pifa.BLL {
 			return this.Where1Or("a.`main_business` = {0}", Main_business);
 		}
 		public FactorySelectBuild WhereMain_businessLike(params string[] Main_business) {
-			if (Main_business == null) return this;
+			if (Main_business == null || Main_business.Where(a => !string.IsNullOrEmpty(a)).Any() == false) return this;
 			return this.Where1Or(@"a.`main_business` LIKE {0}", Main_business.Select(a => "%" + a + "%").ToArray());
 		}
 		public FactorySelectBuild WhereMin_order(params string[] Min_order) {
 			return this.Where1Or("a.`min_order` = {0}", Min_order);
 		}
 		public FactorySelectBuild WhereMin_orderLike(params string[] Min_order) {
-			if (Min_order == null) return this;
+			if (Min_order == null || Min_order.Where(a => !string.IsNullOrEmpty(a)).Any() == false) return this;
 			return this.Where1Or(@"a.`min_order` LIKE {0}", Min_order.Select(a => "%" + a + "%").ToArray());
 		}
 		public FactorySelectBuild WhereProcess_cost(params string[] Process_cost) {
 			return this.Where1Or("a.`process_cost` = {0}", Process_cost);
 		}
 		public FactorySelectBuild WhereProcess_costLike(params string[] Process_cost) {
-			if (Process_cost == null) return this;
+			if (Process_cost == null || Process_cost.Where(a => !string.IsNullOrEmpty(a)).Any() == false) return this;
 			return this.Where1Or(@"a.`process_cost` LIKE {0}", Process_cost.Select(a => "%" + a + "%").ToArray());
 		}
 		public FactorySelectBuild WhereSampling_period(params string[] Sampling_period) {
 			return this.Where1Or("a.`sampling_period` = {0}", Sampling_period);
 		}
 		public FactorySelectBuild WhereSampling_periodLike(params string[] Sampling_period) {
-			if (Sampling_period == null) return this;
+			if (Sampling_period == null || Sampling_period.Where(a => !string.IsNullOrEmpty(a)).Any() == false) return this;
 			return this.Where1Or(@"a.`sampling_period` LIKE {0}", Sampling_period.Select(a => "%" + a + "%").ToArray());
 		}
 		public FactorySelectBuild WhereSampling_price(params string[] Sampling_price) {
 			return this.Where1Or("a.`sampling_price` = {0}", Sampling_price);
 		}
 		public FactorySelectBuild WhereSampling_priceLike(params string[] Sampling_price) {
-			if (Sampling_price == null) return this;
+			if (Sampling_price == null || Sampling_price.Where(a => !string.IsNullOrEmpty(a)).Any() == false) return this;
 			return this.Where1Or(@"a.`sampling_price` LIKE {0}", Sampling_price.Select(a => "%" + a + "%").ToArray());
 		}
 		public FactorySelectBuild WhereTelphone(params string[] Telphone) {
 			return this.Where1Or("a.`telphone` = {0}", Telphone);
 		}
 		public FactorySelectBuild WhereTelphoneLike(params string[] Telphone) {
-			if (Telphone == null) return this;
+			if (Telphone == null || Telphone.Where(a => !string.IsNullOrEmpty(a)).Any() == false) return this;
 			return this.Where1Or(@"a.`telphone` LIKE {0}", Telphone.Select(a => "%" + a + "%").ToArray());
 		}
 		public FactorySelectBuild WhereTitle(params string[] Title) {
 			return this.Where1Or("a.`title` = {0}", Title);
 		}
 		public FactorySelectBuild WhereTitleLike(params string[] Title) {
-			if (Title == null) return this;
+			if (Title == null || Title.Where(a => !string.IsNullOrEmpty(a)).Any() == false) return this;
 			return this.Where1Or(@"a.`title` LIKE {0}", Title.Select(a => "%" + a + "%").ToArray());
 		}
 		public FactorySelectBuild WhereTurn_single_time(params string[] Turn_single_time) {
 			return this.Where1Or("a.`turn_single_time` = {0}", Turn_single_time);
 		}
 		public FactorySelectBuild WhereTurn_single_timeLike(params string[] Turn_single_time) {
-			if (Turn_single_time == null) return this;
+			if (Turn_single_time == null || Turn_single_time.Where(a => !string.IsNullOrEmpty(a)).Any() == false) return this;
 			return this.Where1Or(@"a.`turn_single_time` LIKE {0}", Turn_single_time.Select(a => "%" + a + "%").ToArray());
 		}
 		protected new FactorySelectBuild Where1Or(string filterFormat, Array values) {

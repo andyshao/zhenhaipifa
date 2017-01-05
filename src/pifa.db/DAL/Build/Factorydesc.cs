@@ -39,25 +39,27 @@ namespace pifa.DAL {
 			return GetItem(dr, ref index) as FactorydescInfo;
 		}
 		public object GetItem(IDataReader dr, ref int index) {
-			return new FactorydescInfo {
-				Factory_id = dr.IsDBNull(++index) ? null : (uint?)dr.GetInt32(index), 
-				Address = dr.IsDBNull(++index) ? null : dr.GetString(index), 
-				Content = dr.IsDBNull(++index) ? null : dr.GetString(index), 
-				Url = dr.IsDBNull(++index) ? null : dr.GetString(index), 
-				Username = dr.IsDBNull(++index) ? null : dr.GetString(index)};
-		}
-		public SelectBuild<FactorydescInfo> Select {
-			get { return SelectBuild<FactorydescInfo>.From(this, SqlHelper.Instance); }
+			FactorydescInfo item = new FactorydescInfo();
+				if (!dr.IsDBNull(++index)) item.Factory_id = (uint?)dr.GetInt32(index);
+				if (!dr.IsDBNull(++index)) item.Address = dr.GetString(index);
+				if (!dr.IsDBNull(++index)) item.Content = dr.GetString(index);
+				if (!dr.IsDBNull(++index)) item.Url = dr.GetString(index);
+				if (!dr.IsDBNull(++index)) item.Username = dr.GetString(index);
+			return item;
 		}
 		#endregion
 
-		public int Delete(uint? Factory_id) {
+		public int Delete(uint Factory_id) {
+			return SqlHelper.ExecuteNonQuery(string.Concat(TSQL.Delete, "`factory_id` = ?factory_id"), 
+				GetParameter("?factory_id", MySqlDbType.UInt32, 10, Factory_id));
+		}
+		public int DeleteByFactory_id(uint? Factory_id) {
 			return SqlHelper.ExecuteNonQuery(string.Concat(TSQL.Delete, "`factory_id` = ?factory_id"), 
 				GetParameter("?factory_id", MySqlDbType.UInt32, 10, Factory_id));
 		}
 
 		public int Update(FactorydescInfo item) {
-			return new SqlUpdateBuild(null, item.Factory_id)
+			return new SqlUpdateBuild(null, item.Factory_id.Value)
 				.SetAddress(item.Address)
 				.SetContent(item.Content)
 				.SetUrl(item.Url)
@@ -69,7 +71,7 @@ namespace pifa.DAL {
 			protected string _fields;
 			protected string _where;
 			protected List<MySqlParameter> _parameters = new List<MySqlParameter>();
-			public SqlUpdateBuild(FactorydescInfo item, uint? Factory_id) {
+			public SqlUpdateBuild(FactorydescInfo item, uint Factory_id) {
 				_item = item;
 				_where = SqlHelper.Addslashes("`factory_id` = {0}", Factory_id);
 			}
@@ -97,23 +99,23 @@ namespace pifa.DAL {
 			}
 			public SqlUpdateBuild SetAddress(string value) {
 				if (_item != null) _item.Address = value;
-				return this.Set("`address`", string.Concat("?address_", _parameters.Count), 
-					GetParameter(string.Concat("?address_", _parameters.Count), MySqlDbType.VarChar, 255, value));
+				return this.Set("`address`", $"?address_{_parameters.Count}", 
+					GetParameter($"?address_{{_parameters.Count}}", MySqlDbType.VarChar, 255, value));
 			}
 			public SqlUpdateBuild SetContent(string value) {
 				if (_item != null) _item.Content = value;
-				return this.Set("`content`", string.Concat("?content_", _parameters.Count), 
-					GetParameter(string.Concat("?content_", _parameters.Count), MySqlDbType.Text, -1, value));
+				return this.Set("`content`", $"?content_{_parameters.Count}", 
+					GetParameter($"?content_{{_parameters.Count}}", MySqlDbType.Text, -1, value));
 			}
 			public SqlUpdateBuild SetUrl(string value) {
 				if (_item != null) _item.Url = value;
-				return this.Set("`url`", string.Concat("?url_", _parameters.Count), 
-					GetParameter(string.Concat("?url_", _parameters.Count), MySqlDbType.VarChar, 255, value));
+				return this.Set("`url`", $"?url_{_parameters.Count}", 
+					GetParameter($"?url_{{_parameters.Count}}", MySqlDbType.VarChar, 255, value));
 			}
 			public SqlUpdateBuild SetUsername(string value) {
 				if (_item != null) _item.Username = value;
-				return this.Set("`username`", string.Concat("?username_", _parameters.Count), 
-					GetParameter(string.Concat("?username_", _parameters.Count), MySqlDbType.VarChar, 255, value));
+				return this.Set("`username`", $"?username_{_parameters.Count}", 
+					GetParameter($"?username_{{_parameters.Count}}", MySqlDbType.VarChar, 255, value));
 			}
 		}
 		#endregion
@@ -123,8 +125,5 @@ namespace pifa.DAL {
 			return item;
 		}
 
-		public FactorydescInfo GetItem(uint? Factory_id) {
-			return this.Select.Where("a.`factory_id` = {0}", Factory_id).ToOne();
-		}
 	}
 }

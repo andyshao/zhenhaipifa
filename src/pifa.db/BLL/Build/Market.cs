@@ -18,7 +18,7 @@ namespace pifa.BLL {
 
 		#region delete, update, insert
 
-		public static int Delete(uint? Id) {
+		public static int Delete(uint Id) {
 			if (itemCacheTimeout > 0) RemoveCache(GetItem(Id));
 			return dal.Delete(Id);
 		}
@@ -30,10 +30,10 @@ namespace pifa.BLL {
 			if (itemCacheTimeout > 0) RemoveCache(item);
 			return dal.Update(item);
 		}
-		public static pifa.DAL.Market.SqlUpdateBuild UpdateDiy(uint? Id) {
+		public static pifa.DAL.Market.SqlUpdateBuild UpdateDiy(uint Id) {
 			return UpdateDiy(null, Id);
 		}
-		public static pifa.DAL.Market.SqlUpdateBuild UpdateDiy(MarketInfo item, uint? Id) {
+		public static pifa.DAL.Market.SqlUpdateBuild UpdateDiy(MarketInfo item, uint Id) {
 			if (itemCacheTimeout > 0) RemoveCache(item != null ? item : GetItem(Id));
 			return new pifa.DAL.Market.SqlUpdateBuild(item, Id);
 		}
@@ -61,14 +61,13 @@ namespace pifa.BLL {
 		}
 		#endregion
 
-		public static MarketInfo GetItem(uint? Id) {
-			if (Id == null) return null;
-			if (itemCacheTimeout <= 0) return dal.GetItem(Id);
+		public static MarketInfo GetItem(uint Id) {
+			if (itemCacheTimeout <= 0) return Select.WhereId(Id).ToOne();
 			string key = string.Concat("pifa_BLL_Market_", Id);
 			string value = RedisHelper.Get(key);
 			if (!string.IsNullOrEmpty(value))
-				try { return new MarketInfo(value); } catch { }
-			MarketInfo item = dal.GetItem(Id);
+				try { return MarketInfo.Parse(value); } catch { }
+			MarketInfo item = Select.WhereId(Id).ToOne();
 			if (item == null) return null;
 			RedisHelper.Set(key, item.Stringify(), itemCacheTimeout);
 			return item;
@@ -98,7 +97,7 @@ namespace pifa.BLL {
 	}
 	public partial class MarketSelectBuild : SelectBuild<MarketInfo, MarketSelectBuild> {
 		public MarketSelectBuild WhereArea_id(params uint?[] Area_id) {
-			return this.Where1Or("a.`Area_id` = {0}", Area_id);
+			return this.Where1Or("a.`area_id` = {0}", Area_id);
 		}
 		public MarketSelectBuild WhereMember(params MemberInfo[] items) {
 			if (items == null) return this;
@@ -122,7 +121,7 @@ namespace pifa.BLL {
 			return this.Where1Or("a.`title` = {0}", Title);
 		}
 		public MarketSelectBuild WhereTitleLike(params string[] Title) {
-			if (Title == null) return this;
+			if (Title == null || Title.Where(a => !string.IsNullOrEmpty(a)).Any() == false) return this;
 			return this.Where1Or(@"a.`title` LIKE {0}", Title.Select(a => "%" + a + "%").ToArray());
 		}
 		protected new MarketSelectBuild Where1Or(string filterFormat, Array values) {

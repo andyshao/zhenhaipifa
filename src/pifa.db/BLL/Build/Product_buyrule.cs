@@ -18,7 +18,7 @@ namespace pifa.BLL {
 
 		#region delete, update, insert
 
-		public static int Delete(uint? Id) {
+		public static int Delete(uint Id) {
 			if (itemCacheTimeout > 0) RemoveCache(GetItem(Id));
 			return dal.Delete(Id);
 		}
@@ -30,10 +30,10 @@ namespace pifa.BLL {
 			if (itemCacheTimeout > 0) RemoveCache(item);
 			return dal.Update(item);
 		}
-		public static pifa.DAL.Product_buyrule.SqlUpdateBuild UpdateDiy(uint? Id) {
+		public static pifa.DAL.Product_buyrule.SqlUpdateBuild UpdateDiy(uint Id) {
 			return UpdateDiy(null, Id);
 		}
-		public static pifa.DAL.Product_buyrule.SqlUpdateBuild UpdateDiy(Product_buyruleInfo item, uint? Id) {
+		public static pifa.DAL.Product_buyrule.SqlUpdateBuild UpdateDiy(Product_buyruleInfo item, uint Id) {
 			if (itemCacheTimeout > 0) RemoveCache(item != null ? item : GetItem(Id));
 			return new pifa.DAL.Product_buyrule.SqlUpdateBuild(item, Id);
 		}
@@ -62,14 +62,13 @@ namespace pifa.BLL {
 		}
 		#endregion
 
-		public static Product_buyruleInfo GetItem(uint? Id) {
-			if (Id == null) return null;
-			if (itemCacheTimeout <= 0) return dal.GetItem(Id);
+		public static Product_buyruleInfo GetItem(uint Id) {
+			if (itemCacheTimeout <= 0) return Select.WhereId(Id).ToOne();
 			string key = string.Concat("pifa_BLL_Product_buyrule_", Id);
 			string value = RedisHelper.Get(key);
 			if (!string.IsNullOrEmpty(value))
-				try { return new Product_buyruleInfo(value); } catch { }
-			Product_buyruleInfo item = dal.GetItem(Id);
+				try { return Product_buyruleInfo.Parse(value); } catch { }
+			Product_buyruleInfo item = Select.WhereId(Id).ToOne();
 			if (item == null) return null;
 			RedisHelper.Set(key, item.Stringify(), itemCacheTimeout);
 			return item;
@@ -93,7 +92,7 @@ namespace pifa.BLL {
 	}
 	public partial class Product_buyruleSelectBuild : SelectBuild<Product_buyruleInfo, Product_buyruleSelectBuild> {
 		public Product_buyruleSelectBuild WhereProduct_id(params uint?[] Product_id) {
-			return this.Where1Or("a.`Product_id` = {0}", Product_id);
+			return this.Where1Or("a.`product_id` = {0}", Product_id);
 		}
 		public Product_buyruleSelectBuild WhereId(params uint?[] Id) {
 			return this.Where1Or("a.`id` = {0}", Id);

@@ -4,10 +4,12 @@ using System.Collections.Generic;
 using System.Linq;
 using System.ComponentModel;
 using System.Reflection;
+using Newtonsoft.Json;
 using pifa.BLL;
 
 namespace pifa.Model {
 
+	[JsonObject(MemberSerialization.OptIn)]
 	public partial class Order_productitemInfo {
 		#region fields
 		private uint? _Order_id;
@@ -22,7 +24,7 @@ namespace pifa.Model {
 
 		public Order_productitemInfo() { }
 
-		#region 独创的序列化，反序列化
+		#region 序列化，反序列化
 		protected static readonly string StringifySplit = "@<Order_productitem(Info]?#>";
 		public string Stringify() {
 			return string.Concat(
@@ -33,23 +35,31 @@ namespace pifa.Model {
 				_State == null ? "null" : _State.ToInt64().ToString(), "|",
 				_Title == null ? "null" : _Title.Replace("|", StringifySplit));
 		}
-		public Order_productitemInfo(string stringify) {
+		public static Order_productitemInfo Parse(string stringify) {
 			string[] ret = stringify.Split(new char[] { '|' }, 6, StringSplitOptions.None);
 			if (ret.Length != 6) throw new Exception("格式不正确，Order_productitemInfo：" + stringify);
-			if (string.Compare("null", ret[0]) != 0) _Order_id = uint.Parse(ret[0]);
-			if (string.Compare("null", ret[1]) != 0) _Productitem_id = uint.Parse(ret[1]);
-			if (string.Compare("null", ret[2]) != 0) _Number = uint.Parse(ret[2]);
-			if (string.Compare("null", ret[3]) != 0) _Price = decimal.Parse(ret[3]);
-			if (string.Compare("null", ret[4]) != 0) _State = (Order_productitemSTATE)long.Parse(ret[4]);
-			if (string.Compare("null", ret[5]) != 0) _Title = ret[5].Replace(StringifySplit, "|");
+			Order_productitemInfo item = new Order_productitemInfo();
+			if (string.Compare("null", ret[0]) != 0) item.Order_id = uint.Parse(ret[0]);
+			if (string.Compare("null", ret[1]) != 0) item.Productitem_id = uint.Parse(ret[1]);
+			if (string.Compare("null", ret[2]) != 0) item.Number = uint.Parse(ret[2]);
+			if (string.Compare("null", ret[3]) != 0) item.Price = decimal.Parse(ret[3]);
+			if (string.Compare("null", ret[4]) != 0) item.State = (Order_productitemSTATE)long.Parse(ret[4]);
+			if (string.Compare("null", ret[5]) != 0) item.Title = ret[5].Replace(StringifySplit, "|");
+			return item;
 		}
 		#endregion
 
 		#region override
-		private static Dictionary<string, bool> __jsonIgnore;
-		private static object __jsonIgnore_lock = new object();
+		private static Lazy<Dictionary<string, bool>> __jsonIgnoreLazy = new Lazy<Dictionary<string, bool>>(() => {
+			FieldInfo field = typeof(Order_productitemInfo).GetField("JsonIgnore");
+			Dictionary<string, bool> ret = new Dictionary<string, bool>();
+			if (field != null) string.Concat(field.GetValue(null)).Split(',').ToList().ForEach(f => {
+				if (!string.IsNullOrEmpty(f)) ret[f] = true;
+			});
+			return ret;
+		});
+		private static Dictionary<string, bool> __jsonIgnore => __jsonIgnoreLazy.Value;
 		public override string ToString() {
-			this.Init__jsonIgnore();
 			string json = string.Concat(
 				__jsonIgnore.ContainsKey("Order_id") ? string.Empty : string.Format(", Order_id : {0}", Order_id == null ? "null" : Order_id.ToString()), 
 				__jsonIgnore.ContainsKey("Productitem_id") ? string.Empty : string.Format(", Productitem_id : {0}", Productitem_id == null ? "null" : Productitem_id.ToString()), 
@@ -59,45 +69,15 @@ namespace pifa.Model {
 				__jsonIgnore.ContainsKey("Title") ? string.Empty : string.Format(", Title : {0}", Title == null ? "null" : string.Format("'{0}'", Title.Replace("\\", "\\\\").Replace("\r\n", "\\r\\n").Replace("'", "\\'"))), " }");
 			return string.Concat("{", json.Substring(1));
 		}
-		public IDictionary ToBson() {
-			this.Init__jsonIgnore();
+		public IDictionary ToBson(bool allField = false) {
 			IDictionary ht = new Hashtable();
-			if (!__jsonIgnore.ContainsKey("Order_id")) ht["Order_id"] = Order_id;
-			if (!__jsonIgnore.ContainsKey("Productitem_id")) ht["Productitem_id"] = Productitem_id;
-			if (!__jsonIgnore.ContainsKey("Number")) ht["Number"] = Number;
-			if (!__jsonIgnore.ContainsKey("Price")) ht["Price"] = Price;
-			if (!__jsonIgnore.ContainsKey("State")) ht["State"] = State?.ToDescriptionOrString();
-			if (!__jsonIgnore.ContainsKey("Title")) ht["Title"] = Title;
+			if (allField || !__jsonIgnore.ContainsKey("Order_id")) ht["Order_id"] = Order_id;
+			if (allField || !__jsonIgnore.ContainsKey("Productitem_id")) ht["Productitem_id"] = Productitem_id;
+			if (allField || !__jsonIgnore.ContainsKey("Number")) ht["Number"] = Number;
+			if (allField || !__jsonIgnore.ContainsKey("Price")) ht["Price"] = Price;
+			if (allField || !__jsonIgnore.ContainsKey("State")) ht["State"] = State?.ToDescriptionOrString();
+			if (allField || !__jsonIgnore.ContainsKey("Title")) ht["Title"] = Title;
 			return ht;
-		}
-		private void Init__jsonIgnore() {
-			if (__jsonIgnore == null) {
-				lock (__jsonIgnore_lock) {
-					if (__jsonIgnore == null) {
-						FieldInfo field = typeof(Order_productitemInfo).GetField("JsonIgnore");
-						__jsonIgnore = new Dictionary<string, bool>();
-						if (field != null) {
-							string[] fs = string.Concat(field.GetValue(null)).Split(',');
-							foreach (string f in fs) if (!string.IsNullOrEmpty(f)) __jsonIgnore[f] = true;
-						}
-					}
-				}
-			}
-		}
-		public override bool Equals(object obj) {
-			Order_productitemInfo item = obj as Order_productitemInfo;
-			if (item == null) return false;
-			return this.ToString().Equals(item.ToString());
-		}
-		public override int GetHashCode() {
-			return this.ToString().GetHashCode();
-		}
-		public static bool operator ==(Order_productitemInfo op1, Order_productitemInfo op2) {
-			if (object.Equals(op1, null)) return object.Equals(op2, null);
-			return op1.Equals(op2);
-		}
-		public static bool operator !=(Order_productitemInfo op1, Order_productitemInfo op2) {
-			return !(op1 == op2);
 		}
 		public object this[string key] {
 			get { return this.GetType().GetProperty(key).GetValue(this); }
@@ -109,7 +89,7 @@ namespace pifa.Model {
 		/// <summary>
 		/// 订单
 		/// </summary>
-		public uint? Order_id {
+		[JsonProperty] public uint? Order_id {
 			get { return _Order_id; }
 			set {
 				if (_Order_id != value) _obj_order = null;
@@ -118,7 +98,7 @@ namespace pifa.Model {
 		}
 		public OrderInfo Obj_order {
 			get {
-				if (_obj_order == null) _obj_order = Order.GetItem(_Order_id);
+				if (_obj_order == null) _obj_order = Order.GetItem(_Order_id.Value);
 				return _obj_order;
 			}
 			internal set { _obj_order = value; }
@@ -126,7 +106,7 @@ namespace pifa.Model {
 		/// <summary>
 		/// 产品项
 		/// </summary>
-		public uint? Productitem_id {
+		[JsonProperty] public uint? Productitem_id {
 			get { return _Productitem_id; }
 			set {
 				if (_Productitem_id != value) _obj_productitem = null;
@@ -135,7 +115,7 @@ namespace pifa.Model {
 		}
 		public ProductitemInfo Obj_productitem {
 			get {
-				if (_obj_productitem == null) _obj_productitem = Productitem.GetItem(_Productitem_id);
+				if (_obj_productitem == null) _obj_productitem = Productitem.GetItem(_Productitem_id.Value);
 				return _obj_productitem;
 			}
 			internal set { _obj_productitem = value; }
@@ -143,35 +123,42 @@ namespace pifa.Model {
 		/// <summary>
 		/// 数量
 		/// </summary>
-		public uint? Number {
+		[JsonProperty] public uint? Number {
 			get { return _Number; }
 			set { _Number = value; }
 		}
 		/// <summary>
 		/// 价格
 		/// </summary>
-		public decimal? Price {
+		[JsonProperty] public decimal? Price {
 			get { return _Price; }
 			set { _Price = value; }
 		}
 		/// <summary>
 		/// 状态
 		/// </summary>
-		public Order_productitemSTATE? State {
+		[JsonProperty] public Order_productitemSTATE? State {
 			get { return _State; }
 			set { _State = value; }
 		}
 		/// <summary>
 		/// 商品名称
 		/// </summary>
-		public string Title {
+		[JsonProperty] public string Title {
 			get { return _Title; }
 			set { _Title = value; }
 		}
 		#endregion
 
 		public pifa.DAL.Order_productitem.SqlUpdateBuild UpdateDiy {
-			get { return Order_productitem.UpdateDiy(this, _Order_id, _Productitem_id); }
+			get { return Order_productitem.UpdateDiy(this, _Order_id.Value, _Productitem_id.Value); }
+		}
+		public Order_productitemInfo Save() {
+			if (this.Order_id != null && this.Productitem_id != null) {
+				Order_productitem.Update(this);
+				return this;
+			}
+			return Order_productitem.Insert(this);
 		}
 	}
 	public enum Order_productitemSTATE {

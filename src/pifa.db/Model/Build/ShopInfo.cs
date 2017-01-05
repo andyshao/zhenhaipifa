@@ -4,10 +4,12 @@ using System.Collections.Generic;
 using System.Linq;
 using System.ComponentModel;
 using System.Reflection;
+using Newtonsoft.Json;
 using pifa.BLL;
 
 namespace pifa.Model {
 
+	[JsonObject(MemberSerialization.OptIn)]
 	public partial class ShopInfo {
 		#region fields
 		private uint? _Id;
@@ -31,7 +33,7 @@ namespace pifa.Model {
 
 		public ShopInfo() { }
 
-		#region 独创的序列化，反序列化
+		#region 序列化，反序列化
 		protected static readonly string StringifySplit = "@<Shop(Info]?#>";
 		public string Stringify() {
 			return string.Concat(
@@ -51,32 +53,40 @@ namespace pifa.Model {
 				_State == null ? "null" : _State.ToInt64().ToString(), "|",
 				_Title == null ? "null" : _Title.Replace("|", StringifySplit));
 		}
-		public ShopInfo(string stringify) {
+		public static ShopInfo Parse(string stringify) {
 			string[] ret = stringify.Split(new char[] { '|' }, 15, StringSplitOptions.None);
 			if (ret.Length != 15) throw new Exception("格式不正确，ShopInfo：" + stringify);
-			if (string.Compare("null", ret[0]) != 0) _Id = uint.Parse(ret[0]);
-			if (string.Compare("null", ret[1]) != 0) _Markettype_id = uint.Parse(ret[1]);
-			if (string.Compare("null", ret[2]) != 0) _Member_id = uint.Parse(ret[2]);
-			if (string.Compare("null", ret[3]) != 0) _Address = ret[3].Replace(StringifySplit, "|");
-			if (string.Compare("null", ret[4]) != 0) _Area = decimal.Parse(ret[4]);
-			if (string.Compare("null", ret[5]) != 0) _Code = ret[5].Replace(StringifySplit, "|");
-			if (string.Compare("null", ret[6]) != 0) _Create_time = new DateTime(long.Parse(ret[6]));
-			if (string.Compare("null", ret[7]) != 0) _Fax = ret[7].Replace(StringifySplit, "|");
-			if (string.Compare("null", ret[8]) != 0) _Func_switch = (ShopFUNC_SWITCH)long.Parse(ret[8]);
-			if (string.Compare("null", ret[9]) != 0) _Icon = (ShopICON)long.Parse(ret[9]);
-			if (string.Compare("null", ret[10]) != 0) _Kefu = ret[10].Replace(StringifySplit, "|");
-			if (string.Compare("null", ret[11]) != 0) _Main_business = ret[11].Replace(StringifySplit, "|");
-			if (string.Compare("null", ret[12]) != 0) _Nickname = ret[12].Replace(StringifySplit, "|");
-			if (string.Compare("null", ret[13]) != 0) _State = (ShopSTATE)long.Parse(ret[13]);
-			if (string.Compare("null", ret[14]) != 0) _Title = ret[14].Replace(StringifySplit, "|");
+			ShopInfo item = new ShopInfo();
+			if (string.Compare("null", ret[0]) != 0) item.Id = uint.Parse(ret[0]);
+			if (string.Compare("null", ret[1]) != 0) item.Markettype_id = uint.Parse(ret[1]);
+			if (string.Compare("null", ret[2]) != 0) item.Member_id = uint.Parse(ret[2]);
+			if (string.Compare("null", ret[3]) != 0) item.Address = ret[3].Replace(StringifySplit, "|");
+			if (string.Compare("null", ret[4]) != 0) item.Area = decimal.Parse(ret[4]);
+			if (string.Compare("null", ret[5]) != 0) item.Code = ret[5].Replace(StringifySplit, "|");
+			if (string.Compare("null", ret[6]) != 0) item.Create_time = new DateTime(long.Parse(ret[6]));
+			if (string.Compare("null", ret[7]) != 0) item.Fax = ret[7].Replace(StringifySplit, "|");
+			if (string.Compare("null", ret[8]) != 0) item.Func_switch = (ShopFUNC_SWITCH)long.Parse(ret[8]);
+			if (string.Compare("null", ret[9]) != 0) item.Icon = (ShopICON)long.Parse(ret[9]);
+			if (string.Compare("null", ret[10]) != 0) item.Kefu = ret[10].Replace(StringifySplit, "|");
+			if (string.Compare("null", ret[11]) != 0) item.Main_business = ret[11].Replace(StringifySplit, "|");
+			if (string.Compare("null", ret[12]) != 0) item.Nickname = ret[12].Replace(StringifySplit, "|");
+			if (string.Compare("null", ret[13]) != 0) item.State = (ShopSTATE)long.Parse(ret[13]);
+			if (string.Compare("null", ret[14]) != 0) item.Title = ret[14].Replace(StringifySplit, "|");
+			return item;
 		}
 		#endregion
 
 		#region override
-		private static Dictionary<string, bool> __jsonIgnore;
-		private static object __jsonIgnore_lock = new object();
+		private static Lazy<Dictionary<string, bool>> __jsonIgnoreLazy = new Lazy<Dictionary<string, bool>>(() => {
+			FieldInfo field = typeof(ShopInfo).GetField("JsonIgnore");
+			Dictionary<string, bool> ret = new Dictionary<string, bool>();
+			if (field != null) string.Concat(field.GetValue(null)).Split(',').ToList().ForEach(f => {
+				if (!string.IsNullOrEmpty(f)) ret[f] = true;
+			});
+			return ret;
+		});
+		private static Dictionary<string, bool> __jsonIgnore => __jsonIgnoreLazy.Value;
 		public override string ToString() {
-			this.Init__jsonIgnore();
 			string json = string.Concat(
 				__jsonIgnore.ContainsKey("Id") ? string.Empty : string.Format(", Id : {0}", Id == null ? "null" : Id.ToString()), 
 				__jsonIgnore.ContainsKey("Markettype_id") ? string.Empty : string.Format(", Markettype_id : {0}", Markettype_id == null ? "null" : Markettype_id.ToString()), 
@@ -95,54 +105,24 @@ namespace pifa.Model {
 				__jsonIgnore.ContainsKey("Title") ? string.Empty : string.Format(", Title : {0}", Title == null ? "null" : string.Format("'{0}'", Title.Replace("\\", "\\\\").Replace("\r\n", "\\r\\n").Replace("'", "\\'"))), " }");
 			return string.Concat("{", json.Substring(1));
 		}
-		public IDictionary ToBson() {
-			this.Init__jsonIgnore();
+		public IDictionary ToBson(bool allField = false) {
 			IDictionary ht = new Hashtable();
-			if (!__jsonIgnore.ContainsKey("Id")) ht["Id"] = Id;
-			if (!__jsonIgnore.ContainsKey("Markettype_id")) ht["Markettype_id"] = Markettype_id;
-			if (!__jsonIgnore.ContainsKey("Member_id")) ht["Member_id"] = Member_id;
-			if (!__jsonIgnore.ContainsKey("Address")) ht["Address"] = Address;
-			if (!__jsonIgnore.ContainsKey("Area")) ht["Area"] = Area;
-			if (!__jsonIgnore.ContainsKey("Code")) ht["Code"] = Code;
-			if (!__jsonIgnore.ContainsKey("Create_time")) ht["Create_time"] = Create_time;
-			if (!__jsonIgnore.ContainsKey("Fax")) ht["Fax"] = Fax;
-			if (!__jsonIgnore.ContainsKey("Func_switch")) ht["Func_switch"] = Func_switch?.ToInt64().ToSet<ShopFUNC_SWITCH>().Select<ShopFUNC_SWITCH, string>(a => a.ToDescriptionOrString());
-			if (!__jsonIgnore.ContainsKey("Icon")) ht["Icon"] = Icon?.ToInt64().ToSet<ShopICON>().Select<ShopICON, string>(a => a.ToDescriptionOrString());
-			if (!__jsonIgnore.ContainsKey("Kefu")) ht["Kefu"] = Kefu;
-			if (!__jsonIgnore.ContainsKey("Main_business")) ht["Main_business"] = Main_business;
-			if (!__jsonIgnore.ContainsKey("Nickname")) ht["Nickname"] = Nickname;
-			if (!__jsonIgnore.ContainsKey("State")) ht["State"] = State?.ToDescriptionOrString();
-			if (!__jsonIgnore.ContainsKey("Title")) ht["Title"] = Title;
+			if (allField || !__jsonIgnore.ContainsKey("Id")) ht["Id"] = Id;
+			if (allField || !__jsonIgnore.ContainsKey("Markettype_id")) ht["Markettype_id"] = Markettype_id;
+			if (allField || !__jsonIgnore.ContainsKey("Member_id")) ht["Member_id"] = Member_id;
+			if (allField || !__jsonIgnore.ContainsKey("Address")) ht["Address"] = Address;
+			if (allField || !__jsonIgnore.ContainsKey("Area")) ht["Area"] = Area;
+			if (allField || !__jsonIgnore.ContainsKey("Code")) ht["Code"] = Code;
+			if (allField || !__jsonIgnore.ContainsKey("Create_time")) ht["Create_time"] = Create_time;
+			if (allField || !__jsonIgnore.ContainsKey("Fax")) ht["Fax"] = Fax;
+			if (allField || !__jsonIgnore.ContainsKey("Func_switch")) ht["Func_switch"] = Func_switch?.ToInt64().ToSet<ShopFUNC_SWITCH>().Select(a => a.ToDescriptionOrString());
+			if (allField || !__jsonIgnore.ContainsKey("Icon")) ht["Icon"] = Icon?.ToInt64().ToSet<ShopICON>().Select(a => a.ToDescriptionOrString());
+			if (allField || !__jsonIgnore.ContainsKey("Kefu")) ht["Kefu"] = Kefu;
+			if (allField || !__jsonIgnore.ContainsKey("Main_business")) ht["Main_business"] = Main_business;
+			if (allField || !__jsonIgnore.ContainsKey("Nickname")) ht["Nickname"] = Nickname;
+			if (allField || !__jsonIgnore.ContainsKey("State")) ht["State"] = State?.ToDescriptionOrString();
+			if (allField || !__jsonIgnore.ContainsKey("Title")) ht["Title"] = Title;
 			return ht;
-		}
-		private void Init__jsonIgnore() {
-			if (__jsonIgnore == null) {
-				lock (__jsonIgnore_lock) {
-					if (__jsonIgnore == null) {
-						FieldInfo field = typeof(ShopInfo).GetField("JsonIgnore");
-						__jsonIgnore = new Dictionary<string, bool>();
-						if (field != null) {
-							string[] fs = string.Concat(field.GetValue(null)).Split(',');
-							foreach (string f in fs) if (!string.IsNullOrEmpty(f)) __jsonIgnore[f] = true;
-						}
-					}
-				}
-			}
-		}
-		public override bool Equals(object obj) {
-			ShopInfo item = obj as ShopInfo;
-			if (item == null) return false;
-			return this.ToString().Equals(item.ToString());
-		}
-		public override int GetHashCode() {
-			return this.ToString().GetHashCode();
-		}
-		public static bool operator ==(ShopInfo op1, ShopInfo op2) {
-			if (object.Equals(op1, null)) return object.Equals(op2, null);
-			return op1.Equals(op2);
-		}
-		public static bool operator !=(ShopInfo op1, ShopInfo op2) {
-			return !(op1 == op2);
 		}
 		public object this[string key] {
 			get { return this.GetType().GetProperty(key).GetValue(this); }
@@ -154,14 +134,14 @@ namespace pifa.Model {
 		/// <summary>
 		/// logo,主图以id命名
 		/// </summary>
-		public uint? Id {
+		[JsonProperty] public uint? Id {
 			get { return _Id; }
 			set { _Id = value; }
 		}
 		/// <summary>
 		/// 市场楼层
 		/// </summary>
-		public uint? Markettype_id {
+		[JsonProperty] public uint? Markettype_id {
 			get { return _Markettype_id; }
 			set {
 				if (_Markettype_id != value) _obj_markettype = null;
@@ -170,7 +150,7 @@ namespace pifa.Model {
 		}
 		public MarkettypeInfo Obj_markettype {
 			get {
-				if (_obj_markettype == null) _obj_markettype = Markettype.GetItem(_Markettype_id);
+				if (_obj_markettype == null) _obj_markettype = Markettype.GetItem(_Markettype_id.Value);
 				return _obj_markettype;
 			}
 			internal set { _obj_markettype = value; }
@@ -178,7 +158,7 @@ namespace pifa.Model {
 		/// <summary>
 		/// 所属人
 		/// </summary>
-		public uint? Member_id {
+		[JsonProperty] public uint? Member_id {
 			get { return _Member_id; }
 			set {
 				if (_Member_id != value) _obj_member = null;
@@ -187,7 +167,7 @@ namespace pifa.Model {
 		}
 		public MemberInfo Obj_member {
 			get {
-				if (_obj_member == null) _obj_member = Member.GetItem(_Member_id);
+				if (_obj_member == null) _obj_member = Member.GetItem(_Member_id.Value);
 				return _obj_member;
 			}
 			internal set { _obj_member = value; }
@@ -195,84 +175,84 @@ namespace pifa.Model {
 		/// <summary>
 		/// 地址
 		/// </summary>
-		public string Address {
+		[JsonProperty] public string Address {
 			get { return _Address; }
 			set { _Address = value; }
 		}
 		/// <summary>
 		/// 面积
 		/// </summary>
-		public decimal? Area {
+		[JsonProperty] public decimal? Area {
 			get { return _Area; }
 			set { _Area = value; }
 		}
 		/// <summary>
 		/// 商位号
 		/// </summary>
-		public string Code {
+		[JsonProperty] public string Code {
 			get { return _Code; }
 			set { _Code = value; }
 		}
 		/// <summary>
 		/// 创建时间
 		/// </summary>
-		public DateTime? Create_time {
+		[JsonProperty] public DateTime? Create_time {
 			get { return _Create_time; }
 			set { _Create_time = value; }
 		}
 		/// <summary>
 		/// 传真
 		/// </summary>
-		public string Fax {
+		[JsonProperty] public string Fax {
 			get { return _Fax; }
 			set { _Fax = value; }
 		}
 		/// <summary>
 		/// 功能开关
 		/// </summary>
-		public ShopFUNC_SWITCH? Func_switch {
+		[JsonProperty] public ShopFUNC_SWITCH? Func_switch {
 			get { return _Func_switch; }
 			set { _Func_switch = value; }
 		}
 		/// <summary>
 		/// 点亮图标
 		/// </summary>
-		public ShopICON? Icon {
+		[JsonProperty] public ShopICON? Icon {
 			get { return _Icon; }
 			set { _Icon = value; }
 		}
 		/// <summary>
 		/// 客服
 		/// </summary>
-		public string Kefu {
+		[JsonProperty] public string Kefu {
 			get { return _Kefu; }
 			set { _Kefu = value; }
 		}
 		/// <summary>
 		/// 店铺主营
 		/// </summary>
-		public string Main_business {
+		[JsonProperty] public string Main_business {
 			get { return _Main_business; }
 			set { _Main_business = value; }
 		}
 		/// <summary>
 		/// 姓名
 		/// </summary>
-		public string Nickname {
+		[JsonProperty] public string Nickname {
 			get { return _Nickname; }
 			set { _Nickname = value; }
 		}
 		/// <summary>
 		/// 状态
 		/// </summary>
-		public ShopSTATE? State {
+		[JsonProperty] public ShopSTATE? State {
 			get { return _State; }
 			set { _State = value; }
 		}
 		/// <summary>
 		/// 店铺名称
 		/// </summary>
-		public string Title {
+		[JsonProperty] public string Title {
 			get { return _Title; }
 			set { _Title = value; }
 		}
@@ -325,95 +305,93 @@ namespace pifa.Model {
 		#endregion
 
 		public pifa.DAL.Shop.SqlUpdateBuild UpdateDiy {
-			get { return Shop.UpdateDiy(this, _Id); }
+			get { return Shop.UpdateDiy(this, _Id.Value); }
 		}
-		public Member_shopInfo FlagMember(MemberInfo Member, DateTime? Create_time) {
-			return FlagMember(Member.Id, Create_time);
+		public ShopInfo Save() {
+			if (this.Id != null) {
+				Shop.Update(this);
+				return this;
+			}
+			this.Create_time = DateTime.Now;
+			return Shop.Insert(this);
 		}
+		public Member_shopInfo FlagMember(MemberInfo Member, DateTime? Create_time) => FlagMember(Member.Id, Create_time);
 		public Member_shopInfo FlagMember(uint? Member_id, DateTime? Create_time) {
-			Member_shopInfo item = Member_shop.GetItem(Member_id, this.Id);
+			Member_shopInfo item = Member_shop.GetItem(Member_id.Value, this.Id.Value);
 			if (item == null) item = Member_shop.Insert(new Member_shopInfo {
 				Member_id = Member_id, 
-				Shop_id = this.Id, 
+			Shop_id = this.Id, 
 				Create_time = Create_time});
 			else item.UpdateDiy
 					.SetCreate_time(Create_time).ExecuteNonQuery();
 			return item;
 		}
 
-		public int UnflagMember(MemberInfo Member) {
-			return UnflagMember(Member.Id);
-		}
-		public int UnflagMember(uint? Member_id) {
-			return Member_shop.Delete(Member_id, this.Id);
-		}
-		public int UnflagMemberALL() {
-			return Member_shop.DeleteByShop_id(this.Id);
-		}
+		public int UnflagMember(MemberInfo Member) => UnflagMember(Member.Id);
+		public int UnflagMember(uint? Member_id) => Member_shop.Delete(Member_id.Value, this.Id.Value);
+		public int UnflagMemberALL() => Member_shop.DeleteByShop_id(this.Id);
 
-		public ProductInfo AddProduct(CategoryInfo Category, DateTime? Create_time, ProductICON? Icon, decimal? Price, uint? Stock, string Title, string Unit) {
-			return AddProduct(Category.Id, Create_time, Icon, Price, Stock, Title, Unit);
-		}
-		public ProductInfo AddProduct(uint? Category_id, DateTime? Create_time, ProductICON? Icon, decimal? Price, uint? Stock, string Title, string Unit) {
-			return Product.Insert(new ProductInfo {
+		public ProductInfo AddProduct(CategoryInfo Category, DateTime? Create_time, ProductICON? Icon, decimal? Price, uint? Stock, string Title, string Unit) => AddProduct(Category.Id, Create_time, Icon, Price, Stock, Title, Unit);
+		public ProductInfo AddProduct(uint? Category_id, DateTime? Create_time, ProductICON? Icon, decimal? Price, uint? Stock, string Title, string Unit) => Product.Insert(new ProductInfo {
 				Category_id = Category_id, 
-				Shop_id = this.Id, 
+			Shop_id = this.Id, 
 				Create_time = Create_time, 
 				Icon = Icon, 
 				Price = Price, 
 				Stock = Stock, 
 				Title = Title, 
 				Unit = Unit});
+		public ProductInfo AddProduct(ProductInfo item) {
+			item.Shop_id = this.Id;
+			return item.Save();
 		}
 
-		public Shop_franchisingInfo FlagFranchising(FranchisingInfo Franchising) {
-			return FlagFranchising(Franchising.Id);
-		}
+		public Shop_franchisingInfo FlagFranchising(FranchisingInfo Franchising) => FlagFranchising(Franchising.Id);
 		public Shop_franchisingInfo FlagFranchising(uint? Franchising_id) {
-			Shop_franchisingInfo item = Shop_franchising.GetItem(Franchising_id, this.Id);
+			Shop_franchisingInfo item = Shop_franchising.GetItem(Franchising_id.Value, this.Id.Value);
 			if (item == null) item = Shop_franchising.Insert(new Shop_franchisingInfo {
 				Franchising_id = Franchising_id, 
-				Shop_id = this.Id});
+			Shop_id = this.Id});
 			return item;
 		}
 
-		public int UnflagFranchising(FranchisingInfo Franchising) {
-			return UnflagFranchising(Franchising.Id);
-		}
-		public int UnflagFranchising(uint? Franchising_id) {
-			return Shop_franchising.Delete(Franchising_id, this.Id);
-		}
-		public int UnflagFranchisingALL() {
-			return Shop_franchising.DeleteByShop_id(this.Id);
-		}
+		public int UnflagFranchising(FranchisingInfo Franchising) => UnflagFranchising(Franchising.Id);
+		public int UnflagFranchising(uint? Franchising_id) => Shop_franchising.Delete(Franchising_id.Value, this.Id.Value);
+		public int UnflagFranchisingALL() => Shop_franchising.DeleteByShop_id(this.Id);
 
-		public Shop_friendly_linksInfo AddFriendly_links(DateTime? Create_time, byte? Sort, string Title, string Url) {
-			return Shop_friendly_links.Insert(new Shop_friendly_linksInfo {
-				Shop_id = this.Id, 
+		public Shop_friendly_linksInfo AddFriendly_links(DateTime? Create_time, byte? Sort, string Title, string Url) => Shop_friendly_links.Insert(new Shop_friendly_linksInfo {
+			Shop_id = this.Id, 
 				Create_time = Create_time, 
 				Sort = Sort, 
 				Title = Title, 
 				Url = Url});
+		public Shop_friendly_linksInfo AddFriendly_links(Shop_friendly_linksInfo item) {
+			item.Shop_id = this.Id;
+			return item.Save();
 		}
 
-		public ShopsecurityInfo AddShopsecurity(string Idcard, string Idcard_img1, string Idcard_img2, string License_img) {
-			return Shopsecurity.Insert(new ShopsecurityInfo {
-				Shop_id = this.Id, 
+		public ShopsecurityInfo AddShopsecurity(string Idcard, string Idcard_img1, string Idcard_img2, string License_img) => Shopsecurity.Insert(new ShopsecurityInfo {
+			Shop_id = this.Id, 
 				Idcard = Idcard, 
 				Idcard_img1 = Idcard_img1, 
 				Idcard_img2 = Idcard_img2, 
 				License_img = License_img});
+		public ShopsecurityInfo AddShopsecurity(ShopsecurityInfo item) {
+			item.Shop_id = this.Id;
+			return item.Save();
 		}
 
-		public ShopstatInfo AddShopstat(uint? Today_fav, uint? Today_session, uint? Today_share, uint? Total_fav, uint? Total_session, uint? Total_share) {
-			return Shopstat.Insert(new ShopstatInfo {
-				Shop_id = this.Id, 
+		public ShopstatInfo AddShopstat(uint? Today_fav, uint? Today_session, uint? Today_share, uint? Total_fav, uint? Total_session, uint? Total_share) => Shopstat.Insert(new ShopstatInfo {
+			Shop_id = this.Id, 
 				Today_fav = Today_fav, 
 				Today_session = Today_session, 
 				Today_share = Today_share, 
 				Total_fav = Total_fav, 
 				Total_session = Total_session, 
 				Total_share = Total_share});
+		public ShopstatInfo AddShopstat(ShopstatInfo item) {
+			item.Shop_id = this.Id;
+			return item.Save();
 		}
 
 	}

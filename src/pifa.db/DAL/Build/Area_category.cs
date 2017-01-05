@@ -36,16 +36,14 @@ namespace pifa.DAL {
 			return GetItem(dr, ref index) as Area_categoryInfo;
 		}
 		public object GetItem(IDataReader dr, ref int index) {
-			return new Area_categoryInfo {
-				Area_id = dr.IsDBNull(++index) ? null : (uint?)dr.GetInt32(index), 
-				Category_id = dr.IsDBNull(++index) ? null : (uint?)dr.GetInt32(index)};
-		}
-		public SelectBuild<Area_categoryInfo> Select {
-			get { return SelectBuild<Area_categoryInfo>.From(this, SqlHelper.Instance); }
+			Area_categoryInfo item = new Area_categoryInfo();
+				if (!dr.IsDBNull(++index)) item.Area_id = (uint?)dr.GetInt32(index);
+				if (!dr.IsDBNull(++index)) item.Category_id = (uint?)dr.GetInt32(index);
+			return item;
 		}
 		#endregion
 
-		public int Delete(uint? Area_id, uint? Category_id) {
+		public int Delete(uint Area_id, uint Category_id) {
 			return SqlHelper.ExecuteNonQuery(string.Concat(TSQL.Delete, "`area_id` = ?area_id AND `category_id` = ?category_id"), 
 				GetParameter("?area_id", MySqlDbType.UInt32, 10, Area_id), 
 				GetParameter("?category_id", MySqlDbType.UInt32, 10, Category_id));
@@ -60,7 +58,7 @@ namespace pifa.DAL {
 		}
 
 		public int Update(Area_categoryInfo item) {
-			return new SqlUpdateBuild(null, item.Area_id, item.Category_id).ExecuteNonQuery();
+			return new SqlUpdateBuild(null, item.Area_id.Value, item.Category_id.Value).ExecuteNonQuery();
 		}
 		#region class SqlUpdateBuild
 		public partial class SqlUpdateBuild {
@@ -68,7 +66,7 @@ namespace pifa.DAL {
 			protected string _fields;
 			protected string _where;
 			protected List<MySqlParameter> _parameters = new List<MySqlParameter>();
-			public SqlUpdateBuild(Area_categoryInfo item, uint? Area_id, uint? Category_id) {
+			public SqlUpdateBuild(Area_categoryInfo item, uint Area_id, uint Category_id) {
 				_item = item;
 				_where = SqlHelper.Addslashes("`area_id` = {0} AND `category_id` = {1}", Area_id, Category_id);
 			}
@@ -102,8 +100,5 @@ namespace pifa.DAL {
 			return item;
 		}
 
-		public Area_categoryInfo GetItem(uint? Area_id, uint? Category_id) {
-			return this.Select.Where("a.`area_id` = {0} AND a.`category_id` = {1}", Area_id, Category_id).ToOne();
-		}
 	}
 }

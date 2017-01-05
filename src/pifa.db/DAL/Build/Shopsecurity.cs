@@ -39,19 +39,17 @@ namespace pifa.DAL {
 			return GetItem(dr, ref index) as ShopsecurityInfo;
 		}
 		public object GetItem(IDataReader dr, ref int index) {
-			return new ShopsecurityInfo {
-				Shop_id = dr.IsDBNull(++index) ? null : (uint?)dr.GetInt32(index), 
-				Idcard = dr.IsDBNull(++index) ? null : dr.GetString(index), 
-				Idcard_img1 = dr.IsDBNull(++index) ? null : dr.GetString(index), 
-				Idcard_img2 = dr.IsDBNull(++index) ? null : dr.GetString(index), 
-				License_img = dr.IsDBNull(++index) ? null : dr.GetString(index)};
-		}
-		public SelectBuild<ShopsecurityInfo> Select {
-			get { return SelectBuild<ShopsecurityInfo>.From(this, SqlHelper.Instance); }
+			ShopsecurityInfo item = new ShopsecurityInfo();
+				if (!dr.IsDBNull(++index)) item.Shop_id = (uint?)dr.GetInt32(index);
+				if (!dr.IsDBNull(++index)) item.Idcard = dr.GetString(index);
+				if (!dr.IsDBNull(++index)) item.Idcard_img1 = dr.GetString(index);
+				if (!dr.IsDBNull(++index)) item.Idcard_img2 = dr.GetString(index);
+				if (!dr.IsDBNull(++index)) item.License_img = dr.GetString(index);
+			return item;
 		}
 		#endregion
 
-		public int Delete(uint? Shop_id) {
+		public int Delete(uint Shop_id) {
 			return SqlHelper.ExecuteNonQuery(string.Concat(TSQL.Delete, "`shop_id` = ?shop_id"), 
 				GetParameter("?shop_id", MySqlDbType.UInt32, 10, Shop_id));
 		}
@@ -59,9 +57,13 @@ namespace pifa.DAL {
 			return SqlHelper.ExecuteNonQuery(string.Concat(TSQL.Delete, "`idcard` = ?idcard"), 
 				GetParameter("?idcard", MySqlDbType.VarChar, 32, Idcard));
 		}
+		public int DeleteByShop_id(uint? Shop_id) {
+			return SqlHelper.ExecuteNonQuery(string.Concat(TSQL.Delete, "`shop_id` = ?shop_id"), 
+				GetParameter("?shop_id", MySqlDbType.UInt32, 10, Shop_id));
+		}
 
 		public int Update(ShopsecurityInfo item) {
-			return new SqlUpdateBuild(null, item.Shop_id)
+			return new SqlUpdateBuild(null, item.Shop_id.Value)
 				.SetIdcard(item.Idcard)
 				.SetIdcard_img1(item.Idcard_img1)
 				.SetIdcard_img2(item.Idcard_img2)
@@ -73,7 +75,7 @@ namespace pifa.DAL {
 			protected string _fields;
 			protected string _where;
 			protected List<MySqlParameter> _parameters = new List<MySqlParameter>();
-			public SqlUpdateBuild(ShopsecurityInfo item, uint? Shop_id) {
+			public SqlUpdateBuild(ShopsecurityInfo item, uint Shop_id) {
 				_item = item;
 				_where = SqlHelper.Addslashes("`shop_id` = {0}", Shop_id);
 			}
@@ -101,23 +103,23 @@ namespace pifa.DAL {
 			}
 			public SqlUpdateBuild SetIdcard(string value) {
 				if (_item != null) _item.Idcard = value;
-				return this.Set("`idcard`", string.Concat("?idcard_", _parameters.Count), 
-					GetParameter(string.Concat("?idcard_", _parameters.Count), MySqlDbType.VarChar, 32, value));
+				return this.Set("`idcard`", $"?idcard_{_parameters.Count}", 
+					GetParameter($"?idcard_{{_parameters.Count}}", MySqlDbType.VarChar, 32, value));
 			}
 			public SqlUpdateBuild SetIdcard_img1(string value) {
 				if (_item != null) _item.Idcard_img1 = value;
-				return this.Set("`idcard_img1`", string.Concat("?idcard_img1_", _parameters.Count), 
-					GetParameter(string.Concat("?idcard_img1_", _parameters.Count), MySqlDbType.VarChar, 255, value));
+				return this.Set("`idcard_img1`", $"?idcard_img1_{_parameters.Count}", 
+					GetParameter($"?idcard_img1_{{_parameters.Count}}", MySqlDbType.VarChar, 255, value));
 			}
 			public SqlUpdateBuild SetIdcard_img2(string value) {
 				if (_item != null) _item.Idcard_img2 = value;
-				return this.Set("`idcard_img2`", string.Concat("?idcard_img2_", _parameters.Count), 
-					GetParameter(string.Concat("?idcard_img2_", _parameters.Count), MySqlDbType.VarChar, 255, value));
+				return this.Set("`idcard_img2`", $"?idcard_img2_{_parameters.Count}", 
+					GetParameter($"?idcard_img2_{{_parameters.Count}}", MySqlDbType.VarChar, 255, value));
 			}
 			public SqlUpdateBuild SetLicense_img(string value) {
 				if (_item != null) _item.License_img = value;
-				return this.Set("`license_img`", string.Concat("?license_img_", _parameters.Count), 
-					GetParameter(string.Concat("?license_img_", _parameters.Count), MySqlDbType.VarChar, 255, value));
+				return this.Set("`license_img`", $"?license_img_{_parameters.Count}", 
+					GetParameter($"?license_img_{{_parameters.Count}}", MySqlDbType.VarChar, 255, value));
 			}
 		}
 		#endregion
@@ -127,11 +129,5 @@ namespace pifa.DAL {
 			return item;
 		}
 
-		public ShopsecurityInfo GetItem(uint? Shop_id) {
-			return this.Select.Where("a.`shop_id` = {0}", Shop_id).ToOne();
-		}
-		public ShopsecurityInfo GetItemByIdcard(string Idcard) {
-			return this.Select.Where("a.`idcard` = {0}", Idcard).ToOne();
-		}
 	}
 }

@@ -48,28 +48,26 @@ namespace pifa.DAL {
 			return GetItem(dr, ref index) as Product_commentInfo;
 		}
 		public object GetItem(IDataReader dr, ref int index) {
-			return new Product_commentInfo {
-				Id = dr.IsDBNull(++index) ? null : (uint?)dr.GetInt32(index), 
-				Member_id = dr.IsDBNull(++index) ? null : (uint?)dr.GetInt32(index), 
-				Order_id = dr.IsDBNull(++index) ? null : (uint?)dr.GetInt32(index), 
-				Product_id = dr.IsDBNull(++index) ? null : (uint?)dr.GetInt32(index), 
-				Productitem_id = dr.IsDBNull(++index) ? null : (uint?)dr.GetInt32(index), 
-				Content = dr.IsDBNull(++index) ? null : dr.GetString(index), 
-				Create_time = dr.IsDBNull(++index) ? null : (DateTime?)dr.GetDateTime(index), 
-				Nickname = dr.IsDBNull(++index) ? null : dr.GetString(index), 
-				Star_price = dr.IsDBNull(++index) ? null : (byte?)dr.GetByte(index), 
-				Star_quality = dr.IsDBNull(++index) ? null : (byte?)dr.GetByte(index), 
-				Star_value = dr.IsDBNull(++index) ? null : (byte?)dr.GetByte(index), 
-				State = dr.IsDBNull(++index) ? null : (Product_commentSTATE?)dr.GetInt64(index), 
-				Title = dr.IsDBNull(++index) ? null : dr.GetString(index), 
-				Upload_image_url = dr.IsDBNull(++index) ? null : dr.GetString(index)};
-		}
-		public SelectBuild<Product_commentInfo> Select {
-			get { return SelectBuild<Product_commentInfo>.From(this, SqlHelper.Instance); }
+			Product_commentInfo item = new Product_commentInfo();
+				if (!dr.IsDBNull(++index)) item.Id = (uint?)dr.GetInt32(index);
+				if (!dr.IsDBNull(++index)) item.Member_id = (uint?)dr.GetInt32(index);
+				if (!dr.IsDBNull(++index)) item.Order_id = (uint?)dr.GetInt32(index);
+				if (!dr.IsDBNull(++index)) item.Product_id = (uint?)dr.GetInt32(index);
+				if (!dr.IsDBNull(++index)) item.Productitem_id = (uint?)dr.GetInt32(index);
+				if (!dr.IsDBNull(++index)) item.Content = dr.GetString(index);
+				if (!dr.IsDBNull(++index)) item.Create_time = (DateTime?)dr.GetDateTime(index);
+				if (!dr.IsDBNull(++index)) item.Nickname = dr.GetString(index);
+				if (!dr.IsDBNull(++index)) item.Star_price = (byte?)dr.GetByte(index);
+				if (!dr.IsDBNull(++index)) item.Star_quality = (byte?)dr.GetByte(index);
+				if (!dr.IsDBNull(++index)) item.Star_value = (byte?)dr.GetByte(index);
+				if (!dr.IsDBNull(++index)) item.State = (Product_commentSTATE?)dr.GetInt64(index);
+				if (!dr.IsDBNull(++index)) item.Title = dr.GetString(index);
+				if (!dr.IsDBNull(++index)) item.Upload_image_url = dr.GetString(index);
+			return item;
 		}
 		#endregion
 
-		public int Delete(uint? Id) {
+		public int Delete(uint Id) {
 			return SqlHelper.ExecuteNonQuery(string.Concat(TSQL.Delete, "`id` = ?id"), 
 				GetParameter("?id", MySqlDbType.UInt32, 10, Id));
 		}
@@ -91,7 +89,7 @@ namespace pifa.DAL {
 		}
 
 		public int Update(Product_commentInfo item) {
-			return new SqlUpdateBuild(null, item.Id)
+			return new SqlUpdateBuild(null, item.Id.Value)
 				.SetMember_id(item.Member_id)
 				.SetOrder_id(item.Order_id)
 				.SetProduct_id(item.Product_id)
@@ -112,7 +110,7 @@ namespace pifa.DAL {
 			protected string _fields;
 			protected string _where;
 			protected List<MySqlParameter> _parameters = new List<MySqlParameter>();
-			public SqlUpdateBuild(Product_commentInfo item, uint? Id) {
+			public SqlUpdateBuild(Product_commentInfo item, uint Id) {
 				_item = item;
 				_where = SqlHelper.Addslashes("`id` = {0}", Id);
 			}
@@ -140,83 +138,83 @@ namespace pifa.DAL {
 			}
 			public SqlUpdateBuild SetMember_id(uint? value) {
 				if (_item != null) _item.Member_id = value;
-				return this.Set("`member_id`", string.Concat("?member_id_", _parameters.Count), 
-					GetParameter(string.Concat("?member_id_", _parameters.Count), MySqlDbType.UInt32, 10, value));
+				return this.Set("`member_id`", $"?member_id_{_parameters.Count}", 
+					GetParameter($"?member_id_{{_parameters.Count}}", MySqlDbType.UInt32, 10, value));
 			}
 			public SqlUpdateBuild SetOrder_id(uint? value) {
 				if (_item != null) _item.Order_id = value;
-				return this.Set("`order_id`", string.Concat("?order_id_", _parameters.Count), 
-					GetParameter(string.Concat("?order_id_", _parameters.Count), MySqlDbType.UInt32, 10, value));
+				return this.Set("`order_id`", $"?order_id_{_parameters.Count}", 
+					GetParameter($"?order_id_{{_parameters.Count}}", MySqlDbType.UInt32, 10, value));
 			}
 			public SqlUpdateBuild SetProduct_id(uint? value) {
 				if (_item != null) _item.Product_id = value;
-				return this.Set("`product_id`", string.Concat("?product_id_", _parameters.Count), 
-					GetParameter(string.Concat("?product_id_", _parameters.Count), MySqlDbType.UInt32, 10, value));
+				return this.Set("`product_id`", $"?product_id_{_parameters.Count}", 
+					GetParameter($"?product_id_{{_parameters.Count}}", MySqlDbType.UInt32, 10, value));
 			}
 			public SqlUpdateBuild SetProductitem_id(uint? value) {
 				if (_item != null) _item.Productitem_id = value;
-				return this.Set("`productitem_id`", string.Concat("?productitem_id_", _parameters.Count), 
-					GetParameter(string.Concat("?productitem_id_", _parameters.Count), MySqlDbType.UInt32, 10, value));
+				return this.Set("`productitem_id`", $"?productitem_id_{_parameters.Count}", 
+					GetParameter($"?productitem_id_{{_parameters.Count}}", MySqlDbType.UInt32, 10, value));
 			}
 			public SqlUpdateBuild SetContent(string value) {
 				if (_item != null) _item.Content = value;
-				return this.Set("`content`", string.Concat("?content_", _parameters.Count), 
-					GetParameter(string.Concat("?content_", _parameters.Count), MySqlDbType.VarChar, 255, value));
+				return this.Set("`content`", $"?content_{_parameters.Count}", 
+					GetParameter($"?content_{{_parameters.Count}}", MySqlDbType.VarChar, 255, value));
 			}
 			public SqlUpdateBuild SetCreate_time(DateTime? value) {
 				if (_item != null) _item.Create_time = value;
-				return this.Set("`create_time`", string.Concat("?create_time_", _parameters.Count), 
-					GetParameter(string.Concat("?create_time_", _parameters.Count), MySqlDbType.DateTime, -1, value));
+				return this.Set("`create_time`", $"?create_time_{_parameters.Count}", 
+					GetParameter($"?create_time_{{_parameters.Count}}", MySqlDbType.DateTime, -1, value));
 			}
 			public SqlUpdateBuild SetNickname(string value) {
 				if (_item != null) _item.Nickname = value;
-				return this.Set("`nickname`", string.Concat("?nickname_", _parameters.Count), 
-					GetParameter(string.Concat("?nickname_", _parameters.Count), MySqlDbType.VarChar, 255, value));
+				return this.Set("`nickname`", $"?nickname_{_parameters.Count}", 
+					GetParameter($"?nickname_{{_parameters.Count}}", MySqlDbType.VarChar, 255, value));
 			}
 			public SqlUpdateBuild SetStar_price(byte? value) {
 				if (_item != null) _item.Star_price = value;
-				return this.Set("`star_price`", string.Concat("?star_price_", _parameters.Count), 
-					GetParameter(string.Concat("?star_price_", _parameters.Count), MySqlDbType.UByte, 3, value));
+				return this.Set("`star_price`", $"?star_price_{_parameters.Count}", 
+					GetParameter($"?star_price_{{_parameters.Count}}", MySqlDbType.UByte, 3, value));
 			}
 			public SqlUpdateBuild SetStar_priceIncrement(byte value) {
 				if (_item != null) _item.Star_price += value;
-				return this.Set("`star_price`", string.Concat("`star_price` + ?star_price_", _parameters.Count), 
-					GetParameter(string.Concat("?star_price_", _parameters.Count), MySqlDbType.Byte, 3, value));
+				return this.Set("`star_price`", "`star_price` + ?star_price_{_parameters.Count}", 
+					GetParameter($"?star_price_{{_parameters.Count}}", MySqlDbType.Byte, 3, value));
 			}
 			public SqlUpdateBuild SetStar_quality(byte? value) {
 				if (_item != null) _item.Star_quality = value;
-				return this.Set("`star_quality`", string.Concat("?star_quality_", _parameters.Count), 
-					GetParameter(string.Concat("?star_quality_", _parameters.Count), MySqlDbType.UByte, 3, value));
+				return this.Set("`star_quality`", $"?star_quality_{_parameters.Count}", 
+					GetParameter($"?star_quality_{{_parameters.Count}}", MySqlDbType.UByte, 3, value));
 			}
 			public SqlUpdateBuild SetStar_qualityIncrement(byte value) {
 				if (_item != null) _item.Star_quality += value;
-				return this.Set("`star_quality`", string.Concat("`star_quality` + ?star_quality_", _parameters.Count), 
-					GetParameter(string.Concat("?star_quality_", _parameters.Count), MySqlDbType.Byte, 3, value));
+				return this.Set("`star_quality`", "`star_quality` + ?star_quality_{_parameters.Count}", 
+					GetParameter($"?star_quality_{{_parameters.Count}}", MySqlDbType.Byte, 3, value));
 			}
 			public SqlUpdateBuild SetStar_value(byte? value) {
 				if (_item != null) _item.Star_value = value;
-				return this.Set("`star_value`", string.Concat("?star_value_", _parameters.Count), 
-					GetParameter(string.Concat("?star_value_", _parameters.Count), MySqlDbType.UByte, 3, value));
+				return this.Set("`star_value`", $"?star_value_{_parameters.Count}", 
+					GetParameter($"?star_value_{{_parameters.Count}}", MySqlDbType.UByte, 3, value));
 			}
 			public SqlUpdateBuild SetStar_valueIncrement(byte value) {
 				if (_item != null) _item.Star_value += value;
-				return this.Set("`star_value`", string.Concat("`star_value` + ?star_value_", _parameters.Count), 
-					GetParameter(string.Concat("?star_value_", _parameters.Count), MySqlDbType.Byte, 3, value));
+				return this.Set("`star_value`", "`star_value` + ?star_value_{_parameters.Count}", 
+					GetParameter($"?star_value_{{_parameters.Count}}", MySqlDbType.Byte, 3, value));
 			}
 			public SqlUpdateBuild SetState(Product_commentSTATE? value) {
 				if (_item != null) _item.State = value;
-				return this.Set("`state`", string.Concat("?state_", _parameters.Count), 
-					GetParameter(string.Concat("?state_", _parameters.Count), MySqlDbType.Enum, -1, value?.ToInt64()));
+				return this.Set("`state`", $"?state_{_parameters.Count}", 
+					GetParameter($"?state_{{_parameters.Count}}", MySqlDbType.Enum, -1, value?.ToInt64()));
 			}
 			public SqlUpdateBuild SetTitle(string value) {
 				if (_item != null) _item.Title = value;
-				return this.Set("`title`", string.Concat("?title_", _parameters.Count), 
-					GetParameter(string.Concat("?title_", _parameters.Count), MySqlDbType.VarChar, 255, value));
+				return this.Set("`title`", $"?title_{_parameters.Count}", 
+					GetParameter($"?title_{{_parameters.Count}}", MySqlDbType.VarChar, 255, value));
 			}
 			public SqlUpdateBuild SetUpload_image_url(string value) {
 				if (_item != null) _item.Upload_image_url = value;
-				return this.Set("`upload_image_url`", string.Concat("?upload_image_url_", _parameters.Count), 
-					GetParameter(string.Concat("?upload_image_url_", _parameters.Count), MySqlDbType.VarChar, 255, value));
+				return this.Set("`upload_image_url`", $"?upload_image_url_{_parameters.Count}", 
+					GetParameter($"?upload_image_url_{{_parameters.Count}}", MySqlDbType.VarChar, 255, value));
 			}
 		}
 		#endregion
@@ -227,8 +225,5 @@ namespace pifa.DAL {
 			return item;
 		}
 
-		public Product_commentInfo GetItem(uint? Id) {
-			return this.Select.Where("a.`id` = {0}", Id).ToOne();
-		}
 	}
 }

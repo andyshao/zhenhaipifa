@@ -40,26 +40,28 @@ namespace pifa.DAL {
 			return GetItem(dr, ref index) as Order_addressInfo;
 		}
 		public object GetItem(IDataReader dr, ref int index) {
-			return new Order_addressInfo {
-				Order_id = dr.IsDBNull(++index) ? null : (uint?)dr.GetInt32(index), 
-				Address = dr.IsDBNull(++index) ? null : dr.GetString(index), 
-				Name = dr.IsDBNull(++index) ? null : dr.GetString(index), 
-				Tel = dr.IsDBNull(++index) ? null : dr.GetString(index), 
-				Telphone = dr.IsDBNull(++index) ? null : dr.GetString(index), 
-				Zip = dr.IsDBNull(++index) ? null : dr.GetString(index)};
-		}
-		public SelectBuild<Order_addressInfo> Select {
-			get { return SelectBuild<Order_addressInfo>.From(this, SqlHelper.Instance); }
+			Order_addressInfo item = new Order_addressInfo();
+				if (!dr.IsDBNull(++index)) item.Order_id = (uint?)dr.GetInt32(index);
+				if (!dr.IsDBNull(++index)) item.Address = dr.GetString(index);
+				if (!dr.IsDBNull(++index)) item.Name = dr.GetString(index);
+				if (!dr.IsDBNull(++index)) item.Tel = dr.GetString(index);
+				if (!dr.IsDBNull(++index)) item.Telphone = dr.GetString(index);
+				if (!dr.IsDBNull(++index)) item.Zip = dr.GetString(index);
+			return item;
 		}
 		#endregion
 
-		public int Delete(uint? Order_id) {
+		public int Delete(uint Order_id) {
+			return SqlHelper.ExecuteNonQuery(string.Concat(TSQL.Delete, "`order_id` = ?order_id"), 
+				GetParameter("?order_id", MySqlDbType.UInt32, 10, Order_id));
+		}
+		public int DeleteByOrder_id(uint? Order_id) {
 			return SqlHelper.ExecuteNonQuery(string.Concat(TSQL.Delete, "`order_id` = ?order_id"), 
 				GetParameter("?order_id", MySqlDbType.UInt32, 10, Order_id));
 		}
 
 		public int Update(Order_addressInfo item) {
-			return new SqlUpdateBuild(null, item.Order_id)
+			return new SqlUpdateBuild(null, item.Order_id.Value)
 				.SetAddress(item.Address)
 				.SetName(item.Name)
 				.SetTel(item.Tel)
@@ -72,7 +74,7 @@ namespace pifa.DAL {
 			protected string _fields;
 			protected string _where;
 			protected List<MySqlParameter> _parameters = new List<MySqlParameter>();
-			public SqlUpdateBuild(Order_addressInfo item, uint? Order_id) {
+			public SqlUpdateBuild(Order_addressInfo item, uint Order_id) {
 				_item = item;
 				_where = SqlHelper.Addslashes("`order_id` = {0}", Order_id);
 			}
@@ -100,28 +102,28 @@ namespace pifa.DAL {
 			}
 			public SqlUpdateBuild SetAddress(string value) {
 				if (_item != null) _item.Address = value;
-				return this.Set("`address`", string.Concat("?address_", _parameters.Count), 
-					GetParameter(string.Concat("?address_", _parameters.Count), MySqlDbType.VarChar, 255, value));
+				return this.Set("`address`", $"?address_{_parameters.Count}", 
+					GetParameter($"?address_{{_parameters.Count}}", MySqlDbType.VarChar, 255, value));
 			}
 			public SqlUpdateBuild SetName(string value) {
 				if (_item != null) _item.Name = value;
-				return this.Set("`name`", string.Concat("?name_", _parameters.Count), 
-					GetParameter(string.Concat("?name_", _parameters.Count), MySqlDbType.VarChar, 32, value));
+				return this.Set("`name`", $"?name_{_parameters.Count}", 
+					GetParameter($"?name_{{_parameters.Count}}", MySqlDbType.VarChar, 32, value));
 			}
 			public SqlUpdateBuild SetTel(string value) {
 				if (_item != null) _item.Tel = value;
-				return this.Set("`tel`", string.Concat("?tel_", _parameters.Count), 
-					GetParameter(string.Concat("?tel_", _parameters.Count), MySqlDbType.VarChar, 32, value));
+				return this.Set("`tel`", $"?tel_{_parameters.Count}", 
+					GetParameter($"?tel_{{_parameters.Count}}", MySqlDbType.VarChar, 32, value));
 			}
 			public SqlUpdateBuild SetTelphone(string value) {
 				if (_item != null) _item.Telphone = value;
-				return this.Set("`telphone`", string.Concat("?telphone_", _parameters.Count), 
-					GetParameter(string.Concat("?telphone_", _parameters.Count), MySqlDbType.VarChar, 32, value));
+				return this.Set("`telphone`", $"?telphone_{_parameters.Count}", 
+					GetParameter($"?telphone_{{_parameters.Count}}", MySqlDbType.VarChar, 32, value));
 			}
 			public SqlUpdateBuild SetZip(string value) {
 				if (_item != null) _item.Zip = value;
-				return this.Set("`zip`", string.Concat("?zip_", _parameters.Count), 
-					GetParameter(string.Concat("?zip_", _parameters.Count), MySqlDbType.VarChar, 16, value));
+				return this.Set("`zip`", $"?zip_{_parameters.Count}", 
+					GetParameter($"?zip_{{_parameters.Count}}", MySqlDbType.VarChar, 16, value));
 			}
 		}
 		#endregion
@@ -131,8 +133,5 @@ namespace pifa.DAL {
 			return item;
 		}
 
-		public Order_addressInfo GetItem(uint? Order_id) {
-			return this.Select.Where("a.`order_id` = {0}", Order_id).ToOne();
-		}
 	}
 }

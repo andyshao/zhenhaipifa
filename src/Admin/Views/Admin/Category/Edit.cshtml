@@ -1,0 +1,84 @@
+﻿@{
+	Layout = "";
+	CategoryInfo item = ViewBag.item;
+	var fk_areas = Area.Select.ToList();
+	var fk_markettypes = Markettype.Select.ToList();
+	var fk_Categorys = Category.Select.ToList();
+}
+
+<div class="box">
+	<div class="box-header with-border">
+		<h3 class="box-title" id="box-title"></h3>
+	</div>
+	<div class="box-body">
+		<div class="table-responsive">
+			<form id="form_add" method="post">
+				@Html.AntiForgeryToken()
+				<input type="hidden" name="__callback" value="edit_callback" />
+				<div>
+					<table cellspacing="0" rules="all" class="table table-bordered table-hover" border="1" style="border-collapse:collapse;">
+						@if (item != null) {
+							<tr>
+								<td>id</td>
+								<td><input name="Id" type="text" readonly class="datepicker" style="width:20%;background-color:#ddd;" /></td>
+							</tr>
+						}
+						<tr>
+							<td>父</td>
+							<td id="Parent_id_td"></td>
+						</tr>
+						<tr>
+							<td>分类名称</td>
+							<td><input name="Title" type="text" class="datepicker" style="width:60%;" /></td>
+						</tr>
+						<tr>
+							<td>area</td>
+							<td>
+								<select name="mn_Area" data-placeholder="Select a area" class="form-control select2" multiple>
+									@foreach (AreaInfo fk in fk_areas) { <option value="@fk.Id">@fk.Name</option> }
+								</select>
+							</td>
+						</tr>
+						<tr>
+							<td>markettype</td>
+							<td>
+								<select name="mn_Markettype" data-placeholder="Select a markettype" class="form-control select2" multiple>
+									@foreach (MarkettypeInfo fk in fk_markettypes) { <option value="@fk.Id">@fk.Title</option> }
+								</select>
+							</td>
+						</tr>
+						<tr>
+							<td width="8%">&nbsp</td>
+							<td><input type="submit" value="@(item == null ? "添加" : "更新")" />&nbsp;<input type="button" value="取消" /></td>
+						</tr>
+					</table>
+				</div>
+			</form>
+
+		</div>
+	</div>
+</div>
+
+<script type="text/javascript">
+	(function () {
+		top.edit_callback = function (rt) {
+			if (rt.success) return top.mainViewNav.goto('./');
+			alert(rt.message);
+		};
+
+		$('#Parent_id_td').html(yieldTreeSelect(yieldTreeArray(@Html.Raw(fk_Categorys.ToJson()), null, 'Id', 'Parent_id'), '{#Title}', 'Id')).find('select').attr('name', 'Parent_id');
+		var form = $('#form_add')[0];
+		var item = null;
+		@if (item != null) {
+			<text>
+			item = @Html.Raw(item.ToJson());
+			fillForm(form, item);
+			item.mn_Area = @Html.Raw(item.Obj_areas.ToJson());
+			for (var a = 0; a < item.mn_Area.length; a++) $(form.mn_Area).find('option[value="{0}"]'.format(item.mn_Area[a].Id)).attr('selected', 'selected');
+			item.mn_Markettype = @Html.Raw(item.Obj_markettypes.ToJson());
+			for (var a = 0; a < item.mn_Markettype.length; a++) $(form.mn_Markettype).find('option[value="{0}"]'.format(item.mn_Markettype[a].Id)).attr('selected', 'selected');
+			</text>
+		}
+		top.mainViewInit();
+	})();
+</script>

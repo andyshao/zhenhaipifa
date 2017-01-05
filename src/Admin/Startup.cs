@@ -25,6 +25,12 @@ namespace pifa.Admin {
 
 			this.Configuration = builder.AddEnvironmentVariables().Build();
 			this.env = env;
+
+			Newtonsoft.Json.JsonConvert.DefaultSettings = () => {
+				var st = new Newtonsoft.Json.JsonSerializerSettings();
+				st.Converters.Add(new Newtonsoft.Json.Converters.StringEnumConverter());
+				return st;
+			};
 		}
 
 		public IConfigurationRoot Configuration { get; }
@@ -49,10 +55,9 @@ namespace pifa.Admin {
 						License = new License { Name = "duoyi", Url = "http://duoyi.com" }
 					});
 					options.IgnoreObsoleteActions();
-					//options.IgnoreObsoleteControllers();
-					// 类、方法标记 [Obsolete]，可以阻止【Swagger文档】生成
+					//options.IgnoreObsoleteControllers(); // 类、方法标记 [Obsolete]，可以阻止【Swagger文档】生成
 					options.DescribeAllEnumsAsStrings();
-					options.IncludeXmlComments(AppContext.BaseDirectory + @"/Admin.xml");
+					//options.IncludeXmlComments(AppContext.BaseDirectory + @"/Admin.xml"); // 使用前需开启项目注释 xmldoc
 					options.OperationFilter<FormDataOperationFilter>();
 				});
 			#endregion

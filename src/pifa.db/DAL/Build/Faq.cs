@@ -38,18 +38,16 @@ namespace pifa.DAL {
 			return GetItem(dr, ref index) as FaqInfo;
 		}
 		public object GetItem(IDataReader dr, ref int index) {
-			return new FaqInfo {
-				Id = dr.IsDBNull(++index) ? null : (uint?)dr.GetInt32(index), 
-				Faqtype_id = dr.IsDBNull(++index) ? null : (uint?)dr.GetInt32(index), 
-				Create_time = dr.IsDBNull(++index) ? null : (DateTime?)dr.GetDateTime(index), 
-				Title = dr.IsDBNull(++index) ? null : dr.GetString(index)};
-		}
-		public SelectBuild<FaqInfo> Select {
-			get { return SelectBuild<FaqInfo>.From(this, SqlHelper.Instance); }
+			FaqInfo item = new FaqInfo();
+				if (!dr.IsDBNull(++index)) item.Id = (uint?)dr.GetInt32(index);
+				if (!dr.IsDBNull(++index)) item.Faqtype_id = (uint?)dr.GetInt32(index);
+				if (!dr.IsDBNull(++index)) item.Create_time = (DateTime?)dr.GetDateTime(index);
+				if (!dr.IsDBNull(++index)) item.Title = dr.GetString(index);
+			return item;
 		}
 		#endregion
 
-		public int Delete(uint? Id) {
+		public int Delete(uint Id) {
 			return SqlHelper.ExecuteNonQuery(string.Concat(TSQL.Delete, "`id` = ?id"), 
 				GetParameter("?id", MySqlDbType.UInt32, 10, Id));
 		}
@@ -59,7 +57,7 @@ namespace pifa.DAL {
 		}
 
 		public int Update(FaqInfo item) {
-			return new SqlUpdateBuild(null, item.Id)
+			return new SqlUpdateBuild(null, item.Id.Value)
 				.SetFaqtype_id(item.Faqtype_id)
 				.SetCreate_time(item.Create_time)
 				.SetTitle(item.Title).ExecuteNonQuery();
@@ -70,7 +68,7 @@ namespace pifa.DAL {
 			protected string _fields;
 			protected string _where;
 			protected List<MySqlParameter> _parameters = new List<MySqlParameter>();
-			public SqlUpdateBuild(FaqInfo item, uint? Id) {
+			public SqlUpdateBuild(FaqInfo item, uint Id) {
 				_item = item;
 				_where = SqlHelper.Addslashes("`id` = {0}", Id);
 			}
@@ -98,18 +96,18 @@ namespace pifa.DAL {
 			}
 			public SqlUpdateBuild SetFaqtype_id(uint? value) {
 				if (_item != null) _item.Faqtype_id = value;
-				return this.Set("`faqtype_id`", string.Concat("?faqtype_id_", _parameters.Count), 
-					GetParameter(string.Concat("?faqtype_id_", _parameters.Count), MySqlDbType.UInt32, 10, value));
+				return this.Set("`faqtype_id`", $"?faqtype_id_{_parameters.Count}", 
+					GetParameter($"?faqtype_id_{{_parameters.Count}}", MySqlDbType.UInt32, 10, value));
 			}
 			public SqlUpdateBuild SetCreate_time(DateTime? value) {
 				if (_item != null) _item.Create_time = value;
-				return this.Set("`create_time`", string.Concat("?create_time_", _parameters.Count), 
-					GetParameter(string.Concat("?create_time_", _parameters.Count), MySqlDbType.DateTime, -1, value));
+				return this.Set("`create_time`", $"?create_time_{_parameters.Count}", 
+					GetParameter($"?create_time_{{_parameters.Count}}", MySqlDbType.DateTime, -1, value));
 			}
 			public SqlUpdateBuild SetTitle(string value) {
 				if (_item != null) _item.Title = value;
-				return this.Set("`title`", string.Concat("?title_", _parameters.Count), 
-					GetParameter(string.Concat("?title_", _parameters.Count), MySqlDbType.VarChar, 255, value));
+				return this.Set("`title`", $"?title_{_parameters.Count}", 
+					GetParameter($"?title_{{_parameters.Count}}", MySqlDbType.VarChar, 255, value));
 			}
 		}
 		#endregion
@@ -120,8 +118,5 @@ namespace pifa.DAL {
 			return item;
 		}
 
-		public FaqInfo GetItem(uint? Id) {
-			return this.Select.Where("a.`id` = {0}", Id).ToOne();
-		}
 	}
 }

@@ -18,7 +18,7 @@ namespace pifa.BLL {
 
 		#region delete, update, insert
 
-		public static int Delete(uint? Id) {
+		public static int Delete(uint Id) {
 			if (itemCacheTimeout > 0) RemoveCache(GetItem(Id));
 			return dal.Delete(Id);
 		}
@@ -30,10 +30,10 @@ namespace pifa.BLL {
 			if (itemCacheTimeout > 0) RemoveCache(item);
 			return dal.Update(item);
 		}
-		public static pifa.DAL.Member_addressbook.SqlUpdateBuild UpdateDiy(uint? Id) {
+		public static pifa.DAL.Member_addressbook.SqlUpdateBuild UpdateDiy(uint Id) {
 			return UpdateDiy(null, Id);
 		}
-		public static pifa.DAL.Member_addressbook.SqlUpdateBuild UpdateDiy(Member_addressbookInfo item, uint? Id) {
+		public static pifa.DAL.Member_addressbook.SqlUpdateBuild UpdateDiy(Member_addressbookInfo item, uint Id) {
 			if (itemCacheTimeout > 0) RemoveCache(item != null ? item : GetItem(Id));
 			return new pifa.DAL.Member_addressbook.SqlUpdateBuild(item, Id);
 		}
@@ -70,14 +70,13 @@ namespace pifa.BLL {
 		}
 		#endregion
 
-		public static Member_addressbookInfo GetItem(uint? Id) {
-			if (Id == null) return null;
-			if (itemCacheTimeout <= 0) return dal.GetItem(Id);
+		public static Member_addressbookInfo GetItem(uint Id) {
+			if (itemCacheTimeout <= 0) return Select.WhereId(Id).ToOne();
 			string key = string.Concat("pifa_BLL_Member_addressbook_", Id);
 			string value = RedisHelper.Get(key);
 			if (!string.IsNullOrEmpty(value))
-				try { return new Member_addressbookInfo(value); } catch { }
-			Member_addressbookInfo item = dal.GetItem(Id);
+				try { return Member_addressbookInfo.Parse(value); } catch { }
+			Member_addressbookInfo item = Select.WhereId(Id).ToOne();
 			if (item == null) return null;
 			RedisHelper.Set(key, item.Stringify(), itemCacheTimeout);
 			return item;
@@ -101,7 +100,7 @@ namespace pifa.BLL {
 	}
 	public partial class Member_addressbookSelectBuild : SelectBuild<Member_addressbookInfo, Member_addressbookSelectBuild> {
 		public Member_addressbookSelectBuild WhereMember_id(params uint?[] Member_id) {
-			return this.Where1Or("a.`Member_id` = {0}", Member_id);
+			return this.Where1Or("a.`member_id` = {0}", Member_id);
 		}
 		public Member_addressbookSelectBuild WhereId(params uint?[] Id) {
 			return this.Where1Or("a.`id` = {0}", Id);
@@ -110,7 +109,7 @@ namespace pifa.BLL {
 			return this.Where1Or("a.`address` = {0}", Address);
 		}
 		public Member_addressbookSelectBuild WhereAddressLike(params string[] Address) {
-			if (Address == null) return this;
+			if (Address == null || Address.Where(a => !string.IsNullOrEmpty(a)).Any() == false) return this;
 			return this.Where1Or(@"a.`address` LIKE {0}", Address.Select(a => "%" + a + "%").ToArray());
 		}
 		public Member_addressbookSelectBuild WhereCreate_timeRange(DateTime? begin) {
@@ -127,28 +126,28 @@ namespace pifa.BLL {
 			return this.Where1Or("a.`name` = {0}", Name);
 		}
 		public Member_addressbookSelectBuild WhereNameLike(params string[] Name) {
-			if (Name == null) return this;
+			if (Name == null || Name.Where(a => !string.IsNullOrEmpty(a)).Any() == false) return this;
 			return this.Where1Or(@"a.`name` LIKE {0}", Name.Select(a => "%" + a + "%").ToArray());
 		}
 		public Member_addressbookSelectBuild WhereTel(params string[] Tel) {
 			return this.Where1Or("a.`tel` = {0}", Tel);
 		}
 		public Member_addressbookSelectBuild WhereTelLike(params string[] Tel) {
-			if (Tel == null) return this;
+			if (Tel == null || Tel.Where(a => !string.IsNullOrEmpty(a)).Any() == false) return this;
 			return this.Where1Or(@"a.`tel` LIKE {0}", Tel.Select(a => "%" + a + "%").ToArray());
 		}
 		public Member_addressbookSelectBuild WhereTelphone(params string[] Telphone) {
 			return this.Where1Or("a.`telphone` = {0}", Telphone);
 		}
 		public Member_addressbookSelectBuild WhereTelphoneLike(params string[] Telphone) {
-			if (Telphone == null) return this;
+			if (Telphone == null || Telphone.Where(a => !string.IsNullOrEmpty(a)).Any() == false) return this;
 			return this.Where1Or(@"a.`telphone` LIKE {0}", Telphone.Select(a => "%" + a + "%").ToArray());
 		}
 		public Member_addressbookSelectBuild WhereZip(params string[] Zip) {
 			return this.Where1Or("a.`zip` = {0}", Zip);
 		}
 		public Member_addressbookSelectBuild WhereZipLike(params string[] Zip) {
-			if (Zip == null) return this;
+			if (Zip == null || Zip.Where(a => !string.IsNullOrEmpty(a)).Any() == false) return this;
 			return this.Where1Or(@"a.`zip` LIKE {0}", Zip.Select(a => "%" + a + "%").ToArray());
 		}
 		protected new Member_addressbookSelectBuild Where1Or(string filterFormat, Array values) {

@@ -39,19 +39,17 @@ namespace pifa.DAL {
 			return GetItem(dr, ref index) as RentsubletInfo;
 		}
 		public object GetItem(IDataReader dr, ref int index) {
-			return new RentsubletInfo {
-				Id = dr.IsDBNull(++index) ? null : (uint?)dr.GetInt32(index), 
-				Market_id = dr.IsDBNull(++index) ? null : (uint?)dr.GetInt32(index), 
-				Create_time = dr.IsDBNull(++index) ? null : (DateTime?)dr.GetDateTime(index), 
-				Price = dr.IsDBNull(++index) ? null : (decimal?)dr.GetDecimal(index), 
-				Type = dr.IsDBNull(++index) ? null : (RentsubletTYPE?)dr.GetInt64(index)};
-		}
-		public SelectBuild<RentsubletInfo> Select {
-			get { return SelectBuild<RentsubletInfo>.From(this, SqlHelper.Instance); }
+			RentsubletInfo item = new RentsubletInfo();
+				if (!dr.IsDBNull(++index)) item.Id = (uint?)dr.GetInt32(index);
+				if (!dr.IsDBNull(++index)) item.Market_id = (uint?)dr.GetInt32(index);
+				if (!dr.IsDBNull(++index)) item.Create_time = (DateTime?)dr.GetDateTime(index);
+				if (!dr.IsDBNull(++index)) item.Price = (decimal?)dr.GetDecimal(index);
+				if (!dr.IsDBNull(++index)) item.Type = (RentsubletTYPE?)dr.GetInt64(index);
+			return item;
 		}
 		#endregion
 
-		public int Delete(uint? Id) {
+		public int Delete(uint Id) {
 			return SqlHelper.ExecuteNonQuery(string.Concat(TSQL.Delete, "`id` = ?id"), 
 				GetParameter("?id", MySqlDbType.UInt32, 10, Id));
 		}
@@ -61,7 +59,7 @@ namespace pifa.DAL {
 		}
 
 		public int Update(RentsubletInfo item) {
-			return new SqlUpdateBuild(null, item.Id)
+			return new SqlUpdateBuild(null, item.Id.Value)
 				.SetMarket_id(item.Market_id)
 				.SetCreate_time(item.Create_time)
 				.SetPrice(item.Price)
@@ -73,7 +71,7 @@ namespace pifa.DAL {
 			protected string _fields;
 			protected string _where;
 			protected List<MySqlParameter> _parameters = new List<MySqlParameter>();
-			public SqlUpdateBuild(RentsubletInfo item, uint? Id) {
+			public SqlUpdateBuild(RentsubletInfo item, uint Id) {
 				_item = item;
 				_where = SqlHelper.Addslashes("`id` = {0}", Id);
 			}
@@ -101,28 +99,28 @@ namespace pifa.DAL {
 			}
 			public SqlUpdateBuild SetMarket_id(uint? value) {
 				if (_item != null) _item.Market_id = value;
-				return this.Set("`market_id`", string.Concat("?market_id_", _parameters.Count), 
-					GetParameter(string.Concat("?market_id_", _parameters.Count), MySqlDbType.UInt32, 10, value));
+				return this.Set("`market_id`", $"?market_id_{_parameters.Count}", 
+					GetParameter($"?market_id_{{_parameters.Count}}", MySqlDbType.UInt32, 10, value));
 			}
 			public SqlUpdateBuild SetCreate_time(DateTime? value) {
 				if (_item != null) _item.Create_time = value;
-				return this.Set("`create_time`", string.Concat("?create_time_", _parameters.Count), 
-					GetParameter(string.Concat("?create_time_", _parameters.Count), MySqlDbType.DateTime, -1, value));
+				return this.Set("`create_time`", $"?create_time_{_parameters.Count}", 
+					GetParameter($"?create_time_{{_parameters.Count}}", MySqlDbType.DateTime, -1, value));
 			}
 			public SqlUpdateBuild SetPrice(decimal? value) {
 				if (_item != null) _item.Price = value;
-				return this.Set("`price`", string.Concat("?price_", _parameters.Count), 
-					GetParameter(string.Concat("?price_", _parameters.Count), MySqlDbType.Decimal, 10, value));
+				return this.Set("`price`", $"?price_{_parameters.Count}", 
+					GetParameter($"?price_{{_parameters.Count}}", MySqlDbType.Decimal, 10, value));
 			}
 			public SqlUpdateBuild SetPriceIncrement(decimal value) {
 				if (_item != null) _item.Price += value;
-				return this.Set("`price`", string.Concat("`price` + ?price_", _parameters.Count), 
-					GetParameter(string.Concat("?price_", _parameters.Count), MySqlDbType.Decimal, 10, value));
+				return this.Set("`price`", "`price` + ?price_{_parameters.Count}", 
+					GetParameter($"?price_{{_parameters.Count}}", MySqlDbType.Decimal, 10, value));
 			}
 			public SqlUpdateBuild SetType(RentsubletTYPE? value) {
 				if (_item != null) _item.Type = value;
-				return this.Set("`type`", string.Concat("?type_", _parameters.Count), 
-					GetParameter(string.Concat("?type_", _parameters.Count), MySqlDbType.Enum, -1, value?.ToInt64()));
+				return this.Set("`type`", $"?type_{_parameters.Count}", 
+					GetParameter($"?type_{{_parameters.Count}}", MySqlDbType.Enum, -1, value?.ToInt64()));
 			}
 		}
 		#endregion
@@ -133,8 +131,5 @@ namespace pifa.DAL {
 			return item;
 		}
 
-		public RentsubletInfo GetItem(uint? Id) {
-			return this.Select.Where("a.`id` = {0}", Id).ToOne();
-		}
 	}
 }

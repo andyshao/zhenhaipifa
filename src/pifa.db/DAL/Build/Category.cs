@@ -37,17 +37,15 @@ namespace pifa.DAL {
 			return GetItem(dr, ref index) as CategoryInfo;
 		}
 		public object GetItem(IDataReader dr, ref int index) {
-			return new CategoryInfo {
-				Id = dr.IsDBNull(++index) ? null : (uint?)dr.GetInt32(index), 
-				Parent_id = dr.IsDBNull(++index) ? null : (uint?)dr.GetInt32(index), 
-				Title = dr.IsDBNull(++index) ? null : dr.GetString(index)};
-		}
-		public SelectBuild<CategoryInfo> Select {
-			get { return SelectBuild<CategoryInfo>.From(this, SqlHelper.Instance); }
+			CategoryInfo item = new CategoryInfo();
+				if (!dr.IsDBNull(++index)) item.Id = (uint?)dr.GetInt32(index);
+				if (!dr.IsDBNull(++index)) item.Parent_id = (uint?)dr.GetInt32(index);
+				if (!dr.IsDBNull(++index)) item.Title = dr.GetString(index);
+			return item;
 		}
 		#endregion
 
-		public int Delete(uint? Id) {
+		public int Delete(uint Id) {
 			return SqlHelper.ExecuteNonQuery(string.Concat(TSQL.Delete, "`id` = ?id"), 
 				GetParameter("?id", MySqlDbType.UInt32, 10, Id));
 		}
@@ -57,7 +55,7 @@ namespace pifa.DAL {
 		}
 
 		public int Update(CategoryInfo item) {
-			return new SqlUpdateBuild(null, item.Id)
+			return new SqlUpdateBuild(null, item.Id.Value)
 				.SetParent_id(item.Parent_id)
 				.SetTitle(item.Title).ExecuteNonQuery();
 		}
@@ -67,7 +65,7 @@ namespace pifa.DAL {
 			protected string _fields;
 			protected string _where;
 			protected List<MySqlParameter> _parameters = new List<MySqlParameter>();
-			public SqlUpdateBuild(CategoryInfo item, uint? Id) {
+			public SqlUpdateBuild(CategoryInfo item, uint Id) {
 				_item = item;
 				_where = SqlHelper.Addslashes("`id` = {0}", Id);
 			}
@@ -95,13 +93,13 @@ namespace pifa.DAL {
 			}
 			public SqlUpdateBuild SetParent_id(uint? value) {
 				if (_item != null) _item.Parent_id = value;
-				return this.Set("`parent_id`", string.Concat("?parent_id_", _parameters.Count), 
-					GetParameter(string.Concat("?parent_id_", _parameters.Count), MySqlDbType.UInt32, 10, value));
+				return this.Set("`parent_id`", $"?parent_id_{_parameters.Count}", 
+					GetParameter($"?parent_id_{{_parameters.Count}}", MySqlDbType.UInt32, 10, value));
 			}
 			public SqlUpdateBuild SetTitle(string value) {
 				if (_item != null) _item.Title = value;
-				return this.Set("`title`", string.Concat("?title_", _parameters.Count), 
-					GetParameter(string.Concat("?title_", _parameters.Count), MySqlDbType.VarChar, 255, value));
+				return this.Set("`title`", $"?title_{_parameters.Count}", 
+					GetParameter($"?title_{{_parameters.Count}}", MySqlDbType.VarChar, 255, value));
 			}
 		}
 		#endregion
@@ -112,8 +110,5 @@ namespace pifa.DAL {
 			return item;
 		}
 
-		public CategoryInfo GetItem(uint? Id) {
-			return this.Select.Where("a.`id` = {0}", Id).ToOne();
-		}
 	}
 }

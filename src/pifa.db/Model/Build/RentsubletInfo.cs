@@ -4,10 +4,12 @@ using System.Collections.Generic;
 using System.Linq;
 using System.ComponentModel;
 using System.Reflection;
+using Newtonsoft.Json;
 using pifa.BLL;
 
 namespace pifa.Model {
 
+	[JsonObject(MemberSerialization.OptIn)]
 	public partial class RentsubletInfo {
 		#region fields
 		private uint? _Id;
@@ -20,7 +22,7 @@ namespace pifa.Model {
 
 		public RentsubletInfo() { }
 
-		#region 独创的序列化，反序列化
+		#region 序列化，反序列化
 		protected static readonly string StringifySplit = "@<Rentsublet(Info]?#>";
 		public string Stringify() {
 			return string.Concat(
@@ -30,22 +32,30 @@ namespace pifa.Model {
 				_Price == null ? "null" : _Price.ToString(), "|",
 				_Type == null ? "null" : _Type.ToInt64().ToString());
 		}
-		public RentsubletInfo(string stringify) {
+		public static RentsubletInfo Parse(string stringify) {
 			string[] ret = stringify.Split(new char[] { '|' }, 5, StringSplitOptions.None);
 			if (ret.Length != 5) throw new Exception("格式不正确，RentsubletInfo：" + stringify);
-			if (string.Compare("null", ret[0]) != 0) _Id = uint.Parse(ret[0]);
-			if (string.Compare("null", ret[1]) != 0) _Market_id = uint.Parse(ret[1]);
-			if (string.Compare("null", ret[2]) != 0) _Create_time = new DateTime(long.Parse(ret[2]));
-			if (string.Compare("null", ret[3]) != 0) _Price = decimal.Parse(ret[3]);
-			if (string.Compare("null", ret[4]) != 0) _Type = (RentsubletTYPE)long.Parse(ret[4]);
+			RentsubletInfo item = new RentsubletInfo();
+			if (string.Compare("null", ret[0]) != 0) item.Id = uint.Parse(ret[0]);
+			if (string.Compare("null", ret[1]) != 0) item.Market_id = uint.Parse(ret[1]);
+			if (string.Compare("null", ret[2]) != 0) item.Create_time = new DateTime(long.Parse(ret[2]));
+			if (string.Compare("null", ret[3]) != 0) item.Price = decimal.Parse(ret[3]);
+			if (string.Compare("null", ret[4]) != 0) item.Type = (RentsubletTYPE)long.Parse(ret[4]);
+			return item;
 		}
 		#endregion
 
 		#region override
-		private static Dictionary<string, bool> __jsonIgnore;
-		private static object __jsonIgnore_lock = new object();
+		private static Lazy<Dictionary<string, bool>> __jsonIgnoreLazy = new Lazy<Dictionary<string, bool>>(() => {
+			FieldInfo field = typeof(RentsubletInfo).GetField("JsonIgnore");
+			Dictionary<string, bool> ret = new Dictionary<string, bool>();
+			if (field != null) string.Concat(field.GetValue(null)).Split(',').ToList().ForEach(f => {
+				if (!string.IsNullOrEmpty(f)) ret[f] = true;
+			});
+			return ret;
+		});
+		private static Dictionary<string, bool> __jsonIgnore => __jsonIgnoreLazy.Value;
 		public override string ToString() {
-			this.Init__jsonIgnore();
 			string json = string.Concat(
 				__jsonIgnore.ContainsKey("Id") ? string.Empty : string.Format(", Id : {0}", Id == null ? "null" : Id.ToString()), 
 				__jsonIgnore.ContainsKey("Market_id") ? string.Empty : string.Format(", Market_id : {0}", Market_id == null ? "null" : Market_id.ToString()), 
@@ -54,44 +64,14 @@ namespace pifa.Model {
 				__jsonIgnore.ContainsKey("Type") ? string.Empty : string.Format(", Type : {0}", Type == null ? "null" : string.Format("'{0}'", Type.ToDescriptionOrString().Replace("\\", "\\\\").Replace("\r\n", "\\r\\n").Replace("'", "\\'"))), " }");
 			return string.Concat("{", json.Substring(1));
 		}
-		public IDictionary ToBson() {
-			this.Init__jsonIgnore();
+		public IDictionary ToBson(bool allField = false) {
 			IDictionary ht = new Hashtable();
-			if (!__jsonIgnore.ContainsKey("Id")) ht["Id"] = Id;
-			if (!__jsonIgnore.ContainsKey("Market_id")) ht["Market_id"] = Market_id;
-			if (!__jsonIgnore.ContainsKey("Create_time")) ht["Create_time"] = Create_time;
-			if (!__jsonIgnore.ContainsKey("Price")) ht["Price"] = Price;
-			if (!__jsonIgnore.ContainsKey("Type")) ht["Type"] = Type?.ToDescriptionOrString();
+			if (allField || !__jsonIgnore.ContainsKey("Id")) ht["Id"] = Id;
+			if (allField || !__jsonIgnore.ContainsKey("Market_id")) ht["Market_id"] = Market_id;
+			if (allField || !__jsonIgnore.ContainsKey("Create_time")) ht["Create_time"] = Create_time;
+			if (allField || !__jsonIgnore.ContainsKey("Price")) ht["Price"] = Price;
+			if (allField || !__jsonIgnore.ContainsKey("Type")) ht["Type"] = Type?.ToDescriptionOrString();
 			return ht;
-		}
-		private void Init__jsonIgnore() {
-			if (__jsonIgnore == null) {
-				lock (__jsonIgnore_lock) {
-					if (__jsonIgnore == null) {
-						FieldInfo field = typeof(RentsubletInfo).GetField("JsonIgnore");
-						__jsonIgnore = new Dictionary<string, bool>();
-						if (field != null) {
-							string[] fs = string.Concat(field.GetValue(null)).Split(',');
-							foreach (string f in fs) if (!string.IsNullOrEmpty(f)) __jsonIgnore[f] = true;
-						}
-					}
-				}
-			}
-		}
-		public override bool Equals(object obj) {
-			RentsubletInfo item = obj as RentsubletInfo;
-			if (item == null) return false;
-			return this.ToString().Equals(item.ToString());
-		}
-		public override int GetHashCode() {
-			return this.ToString().GetHashCode();
-		}
-		public static bool operator ==(RentsubletInfo op1, RentsubletInfo op2) {
-			if (object.Equals(op1, null)) return object.Equals(op2, null);
-			return op1.Equals(op2);
-		}
-		public static bool operator !=(RentsubletInfo op1, RentsubletInfo op2) {
-			return !(op1 == op2);
 		}
 		public object this[string key] {
 			get { return this.GetType().GetProperty(key).GetValue(this); }
@@ -100,14 +80,14 @@ namespace pifa.Model {
 		#endregion
 
 		#region properties
-		public uint? Id {
+		[JsonProperty] public uint? Id {
 			get { return _Id; }
 			set { _Id = value; }
 		}
 		/// <summary>
 		/// 市场
 		/// </summary>
-		public uint? Market_id {
+		[JsonProperty] public uint? Market_id {
 			get { return _Market_id; }
 			set {
 				if (_Market_id != value) _obj_market = null;
@@ -116,7 +96,7 @@ namespace pifa.Model {
 		}
 		public MarketInfo Obj_market {
 			get {
-				if (_obj_market == null) _obj_market = Market.GetItem(_Market_id);
+				if (_obj_market == null) _obj_market = Market.GetItem(_Market_id.Value);
 				return _obj_market;
 			}
 			internal set { _obj_market = value; }
@@ -124,21 +104,21 @@ namespace pifa.Model {
 		/// <summary>
 		/// 创建时间
 		/// </summary>
-		public DateTime? Create_time {
+		[JsonProperty] public DateTime? Create_time {
 			get { return _Create_time; }
 			set { _Create_time = value; }
 		}
 		/// <summary>
 		/// 费用
 		/// </summary>
-		public decimal? Price {
+		[JsonProperty] public decimal? Price {
 			get { return _Price; }
 			set { _Price = value; }
 		}
 		/// <summary>
 		/// 类型
 		/// </summary>
-		public RentsubletTYPE? Type {
+		[JsonProperty] public RentsubletTYPE? Type {
 			get { return _Type; }
 			set { _Type = value; }
 		}
@@ -152,28 +132,28 @@ namespace pifa.Model {
 		#endregion
 
 		public pifa.DAL.Rentsublet.SqlUpdateBuild UpdateDiy {
-			get { return Rentsublet.UpdateDiy(this, _Id); }
+			get { return Rentsublet.UpdateDiy(this, _Id.Value); }
 		}
-		public Rentsublet_franchisingInfo FlagFranchising(FranchisingInfo Franchising) {
-			return FlagFranchising(Franchising.Id);
+		public RentsubletInfo Save() {
+			if (this.Id != null) {
+				Rentsublet.Update(this);
+				return this;
+			}
+			this.Create_time = DateTime.Now;
+			return Rentsublet.Insert(this);
 		}
+		public Rentsublet_franchisingInfo FlagFranchising(FranchisingInfo Franchising) => FlagFranchising(Franchising.Id);
 		public Rentsublet_franchisingInfo FlagFranchising(uint? Franchising_id) {
-			Rentsublet_franchisingInfo item = Rentsublet_franchising.GetItem(Franchising_id, this.Id);
+			Rentsublet_franchisingInfo item = Rentsublet_franchising.GetItem(Franchising_id.Value, this.Id.Value);
 			if (item == null) item = Rentsublet_franchising.Insert(new Rentsublet_franchisingInfo {
 				Franchising_id = Franchising_id, 
-				Rentsublet_id = this.Id});
+			Rentsublet_id = this.Id});
 			return item;
 		}
 
-		public int UnflagFranchising(FranchisingInfo Franchising) {
-			return UnflagFranchising(Franchising.Id);
-		}
-		public int UnflagFranchising(uint? Franchising_id) {
-			return Rentsublet_franchising.Delete(Franchising_id, this.Id);
-		}
-		public int UnflagFranchisingALL() {
-			return Rentsublet_franchising.DeleteByRentsublet_id(this.Id);
-		}
+		public int UnflagFranchising(FranchisingInfo Franchising) => UnflagFranchising(Franchising.Id);
+		public int UnflagFranchising(uint? Franchising_id) => Rentsublet_franchising.Delete(Franchising_id.Value, this.Id.Value);
+		public int UnflagFranchisingALL() => Rentsublet_franchising.DeleteByRentsublet_id(this.Id);
 
 	}
 	public enum RentsubletTYPE {

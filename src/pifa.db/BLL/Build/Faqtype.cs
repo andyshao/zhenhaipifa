@@ -18,7 +18,7 @@ namespace pifa.BLL {
 
 		#region delete, update, insert
 
-		public static int Delete(uint? Id) {
+		public static int Delete(uint Id) {
 			if (itemCacheTimeout > 0) RemoveCache(GetItem(Id));
 			return dal.Delete(Id);
 		}
@@ -27,10 +27,10 @@ namespace pifa.BLL {
 			if (itemCacheTimeout > 0) RemoveCache(item);
 			return dal.Update(item);
 		}
-		public static pifa.DAL.Faqtype.SqlUpdateBuild UpdateDiy(uint? Id) {
+		public static pifa.DAL.Faqtype.SqlUpdateBuild UpdateDiy(uint Id) {
 			return UpdateDiy(null, Id);
 		}
-		public static pifa.DAL.Faqtype.SqlUpdateBuild UpdateDiy(FaqtypeInfo item, uint? Id) {
+		public static pifa.DAL.Faqtype.SqlUpdateBuild UpdateDiy(FaqtypeInfo item, uint Id) {
 			if (itemCacheTimeout > 0) RemoveCache(item != null ? item : GetItem(Id));
 			return new pifa.DAL.Faqtype.SqlUpdateBuild(item, Id);
 		}
@@ -57,14 +57,13 @@ namespace pifa.BLL {
 		}
 		#endregion
 
-		public static FaqtypeInfo GetItem(uint? Id) {
-			if (Id == null) return null;
-			if (itemCacheTimeout <= 0) return dal.GetItem(Id);
+		public static FaqtypeInfo GetItem(uint Id) {
+			if (itemCacheTimeout <= 0) return Select.WhereId(Id).ToOne();
 			string key = string.Concat("pifa_BLL_Faqtype_", Id);
 			string value = RedisHelper.Get(key);
 			if (!string.IsNullOrEmpty(value))
-				try { return new FaqtypeInfo(value); } catch { }
-			FaqtypeInfo item = dal.GetItem(Id);
+				try { return FaqtypeInfo.Parse(value); } catch { }
+			FaqtypeInfo item = Select.WhereId(Id).ToOne();
 			if (item == null) return null;
 			RedisHelper.Set(key, item.Stringify(), itemCacheTimeout);
 			return item;
@@ -88,7 +87,7 @@ namespace pifa.BLL {
 			return this.Where1Or("a.`title` = {0}", Title);
 		}
 		public FaqtypeSelectBuild WhereTitleLike(params string[] Title) {
-			if (Title == null) return this;
+			if (Title == null || Title.Where(a => !string.IsNullOrEmpty(a)).Any() == false) return this;
 			return this.Where1Or(@"a.`title` LIKE {0}", Title.Select(a => "%" + a + "%").ToArray());
 		}
 		protected new FaqtypeSelectBuild Where1Or(string filterFormat, Array values) {

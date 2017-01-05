@@ -36,22 +36,24 @@ namespace pifa.DAL {
 			return GetItem(dr, ref index) as FaqdescInfo;
 		}
 		public object GetItem(IDataReader dr, ref int index) {
-			return new FaqdescInfo {
-				Faq_id = dr.IsDBNull(++index) ? null : (uint?)dr.GetInt32(index), 
-				Content = dr.IsDBNull(++index) ? null : dr.GetString(index)};
-		}
-		public SelectBuild<FaqdescInfo> Select {
-			get { return SelectBuild<FaqdescInfo>.From(this, SqlHelper.Instance); }
+			FaqdescInfo item = new FaqdescInfo();
+				if (!dr.IsDBNull(++index)) item.Faq_id = (uint?)dr.GetInt32(index);
+				if (!dr.IsDBNull(++index)) item.Content = dr.GetString(index);
+			return item;
 		}
 		#endregion
 
-		public int Delete(uint? Faq_id) {
+		public int Delete(uint Faq_id) {
+			return SqlHelper.ExecuteNonQuery(string.Concat(TSQL.Delete, "`faq_id` = ?faq_id"), 
+				GetParameter("?faq_id", MySqlDbType.UInt32, 10, Faq_id));
+		}
+		public int DeleteByFaq_id(uint? Faq_id) {
 			return SqlHelper.ExecuteNonQuery(string.Concat(TSQL.Delete, "`faq_id` = ?faq_id"), 
 				GetParameter("?faq_id", MySqlDbType.UInt32, 10, Faq_id));
 		}
 
 		public int Update(FaqdescInfo item) {
-			return new SqlUpdateBuild(null, item.Faq_id)
+			return new SqlUpdateBuild(null, item.Faq_id.Value)
 				.SetContent(item.Content).ExecuteNonQuery();
 		}
 		#region class SqlUpdateBuild
@@ -60,7 +62,7 @@ namespace pifa.DAL {
 			protected string _fields;
 			protected string _where;
 			protected List<MySqlParameter> _parameters = new List<MySqlParameter>();
-			public SqlUpdateBuild(FaqdescInfo item, uint? Faq_id) {
+			public SqlUpdateBuild(FaqdescInfo item, uint Faq_id) {
 				_item = item;
 				_where = SqlHelper.Addslashes("`faq_id` = {0}", Faq_id);
 			}
@@ -88,8 +90,8 @@ namespace pifa.DAL {
 			}
 			public SqlUpdateBuild SetContent(string value) {
 				if (_item != null) _item.Content = value;
-				return this.Set("`content`", string.Concat("?content_", _parameters.Count), 
-					GetParameter(string.Concat("?content_", _parameters.Count), MySqlDbType.Text, -1, value));
+				return this.Set("`content`", $"?content_{_parameters.Count}", 
+					GetParameter($"?content_{{_parameters.Count}}", MySqlDbType.Text, -1, value));
 			}
 		}
 		#endregion
@@ -99,8 +101,5 @@ namespace pifa.DAL {
 			return item;
 		}
 
-		public FaqdescInfo GetItem(uint? Faq_id) {
-			return this.Select.Where("a.`faq_id` = {0}", Faq_id).ToOne();
-		}
 	}
 }

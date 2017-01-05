@@ -18,19 +18,22 @@ namespace pifa.BLL {
 
 		#region delete, update, insert
 
-		public static int Delete(uint? News_id) {
+		public static int Delete(uint News_id) {
 			if (itemCacheTimeout > 0) RemoveCache(GetItem(News_id));
 			return dal.Delete(News_id);
+		}
+		public static int DeleteByNews_id(uint? News_id) {
+			return dal.DeleteByNews_id(News_id);
 		}
 
 		public static int Update(NewsdescInfo item) {
 			if (itemCacheTimeout > 0) RemoveCache(item);
 			return dal.Update(item);
 		}
-		public static pifa.DAL.Newsdesc.SqlUpdateBuild UpdateDiy(uint? News_id) {
+		public static pifa.DAL.Newsdesc.SqlUpdateBuild UpdateDiy(uint News_id) {
 			return UpdateDiy(null, News_id);
 		}
-		public static pifa.DAL.Newsdesc.SqlUpdateBuild UpdateDiy(NewsdescInfo item, uint? News_id) {
+		public static pifa.DAL.Newsdesc.SqlUpdateBuild UpdateDiy(NewsdescInfo item, uint News_id) {
 			if (itemCacheTimeout > 0) RemoveCache(item != null ? item : GetItem(News_id));
 			return new pifa.DAL.Newsdesc.SqlUpdateBuild(item, News_id);
 		}
@@ -57,14 +60,13 @@ namespace pifa.BLL {
 		}
 		#endregion
 
-		public static NewsdescInfo GetItem(uint? News_id) {
-			if (News_id == null) return null;
-			if (itemCacheTimeout <= 0) return dal.GetItem(News_id);
+		public static NewsdescInfo GetItem(uint News_id) {
+			if (itemCacheTimeout <= 0) return Select.WhereNews_id(News_id).ToOne();
 			string key = string.Concat("pifa_BLL_Newsdesc_", News_id);
 			string value = RedisHelper.Get(key);
 			if (!string.IsNullOrEmpty(value))
-				try { return new NewsdescInfo(value); } catch { }
-			NewsdescInfo item = dal.GetItem(News_id);
+				try { return NewsdescInfo.Parse(value); } catch { }
+			NewsdescInfo item = Select.WhereNews_id(News_id).ToOne();
 			if (item == null) return null;
 			RedisHelper.Set(key, item.Stringify(), itemCacheTimeout);
 			return item;
@@ -88,10 +90,10 @@ namespace pifa.BLL {
 	}
 	public partial class NewsdescSelectBuild : SelectBuild<NewsdescInfo, NewsdescSelectBuild> {
 		public NewsdescSelectBuild WhereNews_id(params uint?[] News_id) {
-			return this.Where1Or("a.`News_id` = {0}", News_id);
+			return this.Where1Or("a.`news_id` = {0}", News_id);
 		}
 		public NewsdescSelectBuild WhereContentLike(params string[] Content) {
-			if (Content == null) return this;
+			if (Content == null || Content.Where(a => !string.IsNullOrEmpty(a)).Any() == false) return this;
 			return this.Where1Or(@"a.`content` LIKE {0}", Content.Select(a => "%" + a + "%").ToArray());
 		}
 		protected new NewsdescSelectBuild Where1Or(string filterFormat, Array values) {

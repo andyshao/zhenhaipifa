@@ -18,19 +18,22 @@ namespace pifa.BLL {
 
 		#region delete, update, insert
 
-		public static int Delete(uint? Shop_id) {
+		public static int Delete(uint Shop_id) {
 			if (itemCacheTimeout > 0) RemoveCache(GetItem(Shop_id));
 			return dal.Delete(Shop_id);
+		}
+		public static int DeleteByShop_id(uint? Shop_id) {
+			return dal.DeleteByShop_id(Shop_id);
 		}
 
 		public static int Update(ShopstatInfo item) {
 			if (itemCacheTimeout > 0) RemoveCache(item);
 			return dal.Update(item);
 		}
-		public static pifa.DAL.Shopstat.SqlUpdateBuild UpdateDiy(uint? Shop_id) {
+		public static pifa.DAL.Shopstat.SqlUpdateBuild UpdateDiy(uint Shop_id) {
 			return UpdateDiy(null, Shop_id);
 		}
-		public static pifa.DAL.Shopstat.SqlUpdateBuild UpdateDiy(ShopstatInfo item, uint? Shop_id) {
+		public static pifa.DAL.Shopstat.SqlUpdateBuild UpdateDiy(ShopstatInfo item, uint Shop_id) {
 			if (itemCacheTimeout > 0) RemoveCache(item != null ? item : GetItem(Shop_id));
 			return new pifa.DAL.Shopstat.SqlUpdateBuild(item, Shop_id);
 		}
@@ -66,14 +69,13 @@ namespace pifa.BLL {
 		}
 		#endregion
 
-		public static ShopstatInfo GetItem(uint? Shop_id) {
-			if (Shop_id == null) return null;
-			if (itemCacheTimeout <= 0) return dal.GetItem(Shop_id);
+		public static ShopstatInfo GetItem(uint Shop_id) {
+			if (itemCacheTimeout <= 0) return Select.WhereShop_id(Shop_id).ToOne();
 			string key = string.Concat("pifa_BLL_Shopstat_", Shop_id);
 			string value = RedisHelper.Get(key);
 			if (!string.IsNullOrEmpty(value))
-				try { return new ShopstatInfo(value); } catch { }
-			ShopstatInfo item = dal.GetItem(Shop_id);
+				try { return ShopstatInfo.Parse(value); } catch { }
+			ShopstatInfo item = Select.WhereShop_id(Shop_id).ToOne();
 			if (item == null) return null;
 			RedisHelper.Set(key, item.Stringify(), itemCacheTimeout);
 			return item;
@@ -97,7 +99,7 @@ namespace pifa.BLL {
 	}
 	public partial class ShopstatSelectBuild : SelectBuild<ShopstatInfo, ShopstatSelectBuild> {
 		public ShopstatSelectBuild WhereShop_id(params uint?[] Shop_id) {
-			return this.Where1Or("a.`Shop_id` = {0}", Shop_id);
+			return this.Where1Or("a.`shop_id` = {0}", Shop_id);
 		}
 		public ShopstatSelectBuild WhereToday_fav(params uint?[] Today_fav) {
 			return this.Where1Or("a.`today_fav` = {0}", Today_fav);

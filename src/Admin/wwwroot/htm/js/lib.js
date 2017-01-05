@@ -1,33 +1,28 @@
 if (typeof $ === 'undefined') $ = jQuery;
 $.ajaxSettings.dataType = 'json';
 
-function request(name, defaultValue) {
-	return qs_parse()[name] || defaultValue;
-}
-function cint(str, defaultValue) {
-	str = parseInt(str, 10);
-	return isNaN(str) ? defaultValue || 0 : str;
-}
+function isArray(obj) { return Object.prototype.toString.call(obj) === '[object Array]'; }
+function request(name, defaultValue) { return qs_parse()[name] || defaultValue; }
+function cint(str, defaultValue) { str = parseInt(str, 10); return isNaN(str) ? defaultValue || 0 : str; }
 function _clone(obj) {
 	var ret = {};
 	if (typeof obj === 'undefined' || obj === null) return ret;
-	for (var a in obj) ret[a] = obj[a];
+	for (var a in obj) {
+		if (isArray(obj[a])) {
+			ret[a] = [];
+			for (var b = 0; b < obj[a].length; b++) ret[a].push(obj[a][b]);
+			continue;
+		}
+		ret[a] = obj[a];
+	}
 	return ret;
 }
 
-String.prototype.trim = function () {
-	return this.ltrim().rtrim();
-}
-String.prototype.ltrim = function () {
-	return this.replace(/^\s+(.*)/g, '$1');
-}
-String.prototype.rtrim = function () {
-	return this.replace(/([^ ]*)\s+$/g, '$1');
-}
+String.prototype.trim = function () { return this.ltrim().rtrim(); }
+String.prototype.ltrim = function () { return this.replace(/^\s+(.*)/g, '$1'); }
+String.prototype.rtrim = function () { return this.replace(/([^ ]*)\s+$/g, '$1'); }
 //中文按2位算
-String.prototype.getLength = function () {
-	return this.replace(/([\u0391-\uFFE5])/ig, '11').length;
-}
+String.prototype.getLength = function () { return this.replace(/([\u0391-\uFFE5])/ig, '11').length; }
 String.prototype.left = function (len, endstr) {
 	if (len > this.getLength()) return this;
 	var ret = this.replace(/([\u0391-\uFFE5])/ig, '$1\0')
@@ -95,7 +90,22 @@ function qs_parse(str) {
 	for (var a = 0; a < y.length; a++) {
 		var x = y[a].split('=', 2);
 		if (x[0] === '') continue;
-		qs[url_decode(x[0])] = url_decode(x[1] || '');
+		var x0 = url_decode(x[0]);
+		if (!qs[x0]) qs[x0] = '';
+		qs[x0] += url_decode(x[1] || '') + '\r\n';
+	}
+	//转换数组，去重
+	for (var a in qs) {
+		qs[a] = qs[a].substr(0, qs[a].length - 2);
+		if (qs[a].indexOf('\r\n') === -1) continue;
+		var t1 = qs[a].split('\r\n');
+		var t2 = {};
+		qs[a] = [];
+		for (var b = 0; b < t1.length; b++) {
+			if (t2[t1[b]]) continue;
+			t2[t1[b]] = true;
+			qs[a].push(t1[b]);
+		}
 	}
 	return qs;
 }
@@ -109,8 +119,12 @@ function qs_stringify(query) {
 	var ret = [];
 	for (var a in query) {
 		var z = url_encode(a); if (z === '') continue;
-		var y = url_encode(query[a]);
-		ret.push(z + '=' + y);
+		if (isArray(query[a]) == false) {
+			ret.push(z + '=' + url_encode(query[a]));
+			continue;
+		}
+		for (var b = 0; b < query[a].length; b++)
+			ret.push(z + '=' + url_encode(query[a][b]));
 	}
 	return ret.join('&');
 }

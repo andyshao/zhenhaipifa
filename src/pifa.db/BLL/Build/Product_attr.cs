@@ -18,7 +18,7 @@ namespace pifa.BLL {
 
 		#region delete, update, insert
 
-		public static int Delete(uint? Pattr_id, uint? Product_id) {
+		public static int Delete(uint Pattr_id, uint Product_id) {
 			if (itemCacheTimeout > 0) RemoveCache(GetItem(Pattr_id, Product_id));
 			return dal.Delete(Pattr_id, Product_id);
 		}
@@ -33,10 +33,10 @@ namespace pifa.BLL {
 			if (itemCacheTimeout > 0) RemoveCache(item);
 			return dal.Update(item);
 		}
-		public static pifa.DAL.Product_attr.SqlUpdateBuild UpdateDiy(uint? Pattr_id, uint? Product_id) {
+		public static pifa.DAL.Product_attr.SqlUpdateBuild UpdateDiy(uint Pattr_id, uint Product_id) {
 			return UpdateDiy(null, Pattr_id, Product_id);
 		}
-		public static pifa.DAL.Product_attr.SqlUpdateBuild UpdateDiy(Product_attrInfo item, uint? Pattr_id, uint? Product_id) {
+		public static pifa.DAL.Product_attr.SqlUpdateBuild UpdateDiy(Product_attrInfo item, uint Pattr_id, uint Product_id) {
 			if (itemCacheTimeout > 0) RemoveCache(item != null ? item : GetItem(Pattr_id, Product_id));
 			return new pifa.DAL.Product_attr.SqlUpdateBuild(item, Pattr_id, Product_id);
 		}
@@ -64,14 +64,13 @@ namespace pifa.BLL {
 		}
 		#endregion
 
-		public static Product_attrInfo GetItem(uint? Pattr_id, uint? Product_id) {
-			if (Pattr_id == null || Product_id == null) return null;
-			if (itemCacheTimeout <= 0) return dal.GetItem(Pattr_id, Product_id);
+		public static Product_attrInfo GetItem(uint Pattr_id, uint Product_id) {
+			if (itemCacheTimeout <= 0) return Select.WherePattr_id(Pattr_id).WhereProduct_id(Product_id).ToOne();
 			string key = string.Concat("pifa_BLL_Product_attr_", Pattr_id, "_,_", Product_id);
 			string value = RedisHelper.Get(key);
 			if (!string.IsNullOrEmpty(value))
-				try { return new Product_attrInfo(value); } catch { }
-			Product_attrInfo item = dal.GetItem(Pattr_id, Product_id);
+				try { return Product_attrInfo.Parse(value); } catch { }
+			Product_attrInfo item = Select.WherePattr_id(Pattr_id).WhereProduct_id(Product_id).ToOne();
 			if (item == null) return null;
 			RedisHelper.Set(key, item.Stringify(), itemCacheTimeout);
 			return item;
@@ -104,16 +103,16 @@ namespace pifa.BLL {
 	}
 	public partial class Product_attrSelectBuild : SelectBuild<Product_attrInfo, Product_attrSelectBuild> {
 		public Product_attrSelectBuild WherePattr_id(params uint?[] Pattr_id) {
-			return this.Where1Or("a.`Pattr_id` = {0}", Pattr_id);
+			return this.Where1Or("a.`pattr_id` = {0}", Pattr_id);
 		}
 		public Product_attrSelectBuild WhereProduct_id(params uint?[] Product_id) {
-			return this.Where1Or("a.`Product_id` = {0}", Product_id);
+			return this.Where1Or("a.`product_id` = {0}", Product_id);
 		}
 		public Product_attrSelectBuild WhereValue(params string[] Value) {
 			return this.Where1Or("a.`value` = {0}", Value);
 		}
 		public Product_attrSelectBuild WhereValueLike(params string[] Value) {
-			if (Value == null) return this;
+			if (Value == null || Value.Where(a => !string.IsNullOrEmpty(a)).Any() == false) return this;
 			return this.Where1Or(@"a.`value` LIKE {0}", Value.Select(a => "%" + a + "%").ToArray());
 		}
 		protected new Product_attrSelectBuild Where1Or(string filterFormat, Array values) {

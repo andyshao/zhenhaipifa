@@ -47,27 +47,25 @@ namespace pifa.DAL {
 			return GetItem(dr, ref index) as OrderInfo;
 		}
 		public object GetItem(IDataReader dr, ref int index) {
-			return new OrderInfo {
-				Id = dr.IsDBNull(++index) ? null : (uint?)dr.GetInt32(index), 
-				Member_id = dr.IsDBNull(++index) ? null : (uint?)dr.GetInt32(index), 
-				Code = dr.IsDBNull(++index) ? null : dr.GetString(index), 
-				Create_time = dr.IsDBNull(++index) ? null : (DateTime?)dr.GetDateTime(index), 
-				Express_code = dr.IsDBNull(++index) ? null : dr.GetString(index), 
-				Express_name = dr.IsDBNull(++index) ? null : dr.GetString(index), 
-				Paymethod = dr.IsDBNull(++index) ? null : dr.GetString(index), 
-				Remark = dr.IsDBNull(++index) ? null : dr.GetString(index), 
-				State = dr.IsDBNull(++index) ? null : (OrderSTATE?)dr.GetInt64(index), 
-				Total_express_price = dr.IsDBNull(++index) ? null : (decimal?)dr.GetDecimal(index), 
-				Total_original_price = dr.IsDBNull(++index) ? null : (decimal?)dr.GetDecimal(index), 
-				Total_price = dr.IsDBNull(++index) ? null : (decimal?)dr.GetDecimal(index), 
-				Update_time = dr.IsDBNull(++index) ? null : (DateTime?)dr.GetDateTime(index)};
-		}
-		public SelectBuild<OrderInfo> Select {
-			get { return SelectBuild<OrderInfo>.From(this, SqlHelper.Instance); }
+			OrderInfo item = new OrderInfo();
+				if (!dr.IsDBNull(++index)) item.Id = (uint?)dr.GetInt32(index);
+				if (!dr.IsDBNull(++index)) item.Member_id = (uint?)dr.GetInt32(index);
+				if (!dr.IsDBNull(++index)) item.Code = dr.GetString(index);
+				if (!dr.IsDBNull(++index)) item.Create_time = (DateTime?)dr.GetDateTime(index);
+				if (!dr.IsDBNull(++index)) item.Express_code = dr.GetString(index);
+				if (!dr.IsDBNull(++index)) item.Express_name = dr.GetString(index);
+				if (!dr.IsDBNull(++index)) item.Paymethod = dr.GetString(index);
+				if (!dr.IsDBNull(++index)) item.Remark = dr.GetString(index);
+				if (!dr.IsDBNull(++index)) item.State = (OrderSTATE?)dr.GetInt64(index);
+				if (!dr.IsDBNull(++index)) item.Total_express_price = (decimal?)dr.GetDecimal(index);
+				if (!dr.IsDBNull(++index)) item.Total_original_price = (decimal?)dr.GetDecimal(index);
+				if (!dr.IsDBNull(++index)) item.Total_price = (decimal?)dr.GetDecimal(index);
+				if (!dr.IsDBNull(++index)) item.Update_time = (DateTime?)dr.GetDateTime(index);
+			return item;
 		}
 		#endregion
 
-		public int Delete(uint? Id) {
+		public int Delete(uint Id) {
 			return SqlHelper.ExecuteNonQuery(string.Concat(TSQL.Delete, "`id` = ?id"), 
 				GetParameter("?id", MySqlDbType.UInt32, 10, Id));
 		}
@@ -81,7 +79,7 @@ namespace pifa.DAL {
 		}
 
 		public int Update(OrderInfo item) {
-			return new SqlUpdateBuild(null, item.Id)
+			return new SqlUpdateBuild(null, item.Id.Value)
 				.SetMember_id(item.Member_id)
 				.SetCode(item.Code)
 				.SetCreate_time(item.Create_time)
@@ -101,7 +99,7 @@ namespace pifa.DAL {
 			protected string _fields;
 			protected string _where;
 			protected List<MySqlParameter> _parameters = new List<MySqlParameter>();
-			public SqlUpdateBuild(OrderInfo item, uint? Id) {
+			public SqlUpdateBuild(OrderInfo item, uint Id) {
 				_item = item;
 				_where = SqlHelper.Addslashes("`id` = {0}", Id);
 			}
@@ -129,78 +127,78 @@ namespace pifa.DAL {
 			}
 			public SqlUpdateBuild SetMember_id(uint? value) {
 				if (_item != null) _item.Member_id = value;
-				return this.Set("`member_id`", string.Concat("?member_id_", _parameters.Count), 
-					GetParameter(string.Concat("?member_id_", _parameters.Count), MySqlDbType.UInt32, 10, value));
+				return this.Set("`member_id`", $"?member_id_{_parameters.Count}", 
+					GetParameter($"?member_id_{{_parameters.Count}}", MySqlDbType.UInt32, 10, value));
 			}
 			public SqlUpdateBuild SetCode(string value) {
 				if (_item != null) _item.Code = value;
-				return this.Set("`code`", string.Concat("?code_", _parameters.Count), 
-					GetParameter(string.Concat("?code_", _parameters.Count), MySqlDbType.VarChar, 32, value));
+				return this.Set("`code`", $"?code_{_parameters.Count}", 
+					GetParameter($"?code_{{_parameters.Count}}", MySqlDbType.VarChar, 32, value));
 			}
 			public SqlUpdateBuild SetCreate_time(DateTime? value) {
 				if (_item != null) _item.Create_time = value;
-				return this.Set("`create_time`", string.Concat("?create_time_", _parameters.Count), 
-					GetParameter(string.Concat("?create_time_", _parameters.Count), MySqlDbType.DateTime, -1, value));
+				return this.Set("`create_time`", $"?create_time_{_parameters.Count}", 
+					GetParameter($"?create_time_{{_parameters.Count}}", MySqlDbType.DateTime, -1, value));
 			}
 			public SqlUpdateBuild SetExpress_code(string value) {
 				if (_item != null) _item.Express_code = value;
-				return this.Set("`express_code`", string.Concat("?express_code_", _parameters.Count), 
-					GetParameter(string.Concat("?express_code_", _parameters.Count), MySqlDbType.VarChar, 64, value));
+				return this.Set("`express_code`", $"?express_code_{_parameters.Count}", 
+					GetParameter($"?express_code_{{_parameters.Count}}", MySqlDbType.VarChar, 64, value));
 			}
 			public SqlUpdateBuild SetExpress_name(string value) {
 				if (_item != null) _item.Express_name = value;
-				return this.Set("`express_name`", string.Concat("?express_name_", _parameters.Count), 
-					GetParameter(string.Concat("?express_name_", _parameters.Count), MySqlDbType.VarChar, 255, value));
+				return this.Set("`express_name`", $"?express_name_{_parameters.Count}", 
+					GetParameter($"?express_name_{{_parameters.Count}}", MySqlDbType.VarChar, 255, value));
 			}
 			public SqlUpdateBuild SetPaymethod(string value) {
 				if (_item != null) _item.Paymethod = value;
-				return this.Set("`paymethod`", string.Concat("?paymethod_", _parameters.Count), 
-					GetParameter(string.Concat("?paymethod_", _parameters.Count), MySqlDbType.VarChar, 32, value));
+				return this.Set("`paymethod`", $"?paymethod_{_parameters.Count}", 
+					GetParameter($"?paymethod_{{_parameters.Count}}", MySqlDbType.VarChar, 32, value));
 			}
 			public SqlUpdateBuild SetRemark(string value) {
 				if (_item != null) _item.Remark = value;
-				return this.Set("`remark`", string.Concat("?remark_", _parameters.Count), 
-					GetParameter(string.Concat("?remark_", _parameters.Count), MySqlDbType.VarChar, 255, value));
+				return this.Set("`remark`", $"?remark_{_parameters.Count}", 
+					GetParameter($"?remark_{{_parameters.Count}}", MySqlDbType.VarChar, 255, value));
 			}
 			public SqlUpdateBuild SetState(OrderSTATE? value) {
 				if (_item != null) _item.State = value;
-				return this.Set("`state`", string.Concat("?state_", _parameters.Count), 
-					GetParameter(string.Concat("?state_", _parameters.Count), MySqlDbType.Enum, -1, value?.ToInt64()));
+				return this.Set("`state`", $"?state_{_parameters.Count}", 
+					GetParameter($"?state_{{_parameters.Count}}", MySqlDbType.Enum, -1, value?.ToInt64()));
 			}
 			public SqlUpdateBuild SetTotal_express_price(decimal? value) {
 				if (_item != null) _item.Total_express_price = value;
-				return this.Set("`total_express_price`", string.Concat("?total_express_price_", _parameters.Count), 
-					GetParameter(string.Concat("?total_express_price_", _parameters.Count), MySqlDbType.Decimal, 10, value));
+				return this.Set("`total_express_price`", $"?total_express_price_{_parameters.Count}", 
+					GetParameter($"?total_express_price_{{_parameters.Count}}", MySqlDbType.Decimal, 10, value));
 			}
 			public SqlUpdateBuild SetTotal_express_priceIncrement(decimal value) {
 				if (_item != null) _item.Total_express_price += value;
-				return this.Set("`total_express_price`", string.Concat("`total_express_price` + ?total_express_price_", _parameters.Count), 
-					GetParameter(string.Concat("?total_express_price_", _parameters.Count), MySqlDbType.Decimal, 10, value));
+				return this.Set("`total_express_price`", "`total_express_price` + ?total_express_price_{_parameters.Count}", 
+					GetParameter($"?total_express_price_{{_parameters.Count}}", MySqlDbType.Decimal, 10, value));
 			}
 			public SqlUpdateBuild SetTotal_original_price(decimal? value) {
 				if (_item != null) _item.Total_original_price = value;
-				return this.Set("`total_original_price`", string.Concat("?total_original_price_", _parameters.Count), 
-					GetParameter(string.Concat("?total_original_price_", _parameters.Count), MySqlDbType.Decimal, 10, value));
+				return this.Set("`total_original_price`", $"?total_original_price_{_parameters.Count}", 
+					GetParameter($"?total_original_price_{{_parameters.Count}}", MySqlDbType.Decimal, 10, value));
 			}
 			public SqlUpdateBuild SetTotal_original_priceIncrement(decimal value) {
 				if (_item != null) _item.Total_original_price += value;
-				return this.Set("`total_original_price`", string.Concat("`total_original_price` + ?total_original_price_", _parameters.Count), 
-					GetParameter(string.Concat("?total_original_price_", _parameters.Count), MySqlDbType.Decimal, 10, value));
+				return this.Set("`total_original_price`", "`total_original_price` + ?total_original_price_{_parameters.Count}", 
+					GetParameter($"?total_original_price_{{_parameters.Count}}", MySqlDbType.Decimal, 10, value));
 			}
 			public SqlUpdateBuild SetTotal_price(decimal? value) {
 				if (_item != null) _item.Total_price = value;
-				return this.Set("`total_price`", string.Concat("?total_price_", _parameters.Count), 
-					GetParameter(string.Concat("?total_price_", _parameters.Count), MySqlDbType.Decimal, 10, value));
+				return this.Set("`total_price`", $"?total_price_{_parameters.Count}", 
+					GetParameter($"?total_price_{{_parameters.Count}}", MySqlDbType.Decimal, 10, value));
 			}
 			public SqlUpdateBuild SetTotal_priceIncrement(decimal value) {
 				if (_item != null) _item.Total_price += value;
-				return this.Set("`total_price`", string.Concat("`total_price` + ?total_price_", _parameters.Count), 
-					GetParameter(string.Concat("?total_price_", _parameters.Count), MySqlDbType.Decimal, 10, value));
+				return this.Set("`total_price`", "`total_price` + ?total_price_{_parameters.Count}", 
+					GetParameter($"?total_price_{{_parameters.Count}}", MySqlDbType.Decimal, 10, value));
 			}
 			public SqlUpdateBuild SetUpdate_time(DateTime? value) {
 				if (_item != null) _item.Update_time = value;
-				return this.Set("`update_time`", string.Concat("?update_time_", _parameters.Count), 
-					GetParameter(string.Concat("?update_time_", _parameters.Count), MySqlDbType.DateTime, -1, value));
+				return this.Set("`update_time`", $"?update_time_{_parameters.Count}", 
+					GetParameter($"?update_time_{{_parameters.Count}}", MySqlDbType.DateTime, -1, value));
 			}
 		}
 		#endregion
@@ -211,11 +209,5 @@ namespace pifa.DAL {
 			return item;
 		}
 
-		public OrderInfo GetItem(uint? Id) {
-			return this.Select.Where("a.`id` = {0}", Id).ToOne();
-		}
-		public OrderInfo GetItemByCode(string Code) {
-			return this.Select.Where("a.`code` = {0}", Code).ToOne();
-		}
 	}
 }

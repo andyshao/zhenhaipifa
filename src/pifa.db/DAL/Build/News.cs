@@ -42,28 +42,26 @@ namespace pifa.DAL {
 			return GetItem(dr, ref index) as NewsInfo;
 		}
 		public object GetItem(IDataReader dr, ref int index) {
-			return new NewsInfo {
-				Id = dr.IsDBNull(++index) ? null : (uint?)dr.GetInt32(index), 
-				Create_time = dr.IsDBNull(++index) ? null : (DateTime?)dr.GetDateTime(index), 
-				Intro = dr.IsDBNull(++index) ? null : dr.GetString(index), 
-				Pv = dr.IsDBNull(++index) ? null : (uint?)dr.GetInt32(index), 
-				Source = dr.IsDBNull(++index) ? null : dr.GetString(index), 
-				State = dr.IsDBNull(++index) ? null : (NewsSTATE?)dr.GetInt64(index), 
-				Title = dr.IsDBNull(++index) ? null : dr.GetString(index), 
-				Update_time = dr.IsDBNull(++index) ? null : (DateTime?)dr.GetDateTime(index)};
-		}
-		public SelectBuild<NewsInfo> Select {
-			get { return SelectBuild<NewsInfo>.From(this, SqlHelper.Instance); }
+			NewsInfo item = new NewsInfo();
+				if (!dr.IsDBNull(++index)) item.Id = (uint?)dr.GetInt32(index);
+				if (!dr.IsDBNull(++index)) item.Create_time = (DateTime?)dr.GetDateTime(index);
+				if (!dr.IsDBNull(++index)) item.Intro = dr.GetString(index);
+				if (!dr.IsDBNull(++index)) item.Pv = (uint?)dr.GetInt32(index);
+				if (!dr.IsDBNull(++index)) item.Source = dr.GetString(index);
+				if (!dr.IsDBNull(++index)) item.State = (NewsSTATE?)dr.GetInt64(index);
+				if (!dr.IsDBNull(++index)) item.Title = dr.GetString(index);
+				if (!dr.IsDBNull(++index)) item.Update_time = (DateTime?)dr.GetDateTime(index);
+			return item;
 		}
 		#endregion
 
-		public int Delete(uint? Id) {
+		public int Delete(uint Id) {
 			return SqlHelper.ExecuteNonQuery(string.Concat(TSQL.Delete, "`id` = ?id"), 
 				GetParameter("?id", MySqlDbType.UInt32, 10, Id));
 		}
 
 		public int Update(NewsInfo item) {
-			return new SqlUpdateBuild(null, item.Id)
+			return new SqlUpdateBuild(null, item.Id.Value)
 				.SetCreate_time(item.Create_time)
 				.SetIntro(item.Intro)
 				.SetPv(item.Pv)
@@ -78,7 +76,7 @@ namespace pifa.DAL {
 			protected string _fields;
 			protected string _where;
 			protected List<MySqlParameter> _parameters = new List<MySqlParameter>();
-			public SqlUpdateBuild(NewsInfo item, uint? Id) {
+			public SqlUpdateBuild(NewsInfo item, uint Id) {
 				_item = item;
 				_where = SqlHelper.Addslashes("`id` = {0}", Id);
 			}
@@ -106,43 +104,43 @@ namespace pifa.DAL {
 			}
 			public SqlUpdateBuild SetCreate_time(DateTime? value) {
 				if (_item != null) _item.Create_time = value;
-				return this.Set("`create_time`", string.Concat("?create_time_", _parameters.Count), 
-					GetParameter(string.Concat("?create_time_", _parameters.Count), MySqlDbType.DateTime, -1, value));
+				return this.Set("`create_time`", $"?create_time_{_parameters.Count}", 
+					GetParameter($"?create_time_{{_parameters.Count}}", MySqlDbType.DateTime, -1, value));
 			}
 			public SqlUpdateBuild SetIntro(string value) {
 				if (_item != null) _item.Intro = value;
-				return this.Set("`intro`", string.Concat("?intro_", _parameters.Count), 
-					GetParameter(string.Concat("?intro_", _parameters.Count), MySqlDbType.VarChar, 1000, value));
+				return this.Set("`intro`", $"?intro_{_parameters.Count}", 
+					GetParameter($"?intro_{{_parameters.Count}}", MySqlDbType.VarChar, 1000, value));
 			}
 			public SqlUpdateBuild SetPv(uint? value) {
 				if (_item != null) _item.Pv = value;
-				return this.Set("`pv`", string.Concat("?pv_", _parameters.Count), 
-					GetParameter(string.Concat("?pv_", _parameters.Count), MySqlDbType.UInt32, 10, value));
+				return this.Set("`pv`", $"?pv_{_parameters.Count}", 
+					GetParameter($"?pv_{{_parameters.Count}}", MySqlDbType.UInt32, 10, value));
 			}
 			public SqlUpdateBuild SetPvIncrement(int value) {
 				if (_item != null) _item.Pv = (uint?)((int?)_item.Pv + value);
-				return this.Set("`pv`", string.Concat("`pv` + ?pv_", _parameters.Count), 
-					GetParameter(string.Concat("?pv_", _parameters.Count), MySqlDbType.Int32, 10, value));
+				return this.Set("`pv`", "`pv` + ?pv_{_parameters.Count}", 
+					GetParameter($"?pv_{{_parameters.Count}}", MySqlDbType.Int32, 10, value));
 			}
 			public SqlUpdateBuild SetSource(string value) {
 				if (_item != null) _item.Source = value;
-				return this.Set("`source`", string.Concat("?source_", _parameters.Count), 
-					GetParameter(string.Concat("?source_", _parameters.Count), MySqlDbType.VarChar, 32, value));
+				return this.Set("`source`", $"?source_{_parameters.Count}", 
+					GetParameter($"?source_{{_parameters.Count}}", MySqlDbType.VarChar, 32, value));
 			}
 			public SqlUpdateBuild SetState(NewsSTATE? value) {
 				if (_item != null) _item.State = value;
-				return this.Set("`state`", string.Concat("?state_", _parameters.Count), 
-					GetParameter(string.Concat("?state_", _parameters.Count), MySqlDbType.Enum, -1, value?.ToInt64()));
+				return this.Set("`state`", $"?state_{_parameters.Count}", 
+					GetParameter($"?state_{{_parameters.Count}}", MySqlDbType.Enum, -1, value?.ToInt64()));
 			}
 			public SqlUpdateBuild SetTitle(string value) {
 				if (_item != null) _item.Title = value;
-				return this.Set("`title`", string.Concat("?title_", _parameters.Count), 
-					GetParameter(string.Concat("?title_", _parameters.Count), MySqlDbType.VarChar, 255, value));
+				return this.Set("`title`", $"?title_{_parameters.Count}", 
+					GetParameter($"?title_{{_parameters.Count}}", MySqlDbType.VarChar, 255, value));
 			}
 			public SqlUpdateBuild SetUpdate_time(DateTime? value) {
 				if (_item != null) _item.Update_time = value;
-				return this.Set("`update_time`", string.Concat("?update_time_", _parameters.Count), 
-					GetParameter(string.Concat("?update_time_", _parameters.Count), MySqlDbType.DateTime, -1, value));
+				return this.Set("`update_time`", $"?update_time_{_parameters.Count}", 
+					GetParameter($"?update_time_{{_parameters.Count}}", MySqlDbType.DateTime, -1, value));
 			}
 		}
 		#endregion
@@ -153,8 +151,5 @@ namespace pifa.DAL {
 			return item;
 		}
 
-		public NewsInfo GetItem(uint? Id) {
-			return this.Select.Where("a.`id` = {0}", Id).ToOne();
-		}
 	}
 }

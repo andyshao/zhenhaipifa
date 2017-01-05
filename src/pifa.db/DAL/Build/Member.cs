@@ -40,20 +40,18 @@ namespace pifa.DAL {
 			return GetItem(dr, ref index) as MemberInfo;
 		}
 		public object GetItem(IDataReader dr, ref int index) {
-			return new MemberInfo {
-				Id = dr.IsDBNull(++index) ? null : (uint?)dr.GetInt32(index), 
-				Create_time = dr.IsDBNull(++index) ? null : (DateTime?)dr.GetDateTime(index), 
-				Email = dr.IsDBNull(++index) ? null : dr.GetString(index), 
-				Lastlogin_time = dr.IsDBNull(++index) ? null : (DateTime?)dr.GetDateTime(index), 
-				Telphone = dr.IsDBNull(++index) ? null : dr.GetString(index), 
-				Username = dr.IsDBNull(++index) ? null : dr.GetString(index)};
-		}
-		public SelectBuild<MemberInfo> Select {
-			get { return SelectBuild<MemberInfo>.From(this, SqlHelper.Instance); }
+			MemberInfo item = new MemberInfo();
+				if (!dr.IsDBNull(++index)) item.Id = (uint?)dr.GetInt32(index);
+				if (!dr.IsDBNull(++index)) item.Create_time = (DateTime?)dr.GetDateTime(index);
+				if (!dr.IsDBNull(++index)) item.Email = dr.GetString(index);
+				if (!dr.IsDBNull(++index)) item.Lastlogin_time = (DateTime?)dr.GetDateTime(index);
+				if (!dr.IsDBNull(++index)) item.Telphone = dr.GetString(index);
+				if (!dr.IsDBNull(++index)) item.Username = dr.GetString(index);
+			return item;
 		}
 		#endregion
 
-		public int Delete(uint? Id) {
+		public int Delete(uint Id) {
 			return SqlHelper.ExecuteNonQuery(string.Concat(TSQL.Delete, "`id` = ?id"), 
 				GetParameter("?id", MySqlDbType.UInt32, 10, Id));
 		}
@@ -71,7 +69,7 @@ namespace pifa.DAL {
 		}
 
 		public int Update(MemberInfo item) {
-			return new SqlUpdateBuild(null, item.Id)
+			return new SqlUpdateBuild(null, item.Id.Value)
 				.SetCreate_time(item.Create_time)
 				.SetEmail(item.Email)
 				.SetLastlogin_time(item.Lastlogin_time)
@@ -84,7 +82,7 @@ namespace pifa.DAL {
 			protected string _fields;
 			protected string _where;
 			protected List<MySqlParameter> _parameters = new List<MySqlParameter>();
-			public SqlUpdateBuild(MemberInfo item, uint? Id) {
+			public SqlUpdateBuild(MemberInfo item, uint Id) {
 				_item = item;
 				_where = SqlHelper.Addslashes("`id` = {0}", Id);
 			}
@@ -112,28 +110,28 @@ namespace pifa.DAL {
 			}
 			public SqlUpdateBuild SetCreate_time(DateTime? value) {
 				if (_item != null) _item.Create_time = value;
-				return this.Set("`create_time`", string.Concat("?create_time_", _parameters.Count), 
-					GetParameter(string.Concat("?create_time_", _parameters.Count), MySqlDbType.DateTime, -1, value));
+				return this.Set("`create_time`", $"?create_time_{_parameters.Count}", 
+					GetParameter($"?create_time_{{_parameters.Count}}", MySqlDbType.DateTime, -1, value));
 			}
 			public SqlUpdateBuild SetEmail(string value) {
 				if (_item != null) _item.Email = value;
-				return this.Set("`email`", string.Concat("?email_", _parameters.Count), 
-					GetParameter(string.Concat("?email_", _parameters.Count), MySqlDbType.VarChar, 32, value));
+				return this.Set("`email`", $"?email_{_parameters.Count}", 
+					GetParameter($"?email_{{_parameters.Count}}", MySqlDbType.VarChar, 32, value));
 			}
 			public SqlUpdateBuild SetLastlogin_time(DateTime? value) {
 				if (_item != null) _item.Lastlogin_time = value;
-				return this.Set("`lastlogin_time`", string.Concat("?lastlogin_time_", _parameters.Count), 
-					GetParameter(string.Concat("?lastlogin_time_", _parameters.Count), MySqlDbType.DateTime, -1, value));
+				return this.Set("`lastlogin_time`", $"?lastlogin_time_{_parameters.Count}", 
+					GetParameter($"?lastlogin_time_{{_parameters.Count}}", MySqlDbType.DateTime, -1, value));
 			}
 			public SqlUpdateBuild SetTelphone(string value) {
 				if (_item != null) _item.Telphone = value;
-				return this.Set("`telphone`", string.Concat("?telphone_", _parameters.Count), 
-					GetParameter(string.Concat("?telphone_", _parameters.Count), MySqlDbType.VarChar, 32, value));
+				return this.Set("`telphone`", $"?telphone_{_parameters.Count}", 
+					GetParameter($"?telphone_{{_parameters.Count}}", MySqlDbType.VarChar, 32, value));
 			}
 			public SqlUpdateBuild SetUsername(string value) {
 				if (_item != null) _item.Username = value;
-				return this.Set("`username`", string.Concat("?username_", _parameters.Count), 
-					GetParameter(string.Concat("?username_", _parameters.Count), MySqlDbType.VarChar, 32, value));
+				return this.Set("`username`", $"?username_{_parameters.Count}", 
+					GetParameter($"?username_{{_parameters.Count}}", MySqlDbType.VarChar, 32, value));
 			}
 		}
 		#endregion
@@ -143,17 +141,5 @@ namespace pifa.DAL {
 			return item;
 		}
 
-		public MemberInfo GetItem(uint? Id) {
-			return this.Select.Where("a.`id` = {0}", Id).ToOne();
-		}
-		public MemberInfo GetItemByUsername(string Username) {
-			return this.Select.Where("a.`username` = {0}", Username).ToOne();
-		}
-		public MemberInfo GetItemByTelphone(string Telphone) {
-			return this.Select.Where("a.`telphone` = {0}", Telphone).ToOne();
-		}
-		public MemberInfo GetItemByEmail(string Email) {
-			return this.Select.Where("a.`email` = {0}", Email).ToOne();
-		}
 	}
 }

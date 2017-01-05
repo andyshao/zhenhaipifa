@@ -39,19 +39,17 @@ namespace pifa.DAL {
 			return GetItem(dr, ref index) as Product_buyruleInfo;
 		}
 		public object GetItem(IDataReader dr, ref int index) {
-			return new Product_buyruleInfo {
-				Id = dr.IsDBNull(++index) ? null : (uint?)dr.GetInt32(index), 
-				Product_id = dr.IsDBNull(++index) ? null : (uint?)dr.GetInt32(index), 
-				Discount = dr.IsDBNull(++index) ? null : (uint?)dr.GetInt32(index), 
-				Ordering_end = dr.IsDBNull(++index) ? null : (uint?)dr.GetInt32(index), 
-				Ordering_start = dr.IsDBNull(++index) ? null : (uint?)dr.GetInt32(index)};
-		}
-		public SelectBuild<Product_buyruleInfo> Select {
-			get { return SelectBuild<Product_buyruleInfo>.From(this, SqlHelper.Instance); }
+			Product_buyruleInfo item = new Product_buyruleInfo();
+				if (!dr.IsDBNull(++index)) item.Id = (uint?)dr.GetInt32(index);
+				if (!dr.IsDBNull(++index)) item.Product_id = (uint?)dr.GetInt32(index);
+				if (!dr.IsDBNull(++index)) item.Discount = (uint?)dr.GetInt32(index);
+				if (!dr.IsDBNull(++index)) item.Ordering_end = (uint?)dr.GetInt32(index);
+				if (!dr.IsDBNull(++index)) item.Ordering_start = (uint?)dr.GetInt32(index);
+			return item;
 		}
 		#endregion
 
-		public int Delete(uint? Id) {
+		public int Delete(uint Id) {
 			return SqlHelper.ExecuteNonQuery(string.Concat(TSQL.Delete, "`id` = ?id"), 
 				GetParameter("?id", MySqlDbType.UInt32, 10, Id));
 		}
@@ -61,7 +59,7 @@ namespace pifa.DAL {
 		}
 
 		public int Update(Product_buyruleInfo item) {
-			return new SqlUpdateBuild(null, item.Id)
+			return new SqlUpdateBuild(null, item.Id.Value)
 				.SetProduct_id(item.Product_id)
 				.SetDiscount(item.Discount)
 				.SetOrdering_end(item.Ordering_end)
@@ -73,7 +71,7 @@ namespace pifa.DAL {
 			protected string _fields;
 			protected string _where;
 			protected List<MySqlParameter> _parameters = new List<MySqlParameter>();
-			public SqlUpdateBuild(Product_buyruleInfo item, uint? Id) {
+			public SqlUpdateBuild(Product_buyruleInfo item, uint Id) {
 				_item = item;
 				_where = SqlHelper.Addslashes("`id` = {0}", Id);
 			}
@@ -101,38 +99,38 @@ namespace pifa.DAL {
 			}
 			public SqlUpdateBuild SetProduct_id(uint? value) {
 				if (_item != null) _item.Product_id = value;
-				return this.Set("`product_id`", string.Concat("?product_id_", _parameters.Count), 
-					GetParameter(string.Concat("?product_id_", _parameters.Count), MySqlDbType.UInt32, 10, value));
+				return this.Set("`product_id`", $"?product_id_{_parameters.Count}", 
+					GetParameter($"?product_id_{{_parameters.Count}}", MySqlDbType.UInt32, 10, value));
 			}
 			public SqlUpdateBuild SetDiscount(uint? value) {
 				if (_item != null) _item.Discount = value;
-				return this.Set("`discount`", string.Concat("?discount_", _parameters.Count), 
-					GetParameter(string.Concat("?discount_", _parameters.Count), MySqlDbType.UInt32, 10, value));
+				return this.Set("`discount`", $"?discount_{_parameters.Count}", 
+					GetParameter($"?discount_{{_parameters.Count}}", MySqlDbType.UInt32, 10, value));
 			}
 			public SqlUpdateBuild SetDiscountIncrement(int value) {
 				if (_item != null) _item.Discount = (uint?)((int?)_item.Discount + value);
-				return this.Set("`discount`", string.Concat("`discount` + ?discount_", _parameters.Count), 
-					GetParameter(string.Concat("?discount_", _parameters.Count), MySqlDbType.Int32, 10, value));
+				return this.Set("`discount`", "`discount` + ?discount_{_parameters.Count}", 
+					GetParameter($"?discount_{{_parameters.Count}}", MySqlDbType.Int32, 10, value));
 			}
 			public SqlUpdateBuild SetOrdering_end(uint? value) {
 				if (_item != null) _item.Ordering_end = value;
-				return this.Set("`ordering_end`", string.Concat("?ordering_end_", _parameters.Count), 
-					GetParameter(string.Concat("?ordering_end_", _parameters.Count), MySqlDbType.UInt32, 10, value));
+				return this.Set("`ordering_end`", $"?ordering_end_{_parameters.Count}", 
+					GetParameter($"?ordering_end_{{_parameters.Count}}", MySqlDbType.UInt32, 10, value));
 			}
 			public SqlUpdateBuild SetOrdering_endIncrement(int value) {
 				if (_item != null) _item.Ordering_end = (uint?)((int?)_item.Ordering_end + value);
-				return this.Set("`ordering_end`", string.Concat("`ordering_end` + ?ordering_end_", _parameters.Count), 
-					GetParameter(string.Concat("?ordering_end_", _parameters.Count), MySqlDbType.Int32, 10, value));
+				return this.Set("`ordering_end`", "`ordering_end` + ?ordering_end_{_parameters.Count}", 
+					GetParameter($"?ordering_end_{{_parameters.Count}}", MySqlDbType.Int32, 10, value));
 			}
 			public SqlUpdateBuild SetOrdering_start(uint? value) {
 				if (_item != null) _item.Ordering_start = value;
-				return this.Set("`ordering_start`", string.Concat("?ordering_start_", _parameters.Count), 
-					GetParameter(string.Concat("?ordering_start_", _parameters.Count), MySqlDbType.UInt32, 10, value));
+				return this.Set("`ordering_start`", $"?ordering_start_{_parameters.Count}", 
+					GetParameter($"?ordering_start_{{_parameters.Count}}", MySqlDbType.UInt32, 10, value));
 			}
 			public SqlUpdateBuild SetOrdering_startIncrement(int value) {
 				if (_item != null) _item.Ordering_start = (uint?)((int?)_item.Ordering_start + value);
-				return this.Set("`ordering_start`", string.Concat("`ordering_start` + ?ordering_start_", _parameters.Count), 
-					GetParameter(string.Concat("?ordering_start_", _parameters.Count), MySqlDbType.Int32, 10, value));
+				return this.Set("`ordering_start`", "`ordering_start` + ?ordering_start_{_parameters.Count}", 
+					GetParameter($"?ordering_start_{{_parameters.Count}}", MySqlDbType.Int32, 10, value));
 			}
 		}
 		#endregion
@@ -143,8 +141,5 @@ namespace pifa.DAL {
 			return item;
 		}
 
-		public Product_buyruleInfo GetItem(uint? Id) {
-			return this.Select.Where("a.`id` = {0}", Id).ToOne();
-		}
 	}
 }
