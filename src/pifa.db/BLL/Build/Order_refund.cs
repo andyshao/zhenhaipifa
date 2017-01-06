@@ -119,7 +119,7 @@ namespace pifa.BLL {
 		public Order_refundSelectBuild WhereProductitem_id(params uint?[] Productitem_id) {
 			return this.Where1Or("a.`productitem_id` = {0}", Productitem_id);
 		}
-		public Order_refundSelectBuild WhereId(params uint?[] Id) {
+		public Order_refundSelectBuild WhereId(params uint[] Id) {
 			return this.Where1Or("a.`id` = {0}", Id);
 		}
 		public Order_refundSelectBuild WhereCreate_timeRange(DateTime? begin) {

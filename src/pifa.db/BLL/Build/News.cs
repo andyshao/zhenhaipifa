@@ -100,7 +100,7 @@ namespace pifa.BLL {
 			if (ids == null || ids.Length == 0) return this;
 			return base.Where(string.Format(@"EXISTS( SELECT `news_id` FROM `news_newstag` WHERE `news_id` = a.`id` AND `newstag_id` IN ({0}) )", string.Join<uint>(",", ids))) as NewsSelectBuild;
 		}
-		public NewsSelectBuild WhereId(params uint?[] Id) {
+		public NewsSelectBuild WhereId(params uint[] Id) {
 			return this.Where1Or("a.`id` = {0}", Id);
 		}
 		public NewsSelectBuild WhereCreate_timeRange(DateTime? begin) {

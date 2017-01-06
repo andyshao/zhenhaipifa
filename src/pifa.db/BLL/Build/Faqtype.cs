@@ -77,7 +77,7 @@ namespace pifa.BLL {
 		}
 	}
 	public partial class FaqtypeSelectBuild : SelectBuild<FaqtypeInfo, FaqtypeSelectBuild> {
-		public FaqtypeSelectBuild WhereId(params uint?[] Id) {
+		public FaqtypeSelectBuild WhereId(params uint[] Id) {
 			return this.Where1Or("a.`id` = {0}", Id);
 		}
 		public FaqtypeSelectBuild WhereSort(params byte?[] Sort) {

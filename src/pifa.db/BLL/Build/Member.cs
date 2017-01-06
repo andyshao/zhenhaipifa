@@ -172,7 +172,7 @@ namespace pifa.BLL {
 			if (ids == null || ids.Length == 0) return this;
 			return base.Where(string.Format(@"EXISTS( SELECT `member_id` FROM `member_shop` WHERE `member_id` = a.`id` AND `shop_id` IN ({0}) )", string.Join<uint>(",", ids))) as MemberSelectBuild;
 		}
-		public MemberSelectBuild WhereId(params uint?[] Id) {
+		public MemberSelectBuild WhereId(params uint[] Id) {
 			return this.Where1Or("a.`id` = {0}", Id);
 		}
 		public MemberSelectBuild WhereCreate_timeRange(DateTime? begin) {

@@ -108,7 +108,7 @@ namespace pifa.BLL {
 			if (ids == null || ids.Length == 0) return this;
 			return base.Where(string.Format(@"EXISTS( SELECT `rentsublet_id` FROM `rentsublet_franchising` WHERE `rentsublet_id` = a.`id` AND `franchising_id` IN ({0}) )", string.Join<uint>(",", ids))) as RentsubletSelectBuild;
 		}
-		public RentsubletSelectBuild WhereId(params uint?[] Id) {
+		public RentsubletSelectBuild WhereId(params uint[] Id) {
 			return this.Where1Or("a.`id` = {0}", Id);
 		}
 		public RentsubletSelectBuild WhereCreate_timeRange(DateTime? begin) {

@@ -123,7 +123,7 @@ namespace pifa.BLL {
 			if (ids == null || ids.Length == 0) return this;
 			return base.Where(string.Format(@"EXISTS( SELECT `markettype_id` FROM `markettype_category` WHERE `markettype_id` = a.`id` AND `category_id` IN ({0}) )", string.Join<uint>(",", ids))) as MarkettypeSelectBuild;
 		}
-		public MarkettypeSelectBuild WhereId(params uint?[] Id) {
+		public MarkettypeSelectBuild WhereId(params uint[] Id) {
 			return this.Where1Or("a.`id` = {0}", Id);
 		}
 		public MarkettypeSelectBuild WhereSort(params byte?[] Sort) {

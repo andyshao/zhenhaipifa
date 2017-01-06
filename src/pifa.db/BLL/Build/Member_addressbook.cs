@@ -102,7 +102,7 @@ namespace pifa.BLL {
 		public Member_addressbookSelectBuild WhereMember_id(params uint?[] Member_id) {
 			return this.Where1Or("a.`member_id` = {0}", Member_id);
 		}
-		public Member_addressbookSelectBuild WhereId(params uint?[] Id) {
+		public Member_addressbookSelectBuild WhereId(params uint[] Id) {
 			return this.Where1Or("a.`id` = {0}", Id);
 		}
 		public Member_addressbookSelectBuild WhereAddress(params string[] Address) {

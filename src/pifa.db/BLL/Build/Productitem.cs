@@ -114,7 +114,7 @@ namespace pifa.BLL {
 			if (ids == null || ids.Length == 0) return this;
 			return base.Where(string.Format(@"EXISTS( SELECT `productitem_id` FROM `order_productitem` WHERE `productitem_id` = a.`id` AND `order_id` IN ({0}) )", string.Join<uint>(",", ids))) as ProductitemSelectBuild;
 		}
-		public ProductitemSelectBuild WhereId(params uint?[] Id) {
+		public ProductitemSelectBuild WhereId(params uint[] Id) {
 			return this.Where1Or("a.`id` = {0}", Id);
 		}
 		public ProductitemSelectBuild WhereImg_url(params string[] Img_url) {

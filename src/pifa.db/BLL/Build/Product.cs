@@ -145,7 +145,7 @@ namespace pifa.BLL {
 			if (ids == null || ids.Length == 0) return this;
 			return base.Where(string.Format(@"EXISTS( SELECT `product_id` FROM `product_attr` WHERE `product_id` = a.`id` AND `pattr_id` IN ({0}) )", string.Join<uint>(",", ids))) as ProductSelectBuild;
 		}
-		public ProductSelectBuild WhereId(params uint?[] Id) {
+		public ProductSelectBuild WhereId(params uint[] Id) {
 			return this.Where1Or("a.`id` = {0}", Id);
 		}
 		public ProductSelectBuild WhereCreate_timeRange(DateTime? begin) {

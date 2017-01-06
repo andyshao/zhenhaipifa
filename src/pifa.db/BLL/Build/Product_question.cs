@@ -132,7 +132,7 @@ namespace pifa.BLL {
 		public Product_questionSelectBuild WhereParent_id(params uint?[] Parent_id) {
 			return this.Where1Or("a.`parent_id` = {0}", Parent_id);
 		}
-		public Product_questionSelectBuild WhereId(params uint?[] Id) {
+		public Product_questionSelectBuild WhereId(params uint[] Id) {
 			return this.Where1Or("a.`id` = {0}", Id);
 		}
 		public Product_questionSelectBuild WhereContent(params string[] Content) {

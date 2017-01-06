@@ -99,7 +99,7 @@ namespace pifa.BLL {
 		public Shop_friendly_linksSelectBuild WhereShop_id(params uint?[] Shop_id) {
 			return this.Where1Or("a.`shop_id` = {0}", Shop_id);
 		}
-		public Shop_friendly_linksSelectBuild WhereId(params uint?[] Id) {
+		public Shop_friendly_linksSelectBuild WhereId(params uint[] Id) {
 			return this.Where1Or("a.`id` = {0}", Id);
 		}
 		public Shop_friendly_linksSelectBuild WhereCreate_timeRange(DateTime? begin) {

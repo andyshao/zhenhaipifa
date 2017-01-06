@@ -100,7 +100,7 @@ namespace pifa.BLL {
 		public ExpressSelectBuild WhereArea_id(params uint?[] Area_id) {
 			return this.Where1Or("a.`area_id` = {0}", Area_id);
 		}
-		public ExpressSelectBuild WhereId(params uint?[] Id) {
+		public ExpressSelectBuild WhereId(params uint[] Id) {
 			return this.Where1Or("a.`id` = {0}", Id);
 		}
 		public ExpressSelectBuild WhereAddress(params string[] Address) {

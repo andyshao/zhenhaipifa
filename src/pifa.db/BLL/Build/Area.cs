@@ -106,7 +106,7 @@ namespace pifa.BLL {
 			if (ids == null || ids.Length == 0) return this;
 			return base.Where(string.Format(@"EXISTS( SELECT `area_id` FROM `area_category` WHERE `area_id` = a.`id` AND `category_id` IN ({0}) )", string.Join<uint>(",", ids))) as AreaSelectBuild;
 		}
-		public AreaSelectBuild WhereId(params uint?[] Id) {
+		public AreaSelectBuild WhereId(params uint[] Id) {
 			return this.Where1Or("a.`id` = {0}", Id);
 		}
 		public AreaSelectBuild WhereName(params string[] Name) {

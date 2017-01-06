@@ -93,7 +93,7 @@ namespace pifa.BLL {
 		public FaqSelectBuild WhereFaqtype_id(params uint?[] Faqtype_id) {
 			return this.Where1Or("a.`faqtype_id` = {0}", Faqtype_id);
 		}
-		public FaqSelectBuild WhereId(params uint?[] Id) {
+		public FaqSelectBuild WhereId(params uint[] Id) {
 			return this.Where1Or("a.`id` = {0}", Id);
 		}
 		public FaqSelectBuild WhereCreate_timeRange(DateTime? begin) {
